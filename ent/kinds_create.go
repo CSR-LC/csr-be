@@ -8,56 +8,56 @@ import (
 
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/ent/statuses"
+	"git.epam.com/epm-lstr/epm-lstr-lc/be/ent/kinds"
 )
 
-// StatusesCreate is the builder for creating a Statuses entity.
-type StatusesCreate struct {
+// KindsCreate is the builder for creating a Kinds entity.
+type KindsCreate struct {
 	config
-	mutation *StatusesMutation
+	mutation *KindsMutation
 	hooks    []Hook
 }
 
-// Mutation returns the StatusesMutation object of the builder.
-func (sc *StatusesCreate) Mutation() *StatusesMutation {
-	return sc.mutation
+// Mutation returns the KindsMutation object of the builder.
+func (kc *KindsCreate) Mutation() *KindsMutation {
+	return kc.mutation
 }
 
-// Save creates the Statuses in the database.
-func (sc *StatusesCreate) Save(ctx context.Context) (*Statuses, error) {
+// Save creates the Kinds in the database.
+func (kc *KindsCreate) Save(ctx context.Context) (*Kinds, error) {
 	var (
 		err  error
-		node *Statuses
+		node *Kinds
 	)
-	if len(sc.hooks) == 0 {
-		if err = sc.check(); err != nil {
+	if len(kc.hooks) == 0 {
+		if err = kc.check(); err != nil {
 			return nil, err
 		}
-		node, err = sc.sqlSave(ctx)
+		node, err = kc.sqlSave(ctx)
 	} else {
 		var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
-			mutation, ok := m.(*StatusesMutation)
+			mutation, ok := m.(*KindsMutation)
 			if !ok {
 				return nil, fmt.Errorf("unexpected mutation type %T", m)
 			}
-			if err = sc.check(); err != nil {
+			if err = kc.check(); err != nil {
 				return nil, err
 			}
-			sc.mutation = mutation
-			if node, err = sc.sqlSave(ctx); err != nil {
+			kc.mutation = mutation
+			if node, err = kc.sqlSave(ctx); err != nil {
 				return nil, err
 			}
 			mutation.id = &node.ID
 			mutation.done = true
 			return node, err
 		})
-		for i := len(sc.hooks) - 1; i >= 0; i-- {
-			if sc.hooks[i] == nil {
+		for i := len(kc.hooks) - 1; i >= 0; i-- {
+			if kc.hooks[i] == nil {
 				return nil, fmt.Errorf("ent: uninitialized hook (forgotten import ent/runtime?)")
 			}
-			mut = sc.hooks[i](mut)
+			mut = kc.hooks[i](mut)
 		}
-		if _, err := mut.Mutate(ctx, sc.mutation); err != nil {
+		if _, err := mut.Mutate(ctx, kc.mutation); err != nil {
 			return nil, err
 		}
 	}
@@ -65,8 +65,8 @@ func (sc *StatusesCreate) Save(ctx context.Context) (*Statuses, error) {
 }
 
 // SaveX calls Save and panics if Save returns an error.
-func (sc *StatusesCreate) SaveX(ctx context.Context) *Statuses {
-	v, err := sc.Save(ctx)
+func (kc *KindsCreate) SaveX(ctx context.Context) *Kinds {
+	v, err := kc.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -74,26 +74,26 @@ func (sc *StatusesCreate) SaveX(ctx context.Context) *Statuses {
 }
 
 // Exec executes the query.
-func (sc *StatusesCreate) Exec(ctx context.Context) error {
-	_, err := sc.Save(ctx)
+func (kc *KindsCreate) Exec(ctx context.Context) error {
+	_, err := kc.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (sc *StatusesCreate) ExecX(ctx context.Context) {
-	if err := sc.Exec(ctx); err != nil {
+func (kc *KindsCreate) ExecX(ctx context.Context) {
+	if err := kc.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (sc *StatusesCreate) check() error {
+func (kc *KindsCreate) check() error {
 	return nil
 }
 
-func (sc *StatusesCreate) sqlSave(ctx context.Context) (*Statuses, error) {
-	_node, _spec := sc.createSpec()
-	if err := sqlgraph.CreateNode(ctx, sc.driver, _spec); err != nil {
+func (kc *KindsCreate) sqlSave(ctx context.Context) (*Kinds, error) {
+	_node, _spec := kc.createSpec()
+	if err := sqlgraph.CreateNode(ctx, kc.driver, _spec); err != nil {
 		if sqlgraph.IsConstraintError(err) {
 			err = &ConstraintError{err.Error(), err}
 		}
@@ -104,36 +104,36 @@ func (sc *StatusesCreate) sqlSave(ctx context.Context) (*Statuses, error) {
 	return _node, nil
 }
 
-func (sc *StatusesCreate) createSpec() (*Statuses, *sqlgraph.CreateSpec) {
+func (kc *KindsCreate) createSpec() (*Kinds, *sqlgraph.CreateSpec) {
 	var (
-		_node = &Statuses{config: sc.config}
+		_node = &Kinds{config: kc.config}
 		_spec = &sqlgraph.CreateSpec{
-			Table: statuses.Table,
+			Table: kinds.Table,
 			ID: &sqlgraph.FieldSpec{
 				Type:   field.TypeInt,
-				Column: statuses.FieldID,
+				Column: kinds.FieldID,
 			},
 		}
 	)
 	return _node, _spec
 }
 
-// StatusesCreateBulk is the builder for creating many Statuses entities in bulk.
-type StatusesCreateBulk struct {
+// KindsCreateBulk is the builder for creating many Kinds entities in bulk.
+type KindsCreateBulk struct {
 	config
-	builders []*StatusesCreate
+	builders []*KindsCreate
 }
 
-// Save creates the Statuses entities in the database.
-func (scb *StatusesCreateBulk) Save(ctx context.Context) ([]*Statuses, error) {
-	specs := make([]*sqlgraph.CreateSpec, len(scb.builders))
-	nodes := make([]*Statuses, len(scb.builders))
-	mutators := make([]Mutator, len(scb.builders))
-	for i := range scb.builders {
+// Save creates the Kinds entities in the database.
+func (kcb *KindsCreateBulk) Save(ctx context.Context) ([]*Kinds, error) {
+	specs := make([]*sqlgraph.CreateSpec, len(kcb.builders))
+	nodes := make([]*Kinds, len(kcb.builders))
+	mutators := make([]Mutator, len(kcb.builders))
+	for i := range kcb.builders {
 		func(i int, root context.Context) {
-			builder := scb.builders[i]
+			builder := kcb.builders[i]
 			var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
-				mutation, ok := m.(*StatusesMutation)
+				mutation, ok := m.(*KindsMutation)
 				if !ok {
 					return nil, fmt.Errorf("unexpected mutation type %T", m)
 				}
@@ -144,11 +144,11 @@ func (scb *StatusesCreateBulk) Save(ctx context.Context) ([]*Statuses, error) {
 				nodes[i], specs[i] = builder.createSpec()
 				var err error
 				if i < len(mutators)-1 {
-					_, err = mutators[i+1].Mutate(root, scb.builders[i+1].mutation)
+					_, err = mutators[i+1].Mutate(root, kcb.builders[i+1].mutation)
 				} else {
 					spec := &sqlgraph.BatchCreateSpec{Nodes: specs}
 					// Invoke the actual operation on the latest mutation in the chain.
-					if err = sqlgraph.BatchCreate(ctx, scb.driver, spec); err != nil {
+					if err = sqlgraph.BatchCreate(ctx, kcb.driver, spec); err != nil {
 						if sqlgraph.IsConstraintError(err) {
 							err = &ConstraintError{err.Error(), err}
 						}
@@ -172,7 +172,7 @@ func (scb *StatusesCreateBulk) Save(ctx context.Context) ([]*Statuses, error) {
 		}(i, ctx)
 	}
 	if len(mutators) > 0 {
-		if _, err := mutators[0].Mutate(ctx, scb.builders[0].mutation); err != nil {
+		if _, err := mutators[0].Mutate(ctx, kcb.builders[0].mutation); err != nil {
 			return nil, err
 		}
 	}
@@ -180,8 +180,8 @@ func (scb *StatusesCreateBulk) Save(ctx context.Context) ([]*Statuses, error) {
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (scb *StatusesCreateBulk) SaveX(ctx context.Context) []*Statuses {
-	v, err := scb.Save(ctx)
+func (kcb *KindsCreateBulk) SaveX(ctx context.Context) []*Kinds {
+	v, err := kcb.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -189,14 +189,14 @@ func (scb *StatusesCreateBulk) SaveX(ctx context.Context) []*Statuses {
 }
 
 // Exec executes the query.
-func (scb *StatusesCreateBulk) Exec(ctx context.Context) error {
-	_, err := scb.Save(ctx)
+func (kcb *KindsCreateBulk) Exec(ctx context.Context) error {
+	_, err := kcb.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (scb *StatusesCreateBulk) ExecX(ctx context.Context) {
-	if err := scb.Exec(ctx); err != nil {
+func (kcb *KindsCreateBulk) ExecX(ctx context.Context) {
+	if err := kcb.Exec(ctx); err != nil {
 		panic(err)
 	}
 }

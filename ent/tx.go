@@ -12,14 +12,16 @@ import (
 // Tx is a transactional client that is created by calling Client.Tx().
 type Tx struct {
 	config
+	// Equipment is the client for interacting with the Equipment builders.
+	Equipment *EquipmentClient
 	// Group is the client for interacting with the Group builders.
 	Group *GroupClient
-	// Kind is the client for interacting with the Kind builders.
-	Kind *KindClient
+	// Kinds is the client for interacting with the Kinds builders.
+	Kinds *KindsClient
+	// Locationts is the client for interacting with the Locationts builders.
+	Locationts *LocationtsClient
 	// Permission is the client for interacting with the Permission builders.
 	Permission *PermissionClient
-	// Role is the client for interacting with the Role builders.
-	Role *RoleClient
 	// Statuses is the client for interacting with the Statuses builders.
 	Statuses *StatusesClient
 	// User is the client for interacting with the User builders.
@@ -159,10 +161,11 @@ func (tx *Tx) Client() *Client {
 }
 
 func (tx *Tx) init() {
+	tx.Equipment = NewEquipmentClient(tx.config)
 	tx.Group = NewGroupClient(tx.config)
-	tx.Kind = NewKindClient(tx.config)
+	tx.Kinds = NewKindsClient(tx.config)
+	tx.Locationts = NewLocationtsClient(tx.config)
 	tx.Permission = NewPermissionClient(tx.config)
-	tx.Role = NewRoleClient(tx.config)
 	tx.Statuses = NewStatusesClient(tx.config)
 	tx.User = NewUserClient(tx.config)
 }
@@ -174,7 +177,7 @@ func (tx *Tx) init() {
 // of them in order to commit or rollback the transaction.
 //
 // If a closed transaction is embedded in one of the generated entities, and the entity
-// applies a query, for example: Group.QueryXXX(), the query will be executed
+// applies a query, for example: Equipment.QueryXXX(), the query will be executed
 // through the driver which created this transaction.
 //
 // Note that txDriver is not goroutine safe.

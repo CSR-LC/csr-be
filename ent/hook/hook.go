@@ -9,6 +9,19 @@ import (
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/ent"
 )
 
+// The EquipmentFunc type is an adapter to allow the use of ordinary
+// function as Equipment mutator.
+type EquipmentFunc func(context.Context, *ent.EquipmentMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f EquipmentFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	mv, ok := m.(*ent.EquipmentMutation)
+	if !ok {
+		return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.EquipmentMutation", m)
+	}
+	return f(ctx, mv)
+}
+
 // The GroupFunc type is an adapter to allow the use of ordinary
 // function as Group mutator.
 type GroupFunc func(context.Context, *ent.GroupMutation) (ent.Value, error)
@@ -22,15 +35,28 @@ func (f GroupFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error
 	return f(ctx, mv)
 }
 
-// The KindFunc type is an adapter to allow the use of ordinary
-// function as Kind mutator.
-type KindFunc func(context.Context, *ent.KindMutation) (ent.Value, error)
+// The KindsFunc type is an adapter to allow the use of ordinary
+// function as Kinds mutator.
+type KindsFunc func(context.Context, *ent.KindsMutation) (ent.Value, error)
 
 // Mutate calls f(ctx, m).
-func (f KindFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
-	mv, ok := m.(*ent.KindMutation)
+func (f KindsFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	mv, ok := m.(*ent.KindsMutation)
 	if !ok {
-		return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.KindMutation", m)
+		return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.KindsMutation", m)
+	}
+	return f(ctx, mv)
+}
+
+// The LocationtsFunc type is an adapter to allow the use of ordinary
+// function as Locationts mutator.
+type LocationtsFunc func(context.Context, *ent.LocationtsMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f LocationtsFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	mv, ok := m.(*ent.LocationtsMutation)
+	if !ok {
+		return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.LocationtsMutation", m)
 	}
 	return f(ctx, mv)
 }
@@ -44,19 +70,6 @@ func (f PermissionFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, 
 	mv, ok := m.(*ent.PermissionMutation)
 	if !ok {
 		return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.PermissionMutation", m)
-	}
-	return f(ctx, mv)
-}
-
-// The RoleFunc type is an adapter to allow the use of ordinary
-// function as Role mutator.
-type RoleFunc func(context.Context, *ent.RoleMutation) (ent.Value, error)
-
-// Mutate calls f(ctx, m).
-func (f RoleFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
-	mv, ok := m.(*ent.RoleMutation)
-	if !ok {
-		return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.RoleMutation", m)
 	}
 	return f(ctx, mv)
 }

@@ -8,11 +8,13 @@ import (
 	"log"
 
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/ent/migrate"
+	"github.com/gofrs/uuid"
 
+	"git.epam.com/epm-lstr/epm-lstr-lc/be/ent/equipment"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/ent/group"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/ent/kind"
+	"git.epam.com/epm-lstr/epm-lstr-lc/be/ent/kinds"
+	"git.epam.com/epm-lstr/epm-lstr-lc/be/ent/locationts"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/ent/permission"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/ent/role"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/ent/statuses"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/ent/user"
 
@@ -26,14 +28,16 @@ type Client struct {
 	config
 	// Schema is the client for creating, migrating and dropping schema.
 	Schema *migrate.Schema
+	// Equipment is the client for interacting with the Equipment builders.
+	Equipment *EquipmentClient
 	// Group is the client for interacting with the Group builders.
 	Group *GroupClient
-	// Kind is the client for interacting with the Kind builders.
-	Kind *KindClient
+	// Kinds is the client for interacting with the Kinds builders.
+	Kinds *KindsClient
+	// Locationts is the client for interacting with the Locationts builders.
+	Locationts *LocationtsClient
 	// Permission is the client for interacting with the Permission builders.
 	Permission *PermissionClient
-	// Role is the client for interacting with the Role builders.
-	Role *RoleClient
 	// Statuses is the client for interacting with the Statuses builders.
 	Statuses *StatusesClient
 	// User is the client for interacting with the User builders.
@@ -51,10 +55,11 @@ func NewClient(opts ...Option) *Client {
 
 func (c *Client) init() {
 	c.Schema = migrate.NewSchema(c.driver)
+	c.Equipment = NewEquipmentClient(c.config)
 	c.Group = NewGroupClient(c.config)
-	c.Kind = NewKindClient(c.config)
+	c.Kinds = NewKindsClient(c.config)
+	c.Locationts = NewLocationtsClient(c.config)
 	c.Permission = NewPermissionClient(c.config)
-	c.Role = NewRoleClient(c.config)
 	c.Statuses = NewStatusesClient(c.config)
 	c.User = NewUserClient(c.config)
 }
@@ -90,10 +95,11 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 	return &Tx{
 		ctx:        ctx,
 		config:     cfg,
+		Equipment:  NewEquipmentClient(cfg),
 		Group:      NewGroupClient(cfg),
-		Kind:       NewKindClient(cfg),
+		Kinds:      NewKindsClient(cfg),
+		Locationts: NewLocationtsClient(cfg),
 		Permission: NewPermissionClient(cfg),
-		Role:       NewRoleClient(cfg),
 		Statuses:   NewStatusesClient(cfg),
 		User:       NewUserClient(cfg),
 	}, nil
@@ -115,10 +121,11 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 	return &Tx{
 		ctx:        ctx,
 		config:     cfg,
+		Equipment:  NewEquipmentClient(cfg),
 		Group:      NewGroupClient(cfg),
-		Kind:       NewKindClient(cfg),
+		Kinds:      NewKindsClient(cfg),
+		Locationts: NewLocationtsClient(cfg),
 		Permission: NewPermissionClient(cfg),
-		Role:       NewRoleClient(cfg),
 		Statuses:   NewStatusesClient(cfg),
 		User:       NewUserClient(cfg),
 	}, nil
@@ -127,7 +134,7 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 // Debug returns a new debug-client. It's used to get verbose logging on specific operations.
 //
 //	client.Debug().
-//		Group.
+//		Equipment.
 //		Query().
 //		Count(ctx)
 //
@@ -150,12 +157,103 @@ func (c *Client) Close() error {
 // Use adds the mutation hooks to all the entity clients.
 // In order to add hooks to a specific client, call: `client.Node.Use(...)`.
 func (c *Client) Use(hooks ...Hook) {
+	c.Equipment.Use(hooks...)
 	c.Group.Use(hooks...)
-	c.Kind.Use(hooks...)
+	c.Kinds.Use(hooks...)
+	c.Locationts.Use(hooks...)
 	c.Permission.Use(hooks...)
-	c.Role.Use(hooks...)
 	c.Statuses.Use(hooks...)
 	c.User.Use(hooks...)
+}
+
+// EquipmentClient is a client for the Equipment schema.
+type EquipmentClient struct {
+	config
+}
+
+// NewEquipmentClient returns a client for the Equipment from the given config.
+func NewEquipmentClient(c config) *EquipmentClient {
+	return &EquipmentClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `equipment.Hooks(f(g(h())))`.
+func (c *EquipmentClient) Use(hooks ...Hook) {
+	c.hooks.Equipment = append(c.hooks.Equipment, hooks...)
+}
+
+// Create returns a create builder for Equipment.
+func (c *EquipmentClient) Create() *EquipmentCreate {
+	mutation := newEquipmentMutation(c.config, OpCreate)
+	return &EquipmentCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of Equipment entities.
+func (c *EquipmentClient) CreateBulk(builders ...*EquipmentCreate) *EquipmentCreateBulk {
+	return &EquipmentCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for Equipment.
+func (c *EquipmentClient) Update() *EquipmentUpdate {
+	mutation := newEquipmentMutation(c.config, OpUpdate)
+	return &EquipmentUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *EquipmentClient) UpdateOne(e *Equipment) *EquipmentUpdateOne {
+	mutation := newEquipmentMutation(c.config, OpUpdateOne, withEquipment(e))
+	return &EquipmentUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *EquipmentClient) UpdateOneID(id uuid.UUID) *EquipmentUpdateOne {
+	mutation := newEquipmentMutation(c.config, OpUpdateOne, withEquipmentID(id))
+	return &EquipmentUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for Equipment.
+func (c *EquipmentClient) Delete() *EquipmentDelete {
+	mutation := newEquipmentMutation(c.config, OpDelete)
+	return &EquipmentDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a delete builder for the given entity.
+func (c *EquipmentClient) DeleteOne(e *Equipment) *EquipmentDeleteOne {
+	return c.DeleteOneID(e.ID)
+}
+
+// DeleteOneID returns a delete builder for the given id.
+func (c *EquipmentClient) DeleteOneID(id uuid.UUID) *EquipmentDeleteOne {
+	builder := c.Delete().Where(equipment.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &EquipmentDeleteOne{builder}
+}
+
+// Query returns a query builder for Equipment.
+func (c *EquipmentClient) Query() *EquipmentQuery {
+	return &EquipmentQuery{
+		config: c.config,
+	}
+}
+
+// Get returns a Equipment entity by its id.
+func (c *EquipmentClient) Get(ctx context.Context, id uuid.UUID) (*Equipment, error) {
+	return c.Query().Where(equipment.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *EquipmentClient) GetX(ctx context.Context, id uuid.UUID) *Equipment {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *EquipmentClient) Hooks() []Hook {
+	return c.hooks.Equipment
 }
 
 // GroupClient is a client for the Group schema.
@@ -280,84 +378,84 @@ func (c *GroupClient) Hooks() []Hook {
 	return c.hooks.Group
 }
 
-// KindClient is a client for the Kind schema.
-type KindClient struct {
+// KindsClient is a client for the Kinds schema.
+type KindsClient struct {
 	config
 }
 
-// NewKindClient returns a client for the Kind from the given config.
-func NewKindClient(c config) *KindClient {
-	return &KindClient{config: c}
+// NewKindsClient returns a client for the Kinds from the given config.
+func NewKindsClient(c config) *KindsClient {
+	return &KindsClient{config: c}
 }
 
 // Use adds a list of mutation hooks to the hooks stack.
-// A call to `Use(f, g, h)` equals to `kind.Hooks(f(g(h())))`.
-func (c *KindClient) Use(hooks ...Hook) {
-	c.hooks.Kind = append(c.hooks.Kind, hooks...)
+// A call to `Use(f, g, h)` equals to `kinds.Hooks(f(g(h())))`.
+func (c *KindsClient) Use(hooks ...Hook) {
+	c.hooks.Kinds = append(c.hooks.Kinds, hooks...)
 }
 
-// Create returns a create builder for Kind.
-func (c *KindClient) Create() *KindCreate {
-	mutation := newKindMutation(c.config, OpCreate)
-	return &KindCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+// Create returns a create builder for Kinds.
+func (c *KindsClient) Create() *KindsCreate {
+	mutation := newKindsMutation(c.config, OpCreate)
+	return &KindsCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
 
-// CreateBulk returns a builder for creating a bulk of Kind entities.
-func (c *KindClient) CreateBulk(builders ...*KindCreate) *KindCreateBulk {
-	return &KindCreateBulk{config: c.config, builders: builders}
+// CreateBulk returns a builder for creating a bulk of Kinds entities.
+func (c *KindsClient) CreateBulk(builders ...*KindsCreate) *KindsCreateBulk {
+	return &KindsCreateBulk{config: c.config, builders: builders}
 }
 
-// Update returns an update builder for Kind.
-func (c *KindClient) Update() *KindUpdate {
-	mutation := newKindMutation(c.config, OpUpdate)
-	return &KindUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+// Update returns an update builder for Kinds.
+func (c *KindsClient) Update() *KindsUpdate {
+	mutation := newKindsMutation(c.config, OpUpdate)
+	return &KindsUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
 
 // UpdateOne returns an update builder for the given entity.
-func (c *KindClient) UpdateOne(k *Kind) *KindUpdateOne {
-	mutation := newKindMutation(c.config, OpUpdateOne, withKind(k))
-	return &KindUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+func (c *KindsClient) UpdateOne(k *Kinds) *KindsUpdateOne {
+	mutation := newKindsMutation(c.config, OpUpdateOne, withKinds(k))
+	return &KindsUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
 
 // UpdateOneID returns an update builder for the given id.
-func (c *KindClient) UpdateOneID(id int) *KindUpdateOne {
-	mutation := newKindMutation(c.config, OpUpdateOne, withKindID(id))
-	return &KindUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+func (c *KindsClient) UpdateOneID(id int) *KindsUpdateOne {
+	mutation := newKindsMutation(c.config, OpUpdateOne, withKindsID(id))
+	return &KindsUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
 
-// Delete returns a delete builder for Kind.
-func (c *KindClient) Delete() *KindDelete {
-	mutation := newKindMutation(c.config, OpDelete)
-	return &KindDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+// Delete returns a delete builder for Kinds.
+func (c *KindsClient) Delete() *KindsDelete {
+	mutation := newKindsMutation(c.config, OpDelete)
+	return &KindsDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
 
 // DeleteOne returns a delete builder for the given entity.
-func (c *KindClient) DeleteOne(k *Kind) *KindDeleteOne {
+func (c *KindsClient) DeleteOne(k *Kinds) *KindsDeleteOne {
 	return c.DeleteOneID(k.ID)
 }
 
 // DeleteOneID returns a delete builder for the given id.
-func (c *KindClient) DeleteOneID(id int) *KindDeleteOne {
-	builder := c.Delete().Where(kind.ID(id))
+func (c *KindsClient) DeleteOneID(id int) *KindsDeleteOne {
+	builder := c.Delete().Where(kinds.ID(id))
 	builder.mutation.id = &id
 	builder.mutation.op = OpDeleteOne
-	return &KindDeleteOne{builder}
+	return &KindsDeleteOne{builder}
 }
 
-// Query returns a query builder for Kind.
-func (c *KindClient) Query() *KindQuery {
-	return &KindQuery{
+// Query returns a query builder for Kinds.
+func (c *KindsClient) Query() *KindsQuery {
+	return &KindsQuery{
 		config: c.config,
 	}
 }
 
-// Get returns a Kind entity by its id.
-func (c *KindClient) Get(ctx context.Context, id int) (*Kind, error) {
-	return c.Query().Where(kind.ID(id)).Only(ctx)
+// Get returns a Kinds entity by its id.
+func (c *KindsClient) Get(ctx context.Context, id int) (*Kinds, error) {
+	return c.Query().Where(kinds.ID(id)).Only(ctx)
 }
 
 // GetX is like Get, but panics if an error occurs.
-func (c *KindClient) GetX(ctx context.Context, id int) *Kind {
+func (c *KindsClient) GetX(ctx context.Context, id int) *Kinds {
 	obj, err := c.Get(ctx, id)
 	if err != nil {
 		panic(err)
@@ -366,8 +464,98 @@ func (c *KindClient) GetX(ctx context.Context, id int) *Kind {
 }
 
 // Hooks returns the client hooks.
-func (c *KindClient) Hooks() []Hook {
-	return c.hooks.Kind
+func (c *KindsClient) Hooks() []Hook {
+	return c.hooks.Kinds
+}
+
+// LocationtsClient is a client for the Locationts schema.
+type LocationtsClient struct {
+	config
+}
+
+// NewLocationtsClient returns a client for the Locationts from the given config.
+func NewLocationtsClient(c config) *LocationtsClient {
+	return &LocationtsClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `locationts.Hooks(f(g(h())))`.
+func (c *LocationtsClient) Use(hooks ...Hook) {
+	c.hooks.Locationts = append(c.hooks.Locationts, hooks...)
+}
+
+// Create returns a create builder for Locationts.
+func (c *LocationtsClient) Create() *LocationtsCreate {
+	mutation := newLocationtsMutation(c.config, OpCreate)
+	return &LocationtsCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of Locationts entities.
+func (c *LocationtsClient) CreateBulk(builders ...*LocationtsCreate) *LocationtsCreateBulk {
+	return &LocationtsCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for Locationts.
+func (c *LocationtsClient) Update() *LocationtsUpdate {
+	mutation := newLocationtsMutation(c.config, OpUpdate)
+	return &LocationtsUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *LocationtsClient) UpdateOne(l *Locationts) *LocationtsUpdateOne {
+	mutation := newLocationtsMutation(c.config, OpUpdateOne, withLocationts(l))
+	return &LocationtsUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *LocationtsClient) UpdateOneID(id int) *LocationtsUpdateOne {
+	mutation := newLocationtsMutation(c.config, OpUpdateOne, withLocationtsID(id))
+	return &LocationtsUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for Locationts.
+func (c *LocationtsClient) Delete() *LocationtsDelete {
+	mutation := newLocationtsMutation(c.config, OpDelete)
+	return &LocationtsDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a delete builder for the given entity.
+func (c *LocationtsClient) DeleteOne(l *Locationts) *LocationtsDeleteOne {
+	return c.DeleteOneID(l.ID)
+}
+
+// DeleteOneID returns a delete builder for the given id.
+func (c *LocationtsClient) DeleteOneID(id int) *LocationtsDeleteOne {
+	builder := c.Delete().Where(locationts.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &LocationtsDeleteOne{builder}
+}
+
+// Query returns a query builder for Locationts.
+func (c *LocationtsClient) Query() *LocationtsQuery {
+	return &LocationtsQuery{
+		config: c.config,
+	}
+}
+
+// Get returns a Locationts entity by its id.
+func (c *LocationtsClient) Get(ctx context.Context, id int) (*Locationts, error) {
+	return c.Query().Where(locationts.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *LocationtsClient) GetX(ctx context.Context, id int) *Locationts {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *LocationtsClient) Hooks() []Hook {
+	return c.hooks.Locationts
 }
 
 // PermissionClient is a client for the Permission schema.
@@ -474,112 +662,6 @@ func (c *PermissionClient) QueryGroups(pe *Permission) *GroupQuery {
 // Hooks returns the client hooks.
 func (c *PermissionClient) Hooks() []Hook {
 	return c.hooks.Permission
-}
-
-// RoleClient is a client for the Role schema.
-type RoleClient struct {
-	config
-}
-
-// NewRoleClient returns a client for the Role from the given config.
-func NewRoleClient(c config) *RoleClient {
-	return &RoleClient{config: c}
-}
-
-// Use adds a list of mutation hooks to the hooks stack.
-// A call to `Use(f, g, h)` equals to `role.Hooks(f(g(h())))`.
-func (c *RoleClient) Use(hooks ...Hook) {
-	c.hooks.Role = append(c.hooks.Role, hooks...)
-}
-
-// Create returns a create builder for Role.
-func (c *RoleClient) Create() *RoleCreate {
-	mutation := newRoleMutation(c.config, OpCreate)
-	return &RoleCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// CreateBulk returns a builder for creating a bulk of Role entities.
-func (c *RoleClient) CreateBulk(builders ...*RoleCreate) *RoleCreateBulk {
-	return &RoleCreateBulk{config: c.config, builders: builders}
-}
-
-// Update returns an update builder for Role.
-func (c *RoleClient) Update() *RoleUpdate {
-	mutation := newRoleMutation(c.config, OpUpdate)
-	return &RoleUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// UpdateOne returns an update builder for the given entity.
-func (c *RoleClient) UpdateOne(r *Role) *RoleUpdateOne {
-	mutation := newRoleMutation(c.config, OpUpdateOne, withRole(r))
-	return &RoleUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// UpdateOneID returns an update builder for the given id.
-func (c *RoleClient) UpdateOneID(id int) *RoleUpdateOne {
-	mutation := newRoleMutation(c.config, OpUpdateOne, withRoleID(id))
-	return &RoleUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// Delete returns a delete builder for Role.
-func (c *RoleClient) Delete() *RoleDelete {
-	mutation := newRoleMutation(c.config, OpDelete)
-	return &RoleDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// DeleteOne returns a delete builder for the given entity.
-func (c *RoleClient) DeleteOne(r *Role) *RoleDeleteOne {
-	return c.DeleteOneID(r.ID)
-}
-
-// DeleteOneID returns a delete builder for the given id.
-func (c *RoleClient) DeleteOneID(id int) *RoleDeleteOne {
-	builder := c.Delete().Where(role.ID(id))
-	builder.mutation.id = &id
-	builder.mutation.op = OpDeleteOne
-	return &RoleDeleteOne{builder}
-}
-
-// Query returns a query builder for Role.
-func (c *RoleClient) Query() *RoleQuery {
-	return &RoleQuery{
-		config: c.config,
-	}
-}
-
-// Get returns a Role entity by its id.
-func (c *RoleClient) Get(ctx context.Context, id int) (*Role, error) {
-	return c.Query().Where(role.ID(id)).Only(ctx)
-}
-
-// GetX is like Get, but panics if an error occurs.
-func (c *RoleClient) GetX(ctx context.Context, id int) *Role {
-	obj, err := c.Get(ctx, id)
-	if err != nil {
-		panic(err)
-	}
-	return obj
-}
-
-// QueryUsers queries the users edge of a Role.
-func (c *RoleClient) QueryUsers(r *Role) *UserQuery {
-	query := &UserQuery{config: c.config}
-	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
-		id := r.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(role.Table, role.FieldID, id),
-			sqlgraph.To(user.Table, user.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, role.UsersTable, role.UsersColumn),
-		)
-		fromV = sqlgraph.Neighbors(r.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
-// Hooks returns the client hooks.
-func (c *RoleClient) Hooks() []Hook {
-	return c.hooks.Role
 }
 
 // StatusesClient is a client for the Statuses schema.

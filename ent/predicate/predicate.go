@@ -6,17 +6,20 @@ import (
 	"entgo.io/ent/dialect/sql"
 )
 
+// Equipment is the predicate function for equipment builders.
+type Equipment func(*sql.Selector)
+
 // Group is the predicate function for group builders.
 type Group func(*sql.Selector)
 
-// Kind is the predicate function for kind builders.
-type Kind func(*sql.Selector)
+// Kinds is the predicate function for kinds builders.
+type Kinds func(*sql.Selector)
+
+// Locationts is the predicate function for locationts builders.
+type Locationts func(*sql.Selector)
 
 // Permission is the predicate function for permission builders.
 type Permission func(*sql.Selector)
-
-// Role is the predicate function for role builders.
-type Role func(*sql.Selector)
 
 // Statuses is the predicate function for statuses builders.
 type Statuses func(*sql.Selector)

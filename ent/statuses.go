@@ -12,11 +12,9 @@ import (
 
 // Statuses is the model entity for the Statuses schema.
 type Statuses struct {
-	config `json:"-"`
+	config
 	// ID of the ent.
 	ID int `json:"id,omitempty"`
-	// Name holds the value of the "name" field.
-	Name string `json:"name,omitempty"`
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -26,8 +24,6 @@ func (*Statuses) scanValues(columns []string) ([]interface{}, error) {
 		switch columns[i] {
 		case statuses.FieldID:
 			values[i] = new(sql.NullInt64)
-		case statuses.FieldName:
-			values[i] = new(sql.NullString)
 		default:
 			return nil, fmt.Errorf("unexpected column %q for type Statuses", columns[i])
 		}
@@ -49,12 +45,6 @@ func (s *Statuses) assignValues(columns []string, values []interface{}) error {
 				return fmt.Errorf("unexpected type %T for field id", value)
 			}
 			s.ID = int(value.Int64)
-		case statuses.FieldName:
-			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field name", values[i])
-			} else if value.Valid {
-				s.Name = value.String
-			}
 		}
 	}
 	return nil
@@ -83,8 +73,6 @@ func (s *Statuses) String() string {
 	var builder strings.Builder
 	builder.WriteString("Statuses(")
 	builder.WriteString(fmt.Sprintf("id=%v", s.ID))
-	builder.WriteString(", name=")
-	builder.WriteString(s.Name)
 	builder.WriteByte(')')
 	return builder.String()
 }

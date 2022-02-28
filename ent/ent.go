@@ -8,10 +8,11 @@ import (
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
+	"git.epam.com/epm-lstr/epm-lstr-lc/be/ent/equipment"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/ent/group"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/ent/kind"
+	"git.epam.com/epm-lstr/epm-lstr-lc/be/ent/kinds"
+	"git.epam.com/epm-lstr/epm-lstr-lc/be/ent/locationts"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/ent/permission"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/ent/role"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/ent/statuses"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/ent/user"
 )
@@ -34,10 +35,11 @@ type OrderFunc func(*sql.Selector)
 // columnChecker returns a function indicates if the column exists in the given column.
 func columnChecker(table string) func(string) error {
 	checks := map[string]func(string) bool{
+		equipment.Table:  equipment.ValidColumn,
 		group.Table:      group.ValidColumn,
-		kind.Table:       kind.ValidColumn,
+		kinds.Table:      kinds.ValidColumn,
+		locationts.Table: locationts.ValidColumn,
 		permission.Table: permission.ValidColumn,
-		role.Table:       role.ValidColumn,
 		statuses.Table:   statuses.ValidColumn,
 		user.Table:       user.ValidColumn,
 	}

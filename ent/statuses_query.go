@@ -249,19 +249,6 @@ func (sq *StatusesQuery) Clone() *StatusesQuery {
 
 // GroupBy is used to group vertices by one or more fields/columns.
 // It is often used with aggregate functions, like: count, max, mean, min, sum.
-//
-// Example:
-//
-//	var v []struct {
-//		Name string `json:"name,omitempty"`
-//		Count int `json:"count,omitempty"`
-//	}
-//
-//	client.Statuses.Query().
-//		GroupBy(statuses.FieldName).
-//		Aggregate(ent.Count()).
-//		Scan(ctx, &v)
-//
 func (sq *StatusesQuery) GroupBy(field string, fields ...string) *StatusesGroupBy {
 	group := &StatusesGroupBy{config: sq.config}
 	group.fields = append([]string{field}, fields...)
@@ -276,17 +263,6 @@ func (sq *StatusesQuery) GroupBy(field string, fields ...string) *StatusesGroupB
 
 // Select allows the selection one or more fields/columns for the given query,
 // instead of selecting all fields in the entity.
-//
-// Example:
-//
-//	var v []struct {
-//		Name string `json:"name,omitempty"`
-//	}
-//
-//	client.Statuses.Query().
-//		Select(statuses.FieldName).
-//		Scan(ctx, &v)
-//
 func (sq *StatusesQuery) Select(fields ...string) *StatusesSelect {
 	sq.fields = append(sq.fields, fields...)
 	return &StatusesSelect{StatusesQuery: sq}

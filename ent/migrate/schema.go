@@ -8,6 +8,24 @@ import (
 )
 
 var (
+	// EquipmentColumns holds the columns for the "equipment" table.
+	EquipmentColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID},
+		{Name: "sku", Type: field.TypeString, Default: "unknown"},
+		{Name: "name", Type: field.TypeString, Default: "unknown"},
+		{Name: "kinds", Type: field.TypeUUID},
+		{Name: "statuses", Type: field.TypeUUID},
+		{Name: "rate_hour", Type: field.TypeFloat64},
+		{Name: "rate_day", Type: field.TypeFloat64},
+		{Name: "locations", Type: field.TypeUUID},
+		{Name: "description", Type: field.TypeString, Default: "unknown"},
+	}
+	// EquipmentTable holds the schema information for the "equipment" table.
+	EquipmentTable = &schema.Table{
+		Name:       "equipment",
+		Columns:    EquipmentColumns,
+		PrimaryKey: []*schema.Column{EquipmentColumns[0]},
+	}
 	// GroupsColumns holds the columns for the "groups" table.
 	GroupsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
@@ -21,13 +39,22 @@ var (
 	// KindsColumns holds the columns for the "kinds" table.
 	KindsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
-		{Name: "name", Type: field.TypeString, Default: "unknown"},
 	}
 	// KindsTable holds the schema information for the "kinds" table.
 	KindsTable = &schema.Table{
 		Name:       "kinds",
 		Columns:    KindsColumns,
 		PrimaryKey: []*schema.Column{KindsColumns[0]},
+	}
+	// LocationtsColumns holds the columns for the "locationts" table.
+	LocationtsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+	}
+	// LocationtsTable holds the schema information for the "locationts" table.
+	LocationtsTable = &schema.Table{
+		Name:       "locationts",
+		Columns:    LocationtsColumns,
+		PrimaryKey: []*schema.Column{LocationtsColumns[0]},
 	}
 	// PermissionsColumns holds the columns for the "permissions" table.
 	PermissionsColumns = []*schema.Column{
@@ -40,22 +67,9 @@ var (
 		Columns:    PermissionsColumns,
 		PrimaryKey: []*schema.Column{PermissionsColumns[0]},
 	}
-	// RolesColumns holds the columns for the "roles" table.
-	RolesColumns = []*schema.Column{
-		{Name: "id", Type: field.TypeInt, Increment: true},
-		{Name: "name", Type: field.TypeString},
-		{Name: "slug", Type: field.TypeString, Unique: true},
-	}
-	// RolesTable holds the schema information for the "roles" table.
-	RolesTable = &schema.Table{
-		Name:       "roles",
-		Columns:    RolesColumns,
-		PrimaryKey: []*schema.Column{RolesColumns[0]},
-	}
 	// StatusesColumns holds the columns for the "statuses" table.
 	StatusesColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
-		{Name: "name", Type: field.TypeString, Unique: true},
 	}
 	// StatusesTable holds the schema information for the "statuses" table.
 	StatusesTable = &schema.Table{
@@ -67,21 +81,12 @@ var (
 	UsersColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
 		{Name: "name", Type: field.TypeString, Default: "unknown"},
-		{Name: "role_users", Type: field.TypeInt, Nullable: true},
 	}
 	// UsersTable holds the schema information for the "users" table.
 	UsersTable = &schema.Table{
 		Name:       "users",
 		Columns:    UsersColumns,
 		PrimaryKey: []*schema.Column{UsersColumns[0]},
-		ForeignKeys: []*schema.ForeignKey{
-			{
-				Symbol:     "users_roles_users",
-				Columns:    []*schema.Column{UsersColumns[2]},
-				RefColumns: []*schema.Column{RolesColumns[0]},
-				OnDelete:   schema.SetNull,
-			},
-		},
 	}
 	// GroupUsersColumns holds the columns for the "group_users" table.
 	GroupUsersColumns = []*schema.Column{
@@ -135,10 +140,11 @@ var (
 	}
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
+		EquipmentTable,
 		GroupsTable,
 		KindsTable,
+		LocationtsTable,
 		PermissionsTable,
-		RolesTable,
 		StatusesTable,
 		UsersTable,
 		GroupUsersTable,
@@ -147,7 +153,6 @@ var (
 )
 
 func init() {
-	UsersTable.ForeignKeys[0].RefTable = RolesTable
 	GroupUsersTable.ForeignKeys[0].RefTable = GroupsTable
 	GroupUsersTable.ForeignKeys[1].RefTable = UsersTable
 	GroupPermissionsTable.ForeignKeys[0].RefTable = GroupsTable

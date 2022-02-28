@@ -1,9 +1,6 @@
 package schema
 
-import (
-	"entgo.io/ent"
-	"entgo.io/ent/schema/field"
-)
+import "entgo.io/ent"
 
 // Statuses holds the schema definition for the Statuses entity.
 type Statuses struct {
@@ -12,9 +9,7 @@ type Statuses struct {
 
 // Fields of the Statuses.
 func (Statuses) Fields() []ent.Field {
-	return []ent.Field{
-		field.String("name").Unique(),
-	}
+	return nil
 }
 
 // Edges of the Statuses.

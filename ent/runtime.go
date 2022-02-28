@@ -3,9 +3,8 @@
 package ent
 
 import (
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/ent/kind"
+	"git.epam.com/epm-lstr/epm-lstr-lc/be/ent/equipment"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/ent/permission"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/ent/role"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/ent/schema"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/ent/user"
 )
@@ -14,28 +13,26 @@ import (
 // (default values, validators, hooks and policies) and stitches it
 // to their package variables.
 func init() {
-	kindFields := schema.Kind{}.Fields()
-	_ = kindFields
-	// kindDescName is the schema descriptor for name field.
-	kindDescName := kindFields[0].Descriptor()
-	// kind.DefaultName holds the default value on creation for the name field.
-	kind.DefaultName = kindDescName.Default.(string)
+	equipmentFields := schema.Equipment{}.Fields()
+	_ = equipmentFields
+	// equipmentDescSku is the schema descriptor for sku field.
+	equipmentDescSku := equipmentFields[1].Descriptor()
+	// equipment.DefaultSku holds the default value on creation for the sku field.
+	equipment.DefaultSku = equipmentDescSku.Default.(string)
+	// equipmentDescName is the schema descriptor for name field.
+	equipmentDescName := equipmentFields[2].Descriptor()
+	// equipment.DefaultName holds the default value on creation for the name field.
+	equipment.DefaultName = equipmentDescName.Default.(string)
+	// equipmentDescDescription is the schema descriptor for description field.
+	equipmentDescDescription := equipmentFields[8].Descriptor()
+	// equipment.DefaultDescription holds the default value on creation for the description field.
+	equipment.DefaultDescription = equipmentDescDescription.Default.(string)
 	permissionFields := schema.Permission{}.Fields()
 	_ = permissionFields
 	// permissionDescName is the schema descriptor for name field.
 	permissionDescName := permissionFields[0].Descriptor()
 	// permission.DefaultName holds the default value on creation for the name field.
 	permission.DefaultName = permissionDescName.Default.(string)
-	roleFields := schema.Role{}.Fields()
-	_ = roleFields
-	// roleDescName is the schema descriptor for name field.
-	roleDescName := roleFields[0].Descriptor()
-	// role.NameValidator is a validator for the "name" field. It is called by the builders before save.
-	role.NameValidator = roleDescName.Validators[0].(func(string) error)
-	// roleDescSlug is the schema descriptor for slug field.
-	roleDescSlug := roleFields[1].Descriptor()
-	// role.SlugValidator is a validator for the "slug" field. It is called by the builders before save.
-	role.SlugValidator = roleDescSlug.Validators[0].(func(string) error)
 	userFields := schema.User{}.Fields()
 	_ = userFields
 	// userDescName is the schema descriptor for name field.
