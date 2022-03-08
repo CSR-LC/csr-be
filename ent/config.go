@@ -27,7 +27,7 @@ type hooks struct {
 	Equipment  []ent.Hook
 	Group      []ent.Hook
 	Kinds      []ent.Hook
-	Locationts []ent.Hook
+	Locations  []ent.Hook
 	Permission []ent.Hook
 	Statuses   []ent.Hook
 	User       []ent.Hook

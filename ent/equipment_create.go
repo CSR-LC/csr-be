@@ -10,6 +10,9 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/ent/equipment"
+	"git.epam.com/epm-lstr/epm-lstr-lc/be/ent/kinds"
+	"git.epam.com/epm-lstr/epm-lstr-lc/be/ent/locations"
+	"git.epam.com/epm-lstr/epm-lstr-lc/be/ent/statuses"
 	"github.com/gofrs/uuid"
 )
 
@@ -96,6 +99,51 @@ func (ec *EquipmentCreate) SetNillableDescription(s *string) *EquipmentCreate {
 func (ec *EquipmentCreate) SetID(u uuid.UUID) *EquipmentCreate {
 	ec.mutation.SetID(u)
 	return ec
+}
+
+// AddKindIDs adds the "kinds" edge to the Kinds entity by IDs.
+func (ec *EquipmentCreate) AddKindIDs(ids ...int) *EquipmentCreate {
+	ec.mutation.AddKindIDs(ids...)
+	return ec
+}
+
+// AddKinds adds the "kinds" edges to the Kinds entity.
+func (ec *EquipmentCreate) AddKinds(k ...*Kinds) *EquipmentCreate {
+	ids := make([]int, len(k))
+	for i := range k {
+		ids[i] = k[i].ID
+	}
+	return ec.AddKindIDs(ids...)
+}
+
+// AddStatusIDs adds the "statuses" edge to the Statuses entity by IDs.
+func (ec *EquipmentCreate) AddStatusIDs(ids ...int) *EquipmentCreate {
+	ec.mutation.AddStatusIDs(ids...)
+	return ec
+}
+
+// AddStatuses adds the "statuses" edges to the Statuses entity.
+func (ec *EquipmentCreate) AddStatuses(s ...*Statuses) *EquipmentCreate {
+	ids := make([]int, len(s))
+	for i := range s {
+		ids[i] = s[i].ID
+	}
+	return ec.AddStatusIDs(ids...)
+}
+
+// AddLocationIDs adds the "locations" edge to the Locations entity by IDs.
+func (ec *EquipmentCreate) AddLocationIDs(ids ...int) *EquipmentCreate {
+	ec.mutation.AddLocationIDs(ids...)
+	return ec
+}
+
+// AddLocations adds the "locations" edges to the Locations entity.
+func (ec *EquipmentCreate) AddLocations(l ...*Locations) *EquipmentCreate {
+	ids := make([]int, len(l))
+	for i := range l {
+		ids[i] = l[i].ID
+	}
+	return ec.AddLocationIDs(ids...)
 }
 
 // Mutation returns the EquipmentMutation object of the builder.
@@ -308,6 +356,63 @@ func (ec *EquipmentCreate) createSpec() (*Equipment, *sqlgraph.CreateSpec) {
 			Column: equipment.FieldDescription,
 		})
 		_node.Description = value
+	}
+	if nodes := ec.mutation.KindsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   equipment.KindsTable,
+			Columns: []string{equipment.KindsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: kinds.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := ec.mutation.StatusesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   equipment.StatusesTable,
+			Columns: []string{equipment.StatusesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: statuses.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := ec.mutation.LocationsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   equipment.LocationsTable,
+			Columns: []string{equipment.LocationsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: locations.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec
 }

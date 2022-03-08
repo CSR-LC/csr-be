@@ -15,8 +15,8 @@ type Group func(*sql.Selector)
 // Kinds is the predicate function for kinds builders.
 type Kinds func(*sql.Selector)
 
-// Locationts is the predicate function for locationts builders.
-type Locationts func(*sql.Selector)
+// Locations is the predicate function for locations builders.
+type Locations func(*sql.Selector)
 
 // Permission is the predicate function for permission builders.
 type Permission func(*sql.Selector)

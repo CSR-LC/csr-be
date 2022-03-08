@@ -24,6 +24,7 @@ type KindsQuery struct {
 	order      []OrderFunc
 	fields     []string
 	predicates []predicate.Kinds
+	withFKs    bool
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -286,9 +287,13 @@ func (kq *KindsQuery) prepareQuery(ctx context.Context) error {
 
 func (kq *KindsQuery) sqlAll(ctx context.Context) ([]*Kinds, error) {
 	var (
-		nodes = []*Kinds{}
-		_spec = kq.querySpec()
+		nodes   = []*Kinds{}
+		withFKs = kq.withFKs
+		_spec   = kq.querySpec()
 	)
+	if withFKs {
+		_spec.Node.Columns = append(_spec.Node.Columns, kinds.ForeignKeys...)
+	}
 	_spec.ScanValues = func(columns []string) ([]interface{}, error) {
 		node := &Kinds{config: kq.config}
 		nodes = append(nodes, node)

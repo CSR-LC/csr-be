@@ -6,7 +6,7 @@ info:
     The API provides CSR backend API.
 
 basePath: /api/
-schemes: 
+schemes:
   - http
 securityDefinitions:
   Bearer:
@@ -18,7 +18,7 @@ consumes:
 produces:
   - application/json
 
-paths:  
+paths:
   /v1/users:
     post:
       summary: Register a new user.
@@ -74,148 +74,68 @@ paths:
           description: Unexpected error
           schema:
             $ref: "#/definitions/Error"
-  /equipment/statuses:
+  /equipment:
     post:
-      summary: Creating a new status.
+      summary: Register a new equipment
       tags:
-        - Status
-      operationId: postStatus
+        - Equipment
+      operationId: CreateNewEquipment
+      consumes:
+        - application/json
       parameters:
-        - name: name
+        - name: newEquipment
           in: body
-          description: Status Name
+          description: Create a new equipment
           required: true
           schema:
-            $ref: "#/definitions/StatusName"
+            $ref: "#/definitions/Equipment"
       responses:
         201:
-          description: Status has been created
-          schema: 
-            $ref: "#/definitions/SuccessStatusOperationResponse" 
+          description: Equipment created
+          schema:
+            $ref: "#/definitions/EquipmentResponse"
         default:
           description: Unexpected error.
           schema:
             $ref: "#/definitions/Error"
-    get:
-      summary: List all statuses.
-      tags:
-        - Status
-      operationId: GetStatuses
-      responses:
-        201:
-          description: Success
-          schema:
-            $ref: "#/definitions/ListStatuses"
-        default:
-          description: Unexpected error.
-          schema:
-            $ref: "#/definitions/Error"
-  /equipment/statuses/{statusId}:
+  /equipment/{equipmentId}:
     parameters:
-      - name: statusId
+      - name: equipmentId
         in: path
         required: true
-        description: status id
+        description: equipment id
         type: string
     get:
-      summary: Get status by id
+      summary: Get equipment by id
       tags:
-        - Status
-      operationId: GetStatus
+        - Equipment
+      operationId: GetEquipment
       responses:
         201:
-          description: Status has been created
-          schema: 
-            $ref: "#/definitions/SuccessStatusOperationResponse" 
+          description: Equipment has been found
+          schema:
+            $ref: "#/definitions/Equipment"
         default:
           description: Unexpected error.
           schema:
             $ref: "#/definitions/Error"
     delete:
-      summary: Delete status by id
+      summary: Delete equipment by id
       tags:
-        - Status
-      operationId: DeleteStatus
+        - Equipment
+      operationId: DeleteEquipment
       responses:
         201:
-          description: Status has been created
-          schema: 
-            $ref: "#/definitions/SuccessStatusOperationResponse" 
-        default:
-          description: Unexpected error.
+          description: Equipment has been deleted
           schema:
-            $ref: "#/definitions/Error"  
-  /equipment/kinds:
-    get:
-      summary: Get all kinds.
-      tags:
-        - Kinds
-      operationId: GetAllKinds
-      responses:
-        200:
-          description: Success
-          schema:
-            $ref: "#/definitions/ListOfKinds"
+            $ref: "#/definitions/Equipment"
         default:
           description: Unexpected error.
           schema:
             $ref: "#/definitions/Error"
-    post:
-      summary: Create a new kind.
-      tags:
-        - Kinds
-      operationId: CreateNewKind
-      parameters:
-        - name: name
-          in: body
-          description: Name of a kind
-          required: true
-          schema:
-            $ref: "#/definitions/CreateNewKind"      
-      responses:
-        201:
-          description: Success
-          schema:
-            $ref: "#/definitions/CreateNewKindResponse"
-        default:
-          description: Unexpected error.
-          schema:
-            $ref: "#/definitions/Error"
-  /equipment/kinds/{kindId}:
-    parameters:
-      - name: kindId
-        in: path
-        required: true
-        description: kind id
-        type: string
-    get:
-      summary: Get information about the kind of equipment by id.
-      tags:
-        - Kinds
-      operationId: getKindByID
-      responses:
-        200:
-          description: Success
-          schema:
-            $ref: "#/definitions/GetKindByIDResponse"
-        default:
-          description: Unexpected error.
-          schema:
-            $ref: "#/definitions/Error"
-    delete:
-      summary: Delete kind of equipment from db by id.
-      tags:
-        - Kinds
-      operationId: deleteKind
-      responses:
-        201:
-          description: kind of equipment successfully deleted from db 
-          schema:
-            $ref: "#/definitions/DeleteKindResponse"
-        default:
-          description: Unexpected error.
-          schema:
-            $ref: "#/definitions/Error"            
+
+
+
 
 definitions:
   Error:
@@ -293,79 +213,88 @@ definitions:
     properties:
       data:
         $ref: "#/definitions/User"
-
-  #Status
-  Status:
+  # Equipment
+  Equipment:
+    type: object
+    required:
+      - sku
+      - name
+      - kind
+      - status
+      - rate_hour
+      - rate_day
+      - location
+      - description
+      - photo
+    properties:
+      sku:
+        type: string
+        example: "ABC012345678"
+      name:
+        type: string
+        example: "Dog harness 3000"
+      kind:
+        type: integer
+        example: 5
+      status:
+        type: integer
+        example: 1
+      rate_hour:
+        type: integer
+        example: 110
+      rate_day:
+        type: integer
+        example: 950
+      location:
+        type: integer
+        example: 71
+      description:
+        type: string
+        example: "This is a dog harness.\nWARNING: do not put on cats!"
+      photo:
+        type: string
+        example: "https://..."
+  EquipmentResponse:
     type: object
     required:
       - id
+      - sku
       - name
+      - kind
+      - status
+      - rate_hour
+      - rate_day
+      - location
+      - description
+      - photo
     properties:
       id:
         type: string
+        example: 2
+      sku:
+        type: string
+        example: "ABC012345678"
       name:
         type: string
-  ListStatuses:
-    type: array
-    items:
-      $ref: "#/definitions/Status"
-  SuccessStatusOperationResponse:
-    type: object
-    required:
-      - data 
-    properties:
-      data:
-        $ref: "#/definitions/Status"
-  StatusName:          
-    type: object
-    required: 
-      - name
-    properties:
-      name: 
+        example: "Dog harness 3000"
+      kind:
+        type: integer
+        example: 5
+      status:
+        type: integer
+        example: 1
+      rate_hour:
+        type: integer
+        example: 110
+      rate_day:
+        type: integer
+        example: 950
+      location:
+        type: integer
+        example: 71
+      description:
         type: string
-  # Kind
-  Kind:
-    type: object
-    required:
-      - id
-      - name
-    properties:
-      id:
+        example: "This is a dog harness.\nWARNING: do not put on cats!"
+      photo:
         type: string
-      name:
-        type: string
-  ListOfKinds:
-    type: array
-    items:
-     $ref: "#/definitions/Kind"
-  GetKindByIDResponse:
-    type: object
-    required:
-      - data
-    properties:
-      data:
-        $ref: "#/definitions/Kind"
-  DeleteKindResponse:
-   type: object
-   required:
-    - data
-   properties:
-    data:
-      $ref: "#/definitions/Kind"
-  CreateNewKind:
-   type: object  
-   required:
-    - data
-   properties:
-    data:
-      $ref: "#/definitions/Kind"    
-  CreateNewKindResponse:
-   type: object  
-   required:
-    - data
-   properties:
-    data:
-      $ref: "#/definitions/Kind"
-
-
-
+        example: "https://..."

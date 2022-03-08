@@ -13,7 +13,7 @@ import (
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/ent/equipment"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/ent/group"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/ent/kinds"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/ent/locationts"
+	"git.epam.com/epm-lstr/epm-lstr-lc/be/ent/locations"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/ent/permission"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/ent/statuses"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/ent/user"
@@ -34,8 +34,8 @@ type Client struct {
 	Group *GroupClient
 	// Kinds is the client for interacting with the Kinds builders.
 	Kinds *KindsClient
-	// Locationts is the client for interacting with the Locationts builders.
-	Locationts *LocationtsClient
+	// Locations is the client for interacting with the Locations builders.
+	Locations *LocationsClient
 	// Permission is the client for interacting with the Permission builders.
 	Permission *PermissionClient
 	// Statuses is the client for interacting with the Statuses builders.
@@ -58,7 +58,7 @@ func (c *Client) init() {
 	c.Equipment = NewEquipmentClient(c.config)
 	c.Group = NewGroupClient(c.config)
 	c.Kinds = NewKindsClient(c.config)
-	c.Locationts = NewLocationtsClient(c.config)
+	c.Locations = NewLocationsClient(c.config)
 	c.Permission = NewPermissionClient(c.config)
 	c.Statuses = NewStatusesClient(c.config)
 	c.User = NewUserClient(c.config)
@@ -98,7 +98,7 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		Equipment:  NewEquipmentClient(cfg),
 		Group:      NewGroupClient(cfg),
 		Kinds:      NewKindsClient(cfg),
-		Locationts: NewLocationtsClient(cfg),
+		Locations:  NewLocationsClient(cfg),
 		Permission: NewPermissionClient(cfg),
 		Statuses:   NewStatusesClient(cfg),
 		User:       NewUserClient(cfg),
@@ -124,7 +124,7 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		Equipment:  NewEquipmentClient(cfg),
 		Group:      NewGroupClient(cfg),
 		Kinds:      NewKindsClient(cfg),
-		Locationts: NewLocationtsClient(cfg),
+		Locations:  NewLocationsClient(cfg),
 		Permission: NewPermissionClient(cfg),
 		Statuses:   NewStatusesClient(cfg),
 		User:       NewUserClient(cfg),
@@ -160,7 +160,7 @@ func (c *Client) Use(hooks ...Hook) {
 	c.Equipment.Use(hooks...)
 	c.Group.Use(hooks...)
 	c.Kinds.Use(hooks...)
-	c.Locationts.Use(hooks...)
+	c.Locations.Use(hooks...)
 	c.Permission.Use(hooks...)
 	c.Statuses.Use(hooks...)
 	c.User.Use(hooks...)
@@ -249,6 +249,54 @@ func (c *EquipmentClient) GetX(ctx context.Context, id uuid.UUID) *Equipment {
 		panic(err)
 	}
 	return obj
+}
+
+// QueryKinds queries the kinds edge of a Equipment.
+func (c *EquipmentClient) QueryKinds(e *Equipment) *KindsQuery {
+	query := &KindsQuery{config: c.config}
+	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
+		id := e.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(equipment.Table, equipment.FieldID, id),
+			sqlgraph.To(kinds.Table, kinds.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, equipment.KindsTable, equipment.KindsColumn),
+		)
+		fromV = sqlgraph.Neighbors(e.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryStatuses queries the statuses edge of a Equipment.
+func (c *EquipmentClient) QueryStatuses(e *Equipment) *StatusesQuery {
+	query := &StatusesQuery{config: c.config}
+	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
+		id := e.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(equipment.Table, equipment.FieldID, id),
+			sqlgraph.To(statuses.Table, statuses.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, equipment.StatusesTable, equipment.StatusesColumn),
+		)
+		fromV = sqlgraph.Neighbors(e.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryLocations queries the locations edge of a Equipment.
+func (c *EquipmentClient) QueryLocations(e *Equipment) *LocationsQuery {
+	query := &LocationsQuery{config: c.config}
+	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
+		id := e.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(equipment.Table, equipment.FieldID, id),
+			sqlgraph.To(locations.Table, locations.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, equipment.LocationsTable, equipment.LocationsColumn),
+		)
+		fromV = sqlgraph.Neighbors(e.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
 }
 
 // Hooks returns the client hooks.
@@ -468,84 +516,84 @@ func (c *KindsClient) Hooks() []Hook {
 	return c.hooks.Kinds
 }
 
-// LocationtsClient is a client for the Locationts schema.
-type LocationtsClient struct {
+// LocationsClient is a client for the Locations schema.
+type LocationsClient struct {
 	config
 }
 
-// NewLocationtsClient returns a client for the Locationts from the given config.
-func NewLocationtsClient(c config) *LocationtsClient {
-	return &LocationtsClient{config: c}
+// NewLocationsClient returns a client for the Locations from the given config.
+func NewLocationsClient(c config) *LocationsClient {
+	return &LocationsClient{config: c}
 }
 
 // Use adds a list of mutation hooks to the hooks stack.
-// A call to `Use(f, g, h)` equals to `locationts.Hooks(f(g(h())))`.
-func (c *LocationtsClient) Use(hooks ...Hook) {
-	c.hooks.Locationts = append(c.hooks.Locationts, hooks...)
+// A call to `Use(f, g, h)` equals to `locations.Hooks(f(g(h())))`.
+func (c *LocationsClient) Use(hooks ...Hook) {
+	c.hooks.Locations = append(c.hooks.Locations, hooks...)
 }
 
-// Create returns a create builder for Locationts.
-func (c *LocationtsClient) Create() *LocationtsCreate {
-	mutation := newLocationtsMutation(c.config, OpCreate)
-	return &LocationtsCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+// Create returns a create builder for Locations.
+func (c *LocationsClient) Create() *LocationsCreate {
+	mutation := newLocationsMutation(c.config, OpCreate)
+	return &LocationsCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
 
-// CreateBulk returns a builder for creating a bulk of Locationts entities.
-func (c *LocationtsClient) CreateBulk(builders ...*LocationtsCreate) *LocationtsCreateBulk {
-	return &LocationtsCreateBulk{config: c.config, builders: builders}
+// CreateBulk returns a builder for creating a bulk of Locations entities.
+func (c *LocationsClient) CreateBulk(builders ...*LocationsCreate) *LocationsCreateBulk {
+	return &LocationsCreateBulk{config: c.config, builders: builders}
 }
 
-// Update returns an update builder for Locationts.
-func (c *LocationtsClient) Update() *LocationtsUpdate {
-	mutation := newLocationtsMutation(c.config, OpUpdate)
-	return &LocationtsUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+// Update returns an update builder for Locations.
+func (c *LocationsClient) Update() *LocationsUpdate {
+	mutation := newLocationsMutation(c.config, OpUpdate)
+	return &LocationsUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
 
 // UpdateOne returns an update builder for the given entity.
-func (c *LocationtsClient) UpdateOne(l *Locationts) *LocationtsUpdateOne {
-	mutation := newLocationtsMutation(c.config, OpUpdateOne, withLocationts(l))
-	return &LocationtsUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+func (c *LocationsClient) UpdateOne(l *Locations) *LocationsUpdateOne {
+	mutation := newLocationsMutation(c.config, OpUpdateOne, withLocations(l))
+	return &LocationsUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
 
 // UpdateOneID returns an update builder for the given id.
-func (c *LocationtsClient) UpdateOneID(id int) *LocationtsUpdateOne {
-	mutation := newLocationtsMutation(c.config, OpUpdateOne, withLocationtsID(id))
-	return &LocationtsUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+func (c *LocationsClient) UpdateOneID(id int) *LocationsUpdateOne {
+	mutation := newLocationsMutation(c.config, OpUpdateOne, withLocationsID(id))
+	return &LocationsUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
 
-// Delete returns a delete builder for Locationts.
-func (c *LocationtsClient) Delete() *LocationtsDelete {
-	mutation := newLocationtsMutation(c.config, OpDelete)
-	return &LocationtsDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+// Delete returns a delete builder for Locations.
+func (c *LocationsClient) Delete() *LocationsDelete {
+	mutation := newLocationsMutation(c.config, OpDelete)
+	return &LocationsDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
 
 // DeleteOne returns a delete builder for the given entity.
-func (c *LocationtsClient) DeleteOne(l *Locationts) *LocationtsDeleteOne {
+func (c *LocationsClient) DeleteOne(l *Locations) *LocationsDeleteOne {
 	return c.DeleteOneID(l.ID)
 }
 
 // DeleteOneID returns a delete builder for the given id.
-func (c *LocationtsClient) DeleteOneID(id int) *LocationtsDeleteOne {
-	builder := c.Delete().Where(locationts.ID(id))
+func (c *LocationsClient) DeleteOneID(id int) *LocationsDeleteOne {
+	builder := c.Delete().Where(locations.ID(id))
 	builder.mutation.id = &id
 	builder.mutation.op = OpDeleteOne
-	return &LocationtsDeleteOne{builder}
+	return &LocationsDeleteOne{builder}
 }
 
-// Query returns a query builder for Locationts.
-func (c *LocationtsClient) Query() *LocationtsQuery {
-	return &LocationtsQuery{
+// Query returns a query builder for Locations.
+func (c *LocationsClient) Query() *LocationsQuery {
+	return &LocationsQuery{
 		config: c.config,
 	}
 }
 
-// Get returns a Locationts entity by its id.
-func (c *LocationtsClient) Get(ctx context.Context, id int) (*Locationts, error) {
-	return c.Query().Where(locationts.ID(id)).Only(ctx)
+// Get returns a Locations entity by its id.
+func (c *LocationsClient) Get(ctx context.Context, id int) (*Locations, error) {
+	return c.Query().Where(locations.ID(id)).Only(ctx)
 }
 
 // GetX is like Get, but panics if an error occurs.
-func (c *LocationtsClient) GetX(ctx context.Context, id int) *Locationts {
+func (c *LocationsClient) GetX(ctx context.Context, id int) *Locations {
 	obj, err := c.Get(ctx, id)
 	if err != nil {
 		panic(err)
@@ -554,8 +602,8 @@ func (c *LocationtsClient) GetX(ctx context.Context, id int) *Locationts {
 }
 
 // Hooks returns the client hooks.
-func (c *LocationtsClient) Hooks() []Hook {
-	return c.hooks.Locationts
+func (c *LocationsClient) Hooks() []Hook {
+	return c.hooks.Locations
 }
 
 // PermissionClient is a client for the Permission schema.

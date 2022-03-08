@@ -39,22 +39,40 @@ var (
 	// KindsColumns holds the columns for the "kinds" table.
 	KindsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "equipment_kinds", Type: field.TypeUUID, Nullable: true},
 	}
 	// KindsTable holds the schema information for the "kinds" table.
 	KindsTable = &schema.Table{
 		Name:       "kinds",
 		Columns:    KindsColumns,
 		PrimaryKey: []*schema.Column{KindsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "kinds_equipment_kinds",
+				Columns:    []*schema.Column{KindsColumns[1]},
+				RefColumns: []*schema.Column{EquipmentColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+		},
 	}
-	// LocationtsColumns holds the columns for the "locationts" table.
-	LocationtsColumns = []*schema.Column{
+	// LocationsColumns holds the columns for the "locations" table.
+	LocationsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "equipment_locations", Type: field.TypeUUID, Nullable: true},
 	}
-	// LocationtsTable holds the schema information for the "locationts" table.
-	LocationtsTable = &schema.Table{
-		Name:       "locationts",
-		Columns:    LocationtsColumns,
-		PrimaryKey: []*schema.Column{LocationtsColumns[0]},
+	// LocationsTable holds the schema information for the "locations" table.
+	LocationsTable = &schema.Table{
+		Name:       "locations",
+		Columns:    LocationsColumns,
+		PrimaryKey: []*schema.Column{LocationsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "locations_equipment_locations",
+				Columns:    []*schema.Column{LocationsColumns[1]},
+				RefColumns: []*schema.Column{EquipmentColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+		},
 	}
 	// PermissionsColumns holds the columns for the "permissions" table.
 	PermissionsColumns = []*schema.Column{
@@ -70,12 +88,21 @@ var (
 	// StatusesColumns holds the columns for the "statuses" table.
 	StatusesColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "equipment_statuses", Type: field.TypeUUID, Nullable: true},
 	}
 	// StatusesTable holds the schema information for the "statuses" table.
 	StatusesTable = &schema.Table{
 		Name:       "statuses",
 		Columns:    StatusesColumns,
 		PrimaryKey: []*schema.Column{StatusesColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "statuses_equipment_statuses",
+				Columns:    []*schema.Column{StatusesColumns[1]},
+				RefColumns: []*schema.Column{EquipmentColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+		},
 	}
 	// UsersColumns holds the columns for the "users" table.
 	UsersColumns = []*schema.Column{
@@ -143,7 +170,7 @@ var (
 		EquipmentTable,
 		GroupsTable,
 		KindsTable,
-		LocationtsTable,
+		LocationsTable,
 		PermissionsTable,
 		StatusesTable,
 		UsersTable,
@@ -153,6 +180,9 @@ var (
 )
 
 func init() {
+	KindsTable.ForeignKeys[0].RefTable = EquipmentTable
+	LocationsTable.ForeignKeys[0].RefTable = EquipmentTable
+	StatusesTable.ForeignKeys[0].RefTable = EquipmentTable
 	GroupUsersTable.ForeignKeys[0].RefTable = GroupsTable
 	GroupUsersTable.ForeignKeys[1].RefTable = UsersTable
 	GroupPermissionsTable.ForeignKeys[0].RefTable = GroupsTable

@@ -23,8 +23,35 @@ const (
 	FieldLocation = "locations"
 	// FieldDescription holds the string denoting the description field in the database.
 	FieldDescription = "description"
+	// EdgeKinds holds the string denoting the kinds edge name in mutations.
+	EdgeKinds = "kinds"
+	// EdgeStatuses holds the string denoting the statuses edge name in mutations.
+	EdgeStatuses = "statuses"
+	// EdgeLocations holds the string denoting the locations edge name in mutations.
+	EdgeLocations = "locations"
 	// Table holds the table name of the equipment in the database.
 	Table = "equipment"
+	// KindsTable is the table that holds the kinds relation/edge.
+	KindsTable = "kinds"
+	// KindsInverseTable is the table name for the Kinds entity.
+	// It exists in this package in order to avoid circular dependency with the "kinds" package.
+	KindsInverseTable = "kinds"
+	// KindsColumn is the table column denoting the kinds relation/edge.
+	KindsColumn = "equipment_kinds"
+	// StatusesTable is the table that holds the statuses relation/edge.
+	StatusesTable = "statuses"
+	// StatusesInverseTable is the table name for the Statuses entity.
+	// It exists in this package in order to avoid circular dependency with the "statuses" package.
+	StatusesInverseTable = "statuses"
+	// StatusesColumn is the table column denoting the statuses relation/edge.
+	StatusesColumn = "equipment_statuses"
+	// LocationsTable is the table that holds the locations relation/edge.
+	LocationsTable = "locations"
+	// LocationsInverseTable is the table name for the Locations entity.
+	// It exists in this package in order to avoid circular dependency with the "locations" package.
+	LocationsInverseTable = "locations"
+	// LocationsColumn is the table column denoting the locations relation/edge.
+	LocationsColumn = "equipment_locations"
 )
 
 // Columns holds all SQL columns for equipment fields.

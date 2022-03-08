@@ -4,6 +4,7 @@ package equipment
 
 import (
 	"entgo.io/ent/dialect/sql"
+	"entgo.io/ent/dialect/sql/sqlgraph"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/ent/predicate"
 	"github.com/gofrs/uuid"
 )
@@ -857,6 +858,90 @@ func DescriptionEqualFold(v string) predicate.Equipment {
 func DescriptionContainsFold(v string) predicate.Equipment {
 	return predicate.Equipment(func(s *sql.Selector) {
 		s.Where(sql.ContainsFold(s.C(FieldDescription), v))
+	})
+}
+
+// HasKinds applies the HasEdge predicate on the "kinds" edge.
+func HasKinds() predicate.Equipment {
+	return predicate.Equipment(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.To(KindsTable, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, KindsTable, KindsColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasKindsWith applies the HasEdge predicate on the "kinds" edge with a given conditions (other predicates).
+func HasKindsWith(preds ...predicate.Kinds) predicate.Equipment {
+	return predicate.Equipment(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.To(KindsInverseTable, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, KindsTable, KindsColumn),
+		)
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasStatuses applies the HasEdge predicate on the "statuses" edge.
+func HasStatuses() predicate.Equipment {
+	return predicate.Equipment(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.To(StatusesTable, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, StatusesTable, StatusesColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasStatusesWith applies the HasEdge predicate on the "statuses" edge with a given conditions (other predicates).
+func HasStatusesWith(preds ...predicate.Statuses) predicate.Equipment {
+	return predicate.Equipment(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.To(StatusesInverseTable, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, StatusesTable, StatusesColumn),
+		)
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasLocations applies the HasEdge predicate on the "locations" edge.
+func HasLocations() predicate.Equipment {
+	return predicate.Equipment(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.To(LocationsTable, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, LocationsTable, LocationsColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasLocationsWith applies the HasEdge predicate on the "locations" edge with a given conditions (other predicates).
+func HasLocationsWith(preds ...predicate.Locations) predicate.Equipment {
+	return predicate.Equipment(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.To(LocationsInverseTable, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, LocationsTable, LocationsColumn),
+		)
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
 	})
 }
 

@@ -30,7 +30,7 @@ const (
 	TypeEquipment  = "Equipment"
 	TypeGroup      = "Group"
 	TypeKinds      = "Kinds"
-	TypeLocationts = "Locationts"
+	TypeLocations  = "Locations"
 	TypePermission = "Permission"
 	TypeStatuses   = "Statuses"
 	TypeUser       = "User"
@@ -39,23 +39,32 @@ const (
 // EquipmentMutation represents an operation that mutates the Equipment nodes in the graph.
 type EquipmentMutation struct {
 	config
-	op            Op
-	typ           string
-	id            *uuid.UUID
-	sku           *string
-	name          *string
-	kind          *uuid.UUID
-	status        *uuid.UUID
-	rate_hour     *float64
-	addrate_hour  *float64
-	rate_day      *float64
-	addrate_day   *float64
-	location      *uuid.UUID
-	description   *string
-	clearedFields map[string]struct{}
-	done          bool
-	oldValue      func(context.Context) (*Equipment, error)
-	predicates    []predicate.Equipment
+	op               Op
+	typ              string
+	id               *uuid.UUID
+	sku              *string
+	name             *string
+	kind             *uuid.UUID
+	status           *uuid.UUID
+	rate_hour        *float64
+	addrate_hour     *float64
+	rate_day         *float64
+	addrate_day      *float64
+	location         *uuid.UUID
+	description      *string
+	clearedFields    map[string]struct{}
+	kinds            map[int]struct{}
+	removedkinds     map[int]struct{}
+	clearedkinds     bool
+	statuses         map[int]struct{}
+	removedstatuses  map[int]struct{}
+	clearedstatuses  bool
+	locations        map[int]struct{}
+	removedlocations map[int]struct{}
+	clearedlocations bool
+	done             bool
+	oldValue         func(context.Context) (*Equipment, error)
+	predicates       []predicate.Equipment
 }
 
 var _ ent.Mutation = (*EquipmentMutation)(nil)
@@ -490,6 +499,168 @@ func (m *EquipmentMutation) ResetDescription() {
 	m.description = nil
 }
 
+// AddKindIDs adds the "kinds" edge to the Kinds entity by ids.
+func (m *EquipmentMutation) AddKindIDs(ids ...int) {
+	if m.kinds == nil {
+		m.kinds = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.kinds[ids[i]] = struct{}{}
+	}
+}
+
+// ClearKinds clears the "kinds" edge to the Kinds entity.
+func (m *EquipmentMutation) ClearKinds() {
+	m.clearedkinds = true
+}
+
+// KindsCleared reports if the "kinds" edge to the Kinds entity was cleared.
+func (m *EquipmentMutation) KindsCleared() bool {
+	return m.clearedkinds
+}
+
+// RemoveKindIDs removes the "kinds" edge to the Kinds entity by IDs.
+func (m *EquipmentMutation) RemoveKindIDs(ids ...int) {
+	if m.removedkinds == nil {
+		m.removedkinds = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.kinds, ids[i])
+		m.removedkinds[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedKinds returns the removed IDs of the "kinds" edge to the Kinds entity.
+func (m *EquipmentMutation) RemovedKindsIDs() (ids []int) {
+	for id := range m.removedkinds {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// KindsIDs returns the "kinds" edge IDs in the mutation.
+func (m *EquipmentMutation) KindsIDs() (ids []int) {
+	for id := range m.kinds {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetKinds resets all changes to the "kinds" edge.
+func (m *EquipmentMutation) ResetKinds() {
+	m.kinds = nil
+	m.clearedkinds = false
+	m.removedkinds = nil
+}
+
+// AddStatusIDs adds the "statuses" edge to the Statuses entity by ids.
+func (m *EquipmentMutation) AddStatusIDs(ids ...int) {
+	if m.statuses == nil {
+		m.statuses = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.statuses[ids[i]] = struct{}{}
+	}
+}
+
+// ClearStatuses clears the "statuses" edge to the Statuses entity.
+func (m *EquipmentMutation) ClearStatuses() {
+	m.clearedstatuses = true
+}
+
+// StatusesCleared reports if the "statuses" edge to the Statuses entity was cleared.
+func (m *EquipmentMutation) StatusesCleared() bool {
+	return m.clearedstatuses
+}
+
+// RemoveStatusIDs removes the "statuses" edge to the Statuses entity by IDs.
+func (m *EquipmentMutation) RemoveStatusIDs(ids ...int) {
+	if m.removedstatuses == nil {
+		m.removedstatuses = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.statuses, ids[i])
+		m.removedstatuses[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedStatuses returns the removed IDs of the "statuses" edge to the Statuses entity.
+func (m *EquipmentMutation) RemovedStatusesIDs() (ids []int) {
+	for id := range m.removedstatuses {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// StatusesIDs returns the "statuses" edge IDs in the mutation.
+func (m *EquipmentMutation) StatusesIDs() (ids []int) {
+	for id := range m.statuses {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetStatuses resets all changes to the "statuses" edge.
+func (m *EquipmentMutation) ResetStatuses() {
+	m.statuses = nil
+	m.clearedstatuses = false
+	m.removedstatuses = nil
+}
+
+// AddLocationIDs adds the "locations" edge to the Locations entity by ids.
+func (m *EquipmentMutation) AddLocationIDs(ids ...int) {
+	if m.locations == nil {
+		m.locations = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.locations[ids[i]] = struct{}{}
+	}
+}
+
+// ClearLocations clears the "locations" edge to the Locations entity.
+func (m *EquipmentMutation) ClearLocations() {
+	m.clearedlocations = true
+}
+
+// LocationsCleared reports if the "locations" edge to the Locations entity was cleared.
+func (m *EquipmentMutation) LocationsCleared() bool {
+	return m.clearedlocations
+}
+
+// RemoveLocationIDs removes the "locations" edge to the Locations entity by IDs.
+func (m *EquipmentMutation) RemoveLocationIDs(ids ...int) {
+	if m.removedlocations == nil {
+		m.removedlocations = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.locations, ids[i])
+		m.removedlocations[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedLocations returns the removed IDs of the "locations" edge to the Locations entity.
+func (m *EquipmentMutation) RemovedLocationsIDs() (ids []int) {
+	for id := range m.removedlocations {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// LocationsIDs returns the "locations" edge IDs in the mutation.
+func (m *EquipmentMutation) LocationsIDs() (ids []int) {
+	for id := range m.locations {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetLocations resets all changes to the "locations" edge.
+func (m *EquipmentMutation) ResetLocations() {
+	m.locations = nil
+	m.clearedlocations = false
+	m.removedlocations = nil
+}
+
 // Where appends a list predicates to the EquipmentMutation builder.
 func (m *EquipmentMutation) Where(ps ...predicate.Equipment) {
 	m.predicates = append(m.predicates, ps...)
@@ -754,49 +925,137 @@ func (m *EquipmentMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *EquipmentMutation) AddedEdges() []string {
-	edges := make([]string, 0, 0)
+	edges := make([]string, 0, 3)
+	if m.kinds != nil {
+		edges = append(edges, equipment.EdgeKinds)
+	}
+	if m.statuses != nil {
+		edges = append(edges, equipment.EdgeStatuses)
+	}
+	if m.locations != nil {
+		edges = append(edges, equipment.EdgeLocations)
+	}
 	return edges
 }
 
 // AddedIDs returns all IDs (to other nodes) that were added for the given edge
 // name in this mutation.
 func (m *EquipmentMutation) AddedIDs(name string) []ent.Value {
+	switch name {
+	case equipment.EdgeKinds:
+		ids := make([]ent.Value, 0, len(m.kinds))
+		for id := range m.kinds {
+			ids = append(ids, id)
+		}
+		return ids
+	case equipment.EdgeStatuses:
+		ids := make([]ent.Value, 0, len(m.statuses))
+		for id := range m.statuses {
+			ids = append(ids, id)
+		}
+		return ids
+	case equipment.EdgeLocations:
+		ids := make([]ent.Value, 0, len(m.locations))
+		for id := range m.locations {
+			ids = append(ids, id)
+		}
+		return ids
+	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *EquipmentMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 0)
+	edges := make([]string, 0, 3)
+	if m.removedkinds != nil {
+		edges = append(edges, equipment.EdgeKinds)
+	}
+	if m.removedstatuses != nil {
+		edges = append(edges, equipment.EdgeStatuses)
+	}
+	if m.removedlocations != nil {
+		edges = append(edges, equipment.EdgeLocations)
+	}
 	return edges
 }
 
 // RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
 // the given name in this mutation.
 func (m *EquipmentMutation) RemovedIDs(name string) []ent.Value {
+	switch name {
+	case equipment.EdgeKinds:
+		ids := make([]ent.Value, 0, len(m.removedkinds))
+		for id := range m.removedkinds {
+			ids = append(ids, id)
+		}
+		return ids
+	case equipment.EdgeStatuses:
+		ids := make([]ent.Value, 0, len(m.removedstatuses))
+		for id := range m.removedstatuses {
+			ids = append(ids, id)
+		}
+		return ids
+	case equipment.EdgeLocations:
+		ids := make([]ent.Value, 0, len(m.removedlocations))
+		for id := range m.removedlocations {
+			ids = append(ids, id)
+		}
+		return ids
+	}
 	return nil
 }
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *EquipmentMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 0)
+	edges := make([]string, 0, 3)
+	if m.clearedkinds {
+		edges = append(edges, equipment.EdgeKinds)
+	}
+	if m.clearedstatuses {
+		edges = append(edges, equipment.EdgeStatuses)
+	}
+	if m.clearedlocations {
+		edges = append(edges, equipment.EdgeLocations)
+	}
 	return edges
 }
 
 // EdgeCleared returns a boolean which indicates if the edge with the given name
 // was cleared in this mutation.
 func (m *EquipmentMutation) EdgeCleared(name string) bool {
+	switch name {
+	case equipment.EdgeKinds:
+		return m.clearedkinds
+	case equipment.EdgeStatuses:
+		return m.clearedstatuses
+	case equipment.EdgeLocations:
+		return m.clearedlocations
+	}
 	return false
 }
 
 // ClearEdge clears the value of the edge with the given name. It returns an error
 // if that edge is not defined in the schema.
 func (m *EquipmentMutation) ClearEdge(name string) error {
+	switch name {
+	}
 	return fmt.Errorf("unknown Equipment unique edge %s", name)
 }
 
 // ResetEdge resets all changes to the edge with the given name in this mutation.
 // It returns an error if the edge is not defined in the schema.
 func (m *EquipmentMutation) ResetEdge(name string) error {
+	switch name {
+	case equipment.EdgeKinds:
+		m.ResetKinds()
+		return nil
+	case equipment.EdgeStatuses:
+		m.ResetStatuses()
+		return nil
+	case equipment.EdgeLocations:
+		m.ResetLocations()
+		return nil
+	}
 	return fmt.Errorf("unknown Equipment edge %s", name)
 }
 
@@ -1474,29 +1733,29 @@ func (m *KindsMutation) ResetEdge(name string) error {
 	return fmt.Errorf("unknown Kinds edge %s", name)
 }
 
-// LocationtsMutation represents an operation that mutates the Locationts nodes in the graph.
-type LocationtsMutation struct {
+// LocationsMutation represents an operation that mutates the Locations nodes in the graph.
+type LocationsMutation struct {
 	config
 	op            Op
 	typ           string
 	id            *int
 	clearedFields map[string]struct{}
 	done          bool
-	oldValue      func(context.Context) (*Locationts, error)
-	predicates    []predicate.Locationts
+	oldValue      func(context.Context) (*Locations, error)
+	predicates    []predicate.Locations
 }
 
-var _ ent.Mutation = (*LocationtsMutation)(nil)
+var _ ent.Mutation = (*LocationsMutation)(nil)
 
-// locationtsOption allows management of the mutation configuration using functional options.
-type locationtsOption func(*LocationtsMutation)
+// locationsOption allows management of the mutation configuration using functional options.
+type locationsOption func(*LocationsMutation)
 
-// newLocationtsMutation creates new mutation for the Locationts entity.
-func newLocationtsMutation(c config, op Op, opts ...locationtsOption) *LocationtsMutation {
-	m := &LocationtsMutation{
+// newLocationsMutation creates new mutation for the Locations entity.
+func newLocationsMutation(c config, op Op, opts ...locationsOption) *LocationsMutation {
+	m := &LocationsMutation{
 		config:        c,
 		op:            op,
-		typ:           TypeLocationts,
+		typ:           TypeLocations,
 		clearedFields: make(map[string]struct{}),
 	}
 	for _, opt := range opts {
@@ -1505,20 +1764,20 @@ func newLocationtsMutation(c config, op Op, opts ...locationtsOption) *Locationt
 	return m
 }
 
-// withLocationtsID sets the ID field of the mutation.
-func withLocationtsID(id int) locationtsOption {
-	return func(m *LocationtsMutation) {
+// withLocationsID sets the ID field of the mutation.
+func withLocationsID(id int) locationsOption {
+	return func(m *LocationsMutation) {
 		var (
 			err   error
 			once  sync.Once
-			value *Locationts
+			value *Locations
 		)
-		m.oldValue = func(ctx context.Context) (*Locationts, error) {
+		m.oldValue = func(ctx context.Context) (*Locations, error) {
 			once.Do(func() {
 				if m.done {
 					err = errors.New("querying old values post mutation is not allowed")
 				} else {
-					value, err = m.Client().Locationts.Get(ctx, id)
+					value, err = m.Client().Locations.Get(ctx, id)
 				}
 			})
 			return value, err
@@ -1527,10 +1786,10 @@ func withLocationtsID(id int) locationtsOption {
 	}
 }
 
-// withLocationts sets the old Locationts of the mutation.
-func withLocationts(node *Locationts) locationtsOption {
-	return func(m *LocationtsMutation) {
-		m.oldValue = func(context.Context) (*Locationts, error) {
+// withLocations sets the old Locations of the mutation.
+func withLocations(node *Locations) locationsOption {
+	return func(m *LocationsMutation) {
+		m.oldValue = func(context.Context) (*Locations, error) {
 			return node, nil
 		}
 		m.id = &node.ID
@@ -1539,7 +1798,7 @@ func withLocationts(node *Locationts) locationtsOption {
 
 // Client returns a new `ent.Client` from the mutation. If the mutation was
 // executed in a transaction (ent.Tx), a transactional client is returned.
-func (m LocationtsMutation) Client() *Client {
+func (m LocationsMutation) Client() *Client {
 	client := &Client{config: m.config}
 	client.init()
 	return client
@@ -1547,7 +1806,7 @@ func (m LocationtsMutation) Client() *Client {
 
 // Tx returns an `ent.Tx` for mutations that were executed in transactions;
 // it returns an error otherwise.
-func (m LocationtsMutation) Tx() (*Tx, error) {
+func (m LocationsMutation) Tx() (*Tx, error) {
 	if _, ok := m.driver.(*txDriver); !ok {
 		return nil, errors.New("ent: mutation is not running in a transaction")
 	}
@@ -1558,7 +1817,7 @@ func (m LocationtsMutation) Tx() (*Tx, error) {
 
 // ID returns the ID value in the mutation. Note that the ID is only available
 // if it was provided to the builder or after it was returned from the database.
-func (m *LocationtsMutation) ID() (id int, exists bool) {
+func (m *LocationsMutation) ID() (id int, exists bool) {
 	if m.id == nil {
 		return
 	}
@@ -1569,7 +1828,7 @@ func (m *LocationtsMutation) ID() (id int, exists bool) {
 // That means, if the mutation is applied within a transaction with an isolation level such
 // as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
 // or updated by the mutation.
-func (m *LocationtsMutation) IDs(ctx context.Context) ([]int, error) {
+func (m *LocationsMutation) IDs(ctx context.Context) ([]int, error) {
 	switch {
 	case m.op.Is(OpUpdateOne | OpDeleteOne):
 		id, exists := m.ID()
@@ -1578,31 +1837,31 @@ func (m *LocationtsMutation) IDs(ctx context.Context) ([]int, error) {
 		}
 		fallthrough
 	case m.op.Is(OpUpdate | OpDelete):
-		return m.Client().Locationts.Query().Where(m.predicates...).IDs(ctx)
+		return m.Client().Locations.Query().Where(m.predicates...).IDs(ctx)
 	default:
 		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
 	}
 }
 
-// Where appends a list predicates to the LocationtsMutation builder.
-func (m *LocationtsMutation) Where(ps ...predicate.Locationts) {
+// Where appends a list predicates to the LocationsMutation builder.
+func (m *LocationsMutation) Where(ps ...predicate.Locations) {
 	m.predicates = append(m.predicates, ps...)
 }
 
 // Op returns the operation name.
-func (m *LocationtsMutation) Op() Op {
+func (m *LocationsMutation) Op() Op {
 	return m.op
 }
 
-// Type returns the node type of this mutation (Locationts).
-func (m *LocationtsMutation) Type() string {
+// Type returns the node type of this mutation (Locations).
+func (m *LocationsMutation) Type() string {
 	return m.typ
 }
 
 // Fields returns all fields that were changed during this mutation. Note that in
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
-func (m *LocationtsMutation) Fields() []string {
+func (m *LocationsMutation) Fields() []string {
 	fields := make([]string, 0, 0)
 	return fields
 }
@@ -1610,117 +1869,117 @@ func (m *LocationtsMutation) Fields() []string {
 // Field returns the value of a field with the given name. The second boolean
 // return value indicates that this field was not set, or was not defined in the
 // schema.
-func (m *LocationtsMutation) Field(name string) (ent.Value, bool) {
+func (m *LocationsMutation) Field(name string) (ent.Value, bool) {
 	return nil, false
 }
 
 // OldField returns the old value of the field from the database. An error is
 // returned if the mutation operation is not UpdateOne, or the query to the
 // database failed.
-func (m *LocationtsMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
-	return nil, fmt.Errorf("unknown Locationts field %s", name)
+func (m *LocationsMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	return nil, fmt.Errorf("unknown Locations field %s", name)
 }
 
 // SetField sets the value of a field with the given name. It returns an error if
 // the field is not defined in the schema, or if the type mismatched the field
 // type.
-func (m *LocationtsMutation) SetField(name string, value ent.Value) error {
+func (m *LocationsMutation) SetField(name string, value ent.Value) error {
 	switch name {
 	}
-	return fmt.Errorf("unknown Locationts field %s", name)
+	return fmt.Errorf("unknown Locations field %s", name)
 }
 
 // AddedFields returns all numeric fields that were incremented/decremented during
 // this mutation.
-func (m *LocationtsMutation) AddedFields() []string {
+func (m *LocationsMutation) AddedFields() []string {
 	return nil
 }
 
 // AddedField returns the numeric value that was incremented/decremented on a field
 // with the given name. The second boolean return value indicates that this field
 // was not set, or was not defined in the schema.
-func (m *LocationtsMutation) AddedField(name string) (ent.Value, bool) {
+func (m *LocationsMutation) AddedField(name string) (ent.Value, bool) {
 	return nil, false
 }
 
 // AddField adds the value to the field with the given name. It returns an error if
 // the field is not defined in the schema, or if the type mismatched the field
 // type.
-func (m *LocationtsMutation) AddField(name string, value ent.Value) error {
-	return fmt.Errorf("unknown Locationts numeric field %s", name)
+func (m *LocationsMutation) AddField(name string, value ent.Value) error {
+	return fmt.Errorf("unknown Locations numeric field %s", name)
 }
 
 // ClearedFields returns all nullable fields that were cleared during this
 // mutation.
-func (m *LocationtsMutation) ClearedFields() []string {
+func (m *LocationsMutation) ClearedFields() []string {
 	return nil
 }
 
 // FieldCleared returns a boolean indicating if a field with the given name was
 // cleared in this mutation.
-func (m *LocationtsMutation) FieldCleared(name string) bool {
+func (m *LocationsMutation) FieldCleared(name string) bool {
 	_, ok := m.clearedFields[name]
 	return ok
 }
 
 // ClearField clears the value of the field with the given name. It returns an
 // error if the field is not defined in the schema.
-func (m *LocationtsMutation) ClearField(name string) error {
-	return fmt.Errorf("unknown Locationts nullable field %s", name)
+func (m *LocationsMutation) ClearField(name string) error {
+	return fmt.Errorf("unknown Locations nullable field %s", name)
 }
 
 // ResetField resets all changes in the mutation for the field with the given name.
 // It returns an error if the field is not defined in the schema.
-func (m *LocationtsMutation) ResetField(name string) error {
-	return fmt.Errorf("unknown Locationts field %s", name)
+func (m *LocationsMutation) ResetField(name string) error {
+	return fmt.Errorf("unknown Locations field %s", name)
 }
 
 // AddedEdges returns all edge names that were set/added in this mutation.
-func (m *LocationtsMutation) AddedEdges() []string {
+func (m *LocationsMutation) AddedEdges() []string {
 	edges := make([]string, 0, 0)
 	return edges
 }
 
 // AddedIDs returns all IDs (to other nodes) that were added for the given edge
 // name in this mutation.
-func (m *LocationtsMutation) AddedIDs(name string) []ent.Value {
+func (m *LocationsMutation) AddedIDs(name string) []ent.Value {
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
-func (m *LocationtsMutation) RemovedEdges() []string {
+func (m *LocationsMutation) RemovedEdges() []string {
 	edges := make([]string, 0, 0)
 	return edges
 }
 
 // RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
 // the given name in this mutation.
-func (m *LocationtsMutation) RemovedIDs(name string) []ent.Value {
+func (m *LocationsMutation) RemovedIDs(name string) []ent.Value {
 	return nil
 }
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
-func (m *LocationtsMutation) ClearedEdges() []string {
+func (m *LocationsMutation) ClearedEdges() []string {
 	edges := make([]string, 0, 0)
 	return edges
 }
 
 // EdgeCleared returns a boolean which indicates if the edge with the given name
 // was cleared in this mutation.
-func (m *LocationtsMutation) EdgeCleared(name string) bool {
+func (m *LocationsMutation) EdgeCleared(name string) bool {
 	return false
 }
 
 // ClearEdge clears the value of the edge with the given name. It returns an error
 // if that edge is not defined in the schema.
-func (m *LocationtsMutation) ClearEdge(name string) error {
-	return fmt.Errorf("unknown Locationts unique edge %s", name)
+func (m *LocationsMutation) ClearEdge(name string) error {
+	return fmt.Errorf("unknown Locations unique edge %s", name)
 }
 
 // ResetEdge resets all changes to the edge with the given name in this mutation.
 // It returns an error if the edge is not defined in the schema.
-func (m *LocationtsMutation) ResetEdge(name string) error {
-	return fmt.Errorf("unknown Locationts edge %s", name)
+func (m *LocationsMutation) ResetEdge(name string) error {
+	return fmt.Errorf("unknown Locations edge %s", name)
 }
 
 // PermissionMutation represents an operation that mutates the Permission nodes in the graph.

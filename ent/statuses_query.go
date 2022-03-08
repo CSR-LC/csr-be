@@ -24,6 +24,7 @@ type StatusesQuery struct {
 	order      []OrderFunc
 	fields     []string
 	predicates []predicate.Statuses
+	withFKs    bool
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -286,9 +287,13 @@ func (sq *StatusesQuery) prepareQuery(ctx context.Context) error {
 
 func (sq *StatusesQuery) sqlAll(ctx context.Context) ([]*Statuses, error) {
 	var (
-		nodes = []*Statuses{}
-		_spec = sq.querySpec()
+		nodes   = []*Statuses{}
+		withFKs = sq.withFKs
+		_spec   = sq.querySpec()
 	)
+	if withFKs {
+		_spec.Node.Columns = append(_spec.Node.Columns, statuses.ForeignKeys...)
+	}
 	_spec.ScanValues = func(columns []string) ([]interface{}, error) {
 		node := &Statuses{config: sq.config}
 		nodes = append(nodes, node)

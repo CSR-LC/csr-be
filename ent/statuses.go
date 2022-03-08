@@ -8,13 +8,15 @@ import (
 
 	"entgo.io/ent/dialect/sql"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/ent/statuses"
+	"github.com/gofrs/uuid"
 )
 
 // Statuses is the model entity for the Statuses schema.
 type Statuses struct {
 	config
 	// ID of the ent.
-	ID int `json:"id,omitempty"`
+	ID                 int `json:"id,omitempty"`
+	equipment_statuses *uuid.UUID
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -24,6 +26,8 @@ func (*Statuses) scanValues(columns []string) ([]interface{}, error) {
 		switch columns[i] {
 		case statuses.FieldID:
 			values[i] = new(sql.NullInt64)
+		case statuses.ForeignKeys[0]: // equipment_statuses
+			values[i] = &sql.NullScanner{S: new(uuid.UUID)}
 		default:
 			return nil, fmt.Errorf("unexpected column %q for type Statuses", columns[i])
 		}
@@ -45,6 +49,13 @@ func (s *Statuses) assignValues(columns []string, values []interface{}) error {
 				return fmt.Errorf("unexpected type %T for field id", value)
 			}
 			s.ID = int(value.Int64)
+		case statuses.ForeignKeys[0]:
+			if value, ok := values[i].(*sql.NullScanner); !ok {
+				return fmt.Errorf("unexpected type %T for field equipment_statuses", values[i])
+			} else if value.Valid {
+				s.equipment_statuses = new(uuid.UUID)
+				*s.equipment_statuses = *value.S.(*uuid.UUID)
+			}
 		}
 	}
 	return nil

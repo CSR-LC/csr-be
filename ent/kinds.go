@@ -8,13 +8,15 @@ import (
 
 	"entgo.io/ent/dialect/sql"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/ent/kinds"
+	"github.com/gofrs/uuid"
 )
 
 // Kinds is the model entity for the Kinds schema.
 type Kinds struct {
 	config
 	// ID of the ent.
-	ID int `json:"id,omitempty"`
+	ID              int `json:"id,omitempty"`
+	equipment_kinds *uuid.UUID
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -24,6 +26,8 @@ func (*Kinds) scanValues(columns []string) ([]interface{}, error) {
 		switch columns[i] {
 		case kinds.FieldID:
 			values[i] = new(sql.NullInt64)
+		case kinds.ForeignKeys[0]: // equipment_kinds
+			values[i] = &sql.NullScanner{S: new(uuid.UUID)}
 		default:
 			return nil, fmt.Errorf("unexpected column %q for type Kinds", columns[i])
 		}
@@ -45,6 +49,13 @@ func (k *Kinds) assignValues(columns []string, values []interface{}) error {
 				return fmt.Errorf("unexpected type %T for field id", value)
 			}
 			k.ID = int(value.Int64)
+		case kinds.ForeignKeys[0]:
+			if value, ok := values[i].(*sql.NullScanner); !ok {
+				return fmt.Errorf("unexpected type %T for field equipment_kinds", values[i])
+			} else if value.Valid {
+				k.equipment_kinds = new(uuid.UUID)
+				*k.equipment_kinds = *value.S.(*uuid.UUID)
+			}
 		}
 	}
 	return nil

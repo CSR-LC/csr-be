@@ -32,6 +32,49 @@ type Equipment struct {
 	Location uuid.UUID `json:"location,omitempty"`
 	// Description holds the value of the "description" field.
 	Description string `json:"description,omitempty"`
+	// Edges holds the relations/edges for other nodes in the graph.
+	// The values are being populated by the EquipmentQuery when eager-loading is set.
+	Edges EquipmentEdges `json:"edges"`
+}
+
+// EquipmentEdges holds the relations/edges for other nodes in the graph.
+type EquipmentEdges struct {
+	// Kinds holds the value of the kinds edge.
+	Kinds []*Kinds `json:"kinds,omitempty"`
+	// Statuses holds the value of the statuses edge.
+	Statuses []*Statuses `json:"statuses,omitempty"`
+	// Locations holds the value of the locations edge.
+	Locations []*Locations `json:"locations,omitempty"`
+	// loadedTypes holds the information for reporting if a
+	// type was loaded (or requested) in eager-loading or not.
+	loadedTypes [3]bool
+}
+
+// KindsOrErr returns the Kinds value or an error if the edge
+// was not loaded in eager-loading.
+func (e EquipmentEdges) KindsOrErr() ([]*Kinds, error) {
+	if e.loadedTypes[0] {
+		return e.Kinds, nil
+	}
+	return nil, &NotLoadedError{edge: "kinds"}
+}
+
+// StatusesOrErr returns the Statuses value or an error if the edge
+// was not loaded in eager-loading.
+func (e EquipmentEdges) StatusesOrErr() ([]*Statuses, error) {
+	if e.loadedTypes[1] {
+		return e.Statuses, nil
+	}
+	return nil, &NotLoadedError{edge: "statuses"}
+}
+
+// LocationsOrErr returns the Locations value or an error if the edge
+// was not loaded in eager-loading.
+func (e EquipmentEdges) LocationsOrErr() ([]*Locations, error) {
+	if e.loadedTypes[2] {
+		return e.Locations, nil
+	}
+	return nil, &NotLoadedError{edge: "locations"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -117,6 +160,21 @@ func (e *Equipment) assignValues(columns []string, values []interface{}) error {
 		}
 	}
 	return nil
+}
+
+// QueryKinds queries the "kinds" edge of the Equipment entity.
+func (e *Equipment) QueryKinds() *KindsQuery {
+	return (&EquipmentClient{config: e.config}).QueryKinds(e)
+}
+
+// QueryStatuses queries the "statuses" edge of the Equipment entity.
+func (e *Equipment) QueryStatuses() *StatusesQuery {
+	return (&EquipmentClient{config: e.config}).QueryStatuses(e)
+}
+
+// QueryLocations queries the "locations" edge of the Equipment entity.
+func (e *Equipment) QueryLocations() *LocationsQuery {
+	return (&EquipmentClient{config: e.config}).QueryLocations(e)
 }
 
 // Update returns a builder for updating this Equipment.

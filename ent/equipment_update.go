@@ -11,7 +11,10 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/ent/equipment"
+	"git.epam.com/epm-lstr/epm-lstr-lc/be/ent/kinds"
+	"git.epam.com/epm-lstr/epm-lstr-lc/be/ent/locations"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/ent/predicate"
+	"git.epam.com/epm-lstr/epm-lstr-lc/be/ent/statuses"
 	"github.com/gofrs/uuid"
 )
 
@@ -114,9 +117,117 @@ func (eu *EquipmentUpdate) SetNillableDescription(s *string) *EquipmentUpdate {
 	return eu
 }
 
+// AddKindIDs adds the "kinds" edge to the Kinds entity by IDs.
+func (eu *EquipmentUpdate) AddKindIDs(ids ...int) *EquipmentUpdate {
+	eu.mutation.AddKindIDs(ids...)
+	return eu
+}
+
+// AddKinds adds the "kinds" edges to the Kinds entity.
+func (eu *EquipmentUpdate) AddKinds(k ...*Kinds) *EquipmentUpdate {
+	ids := make([]int, len(k))
+	for i := range k {
+		ids[i] = k[i].ID
+	}
+	return eu.AddKindIDs(ids...)
+}
+
+// AddStatusIDs adds the "statuses" edge to the Statuses entity by IDs.
+func (eu *EquipmentUpdate) AddStatusIDs(ids ...int) *EquipmentUpdate {
+	eu.mutation.AddStatusIDs(ids...)
+	return eu
+}
+
+// AddStatuses adds the "statuses" edges to the Statuses entity.
+func (eu *EquipmentUpdate) AddStatuses(s ...*Statuses) *EquipmentUpdate {
+	ids := make([]int, len(s))
+	for i := range s {
+		ids[i] = s[i].ID
+	}
+	return eu.AddStatusIDs(ids...)
+}
+
+// AddLocationIDs adds the "locations" edge to the Locations entity by IDs.
+func (eu *EquipmentUpdate) AddLocationIDs(ids ...int) *EquipmentUpdate {
+	eu.mutation.AddLocationIDs(ids...)
+	return eu
+}
+
+// AddLocations adds the "locations" edges to the Locations entity.
+func (eu *EquipmentUpdate) AddLocations(l ...*Locations) *EquipmentUpdate {
+	ids := make([]int, len(l))
+	for i := range l {
+		ids[i] = l[i].ID
+	}
+	return eu.AddLocationIDs(ids...)
+}
+
 // Mutation returns the EquipmentMutation object of the builder.
 func (eu *EquipmentUpdate) Mutation() *EquipmentMutation {
 	return eu.mutation
+}
+
+// ClearKinds clears all "kinds" edges to the Kinds entity.
+func (eu *EquipmentUpdate) ClearKinds() *EquipmentUpdate {
+	eu.mutation.ClearKinds()
+	return eu
+}
+
+// RemoveKindIDs removes the "kinds" edge to Kinds entities by IDs.
+func (eu *EquipmentUpdate) RemoveKindIDs(ids ...int) *EquipmentUpdate {
+	eu.mutation.RemoveKindIDs(ids...)
+	return eu
+}
+
+// RemoveKinds removes "kinds" edges to Kinds entities.
+func (eu *EquipmentUpdate) RemoveKinds(k ...*Kinds) *EquipmentUpdate {
+	ids := make([]int, len(k))
+	for i := range k {
+		ids[i] = k[i].ID
+	}
+	return eu.RemoveKindIDs(ids...)
+}
+
+// ClearStatuses clears all "statuses" edges to the Statuses entity.
+func (eu *EquipmentUpdate) ClearStatuses() *EquipmentUpdate {
+	eu.mutation.ClearStatuses()
+	return eu
+}
+
+// RemoveStatusIDs removes the "statuses" edge to Statuses entities by IDs.
+func (eu *EquipmentUpdate) RemoveStatusIDs(ids ...int) *EquipmentUpdate {
+	eu.mutation.RemoveStatusIDs(ids...)
+	return eu
+}
+
+// RemoveStatuses removes "statuses" edges to Statuses entities.
+func (eu *EquipmentUpdate) RemoveStatuses(s ...*Statuses) *EquipmentUpdate {
+	ids := make([]int, len(s))
+	for i := range s {
+		ids[i] = s[i].ID
+	}
+	return eu.RemoveStatusIDs(ids...)
+}
+
+// ClearLocations clears all "locations" edges to the Locations entity.
+func (eu *EquipmentUpdate) ClearLocations() *EquipmentUpdate {
+	eu.mutation.ClearLocations()
+	return eu
+}
+
+// RemoveLocationIDs removes the "locations" edge to Locations entities by IDs.
+func (eu *EquipmentUpdate) RemoveLocationIDs(ids ...int) *EquipmentUpdate {
+	eu.mutation.RemoveLocationIDs(ids...)
+	return eu
+}
+
+// RemoveLocations removes "locations" edges to Locations entities.
+func (eu *EquipmentUpdate) RemoveLocations(l ...*Locations) *EquipmentUpdate {
+	ids := make([]int, len(l))
+	for i := range l {
+		ids[i] = l[i].ID
+	}
+	return eu.RemoveLocationIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -261,6 +372,168 @@ func (eu *EquipmentUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Column: equipment.FieldDescription,
 		})
 	}
+	if eu.mutation.KindsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   equipment.KindsTable,
+			Columns: []string{equipment.KindsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: kinds.FieldID,
+				},
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := eu.mutation.RemovedKindsIDs(); len(nodes) > 0 && !eu.mutation.KindsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   equipment.KindsTable,
+			Columns: []string{equipment.KindsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: kinds.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := eu.mutation.KindsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   equipment.KindsTable,
+			Columns: []string{equipment.KindsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: kinds.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if eu.mutation.StatusesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   equipment.StatusesTable,
+			Columns: []string{equipment.StatusesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: statuses.FieldID,
+				},
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := eu.mutation.RemovedStatusesIDs(); len(nodes) > 0 && !eu.mutation.StatusesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   equipment.StatusesTable,
+			Columns: []string{equipment.StatusesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: statuses.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := eu.mutation.StatusesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   equipment.StatusesTable,
+			Columns: []string{equipment.StatusesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: statuses.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if eu.mutation.LocationsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   equipment.LocationsTable,
+			Columns: []string{equipment.LocationsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: locations.FieldID,
+				},
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := eu.mutation.RemovedLocationsIDs(); len(nodes) > 0 && !eu.mutation.LocationsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   equipment.LocationsTable,
+			Columns: []string{equipment.LocationsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: locations.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := eu.mutation.LocationsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   equipment.LocationsTable,
+			Columns: []string{equipment.LocationsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: locations.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
 	if n, err = sqlgraph.UpdateNodes(ctx, eu.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{equipment.Label}
@@ -366,9 +639,117 @@ func (euo *EquipmentUpdateOne) SetNillableDescription(s *string) *EquipmentUpdat
 	return euo
 }
 
+// AddKindIDs adds the "kinds" edge to the Kinds entity by IDs.
+func (euo *EquipmentUpdateOne) AddKindIDs(ids ...int) *EquipmentUpdateOne {
+	euo.mutation.AddKindIDs(ids...)
+	return euo
+}
+
+// AddKinds adds the "kinds" edges to the Kinds entity.
+func (euo *EquipmentUpdateOne) AddKinds(k ...*Kinds) *EquipmentUpdateOne {
+	ids := make([]int, len(k))
+	for i := range k {
+		ids[i] = k[i].ID
+	}
+	return euo.AddKindIDs(ids...)
+}
+
+// AddStatusIDs adds the "statuses" edge to the Statuses entity by IDs.
+func (euo *EquipmentUpdateOne) AddStatusIDs(ids ...int) *EquipmentUpdateOne {
+	euo.mutation.AddStatusIDs(ids...)
+	return euo
+}
+
+// AddStatuses adds the "statuses" edges to the Statuses entity.
+func (euo *EquipmentUpdateOne) AddStatuses(s ...*Statuses) *EquipmentUpdateOne {
+	ids := make([]int, len(s))
+	for i := range s {
+		ids[i] = s[i].ID
+	}
+	return euo.AddStatusIDs(ids...)
+}
+
+// AddLocationIDs adds the "locations" edge to the Locations entity by IDs.
+func (euo *EquipmentUpdateOne) AddLocationIDs(ids ...int) *EquipmentUpdateOne {
+	euo.mutation.AddLocationIDs(ids...)
+	return euo
+}
+
+// AddLocations adds the "locations" edges to the Locations entity.
+func (euo *EquipmentUpdateOne) AddLocations(l ...*Locations) *EquipmentUpdateOne {
+	ids := make([]int, len(l))
+	for i := range l {
+		ids[i] = l[i].ID
+	}
+	return euo.AddLocationIDs(ids...)
+}
+
 // Mutation returns the EquipmentMutation object of the builder.
 func (euo *EquipmentUpdateOne) Mutation() *EquipmentMutation {
 	return euo.mutation
+}
+
+// ClearKinds clears all "kinds" edges to the Kinds entity.
+func (euo *EquipmentUpdateOne) ClearKinds() *EquipmentUpdateOne {
+	euo.mutation.ClearKinds()
+	return euo
+}
+
+// RemoveKindIDs removes the "kinds" edge to Kinds entities by IDs.
+func (euo *EquipmentUpdateOne) RemoveKindIDs(ids ...int) *EquipmentUpdateOne {
+	euo.mutation.RemoveKindIDs(ids...)
+	return euo
+}
+
+// RemoveKinds removes "kinds" edges to Kinds entities.
+func (euo *EquipmentUpdateOne) RemoveKinds(k ...*Kinds) *EquipmentUpdateOne {
+	ids := make([]int, len(k))
+	for i := range k {
+		ids[i] = k[i].ID
+	}
+	return euo.RemoveKindIDs(ids...)
+}
+
+// ClearStatuses clears all "statuses" edges to the Statuses entity.
+func (euo *EquipmentUpdateOne) ClearStatuses() *EquipmentUpdateOne {
+	euo.mutation.ClearStatuses()
+	return euo
+}
+
+// RemoveStatusIDs removes the "statuses" edge to Statuses entities by IDs.
+func (euo *EquipmentUpdateOne) RemoveStatusIDs(ids ...int) *EquipmentUpdateOne {
+	euo.mutation.RemoveStatusIDs(ids...)
+	return euo
+}
+
+// RemoveStatuses removes "statuses" edges to Statuses entities.
+func (euo *EquipmentUpdateOne) RemoveStatuses(s ...*Statuses) *EquipmentUpdateOne {
+	ids := make([]int, len(s))
+	for i := range s {
+		ids[i] = s[i].ID
+	}
+	return euo.RemoveStatusIDs(ids...)
+}
+
+// ClearLocations clears all "locations" edges to the Locations entity.
+func (euo *EquipmentUpdateOne) ClearLocations() *EquipmentUpdateOne {
+	euo.mutation.ClearLocations()
+	return euo
+}
+
+// RemoveLocationIDs removes the "locations" edge to Locations entities by IDs.
+func (euo *EquipmentUpdateOne) RemoveLocationIDs(ids ...int) *EquipmentUpdateOne {
+	euo.mutation.RemoveLocationIDs(ids...)
+	return euo
+}
+
+// RemoveLocations removes "locations" edges to Locations entities.
+func (euo *EquipmentUpdateOne) RemoveLocations(l ...*Locations) *EquipmentUpdateOne {
+	ids := make([]int, len(l))
+	for i := range l {
+		ids[i] = l[i].ID
+	}
+	return euo.RemoveLocationIDs(ids...)
 }
 
 // Select allows selecting one or more fields (columns) of the returned entity.
@@ -536,6 +917,168 @@ func (euo *EquipmentUpdateOne) sqlSave(ctx context.Context) (_node *Equipment, e
 			Value:  value,
 			Column: equipment.FieldDescription,
 		})
+	}
+	if euo.mutation.KindsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   equipment.KindsTable,
+			Columns: []string{equipment.KindsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: kinds.FieldID,
+				},
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := euo.mutation.RemovedKindsIDs(); len(nodes) > 0 && !euo.mutation.KindsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   equipment.KindsTable,
+			Columns: []string{equipment.KindsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: kinds.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := euo.mutation.KindsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   equipment.KindsTable,
+			Columns: []string{equipment.KindsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: kinds.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if euo.mutation.StatusesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   equipment.StatusesTable,
+			Columns: []string{equipment.StatusesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: statuses.FieldID,
+				},
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := euo.mutation.RemovedStatusesIDs(); len(nodes) > 0 && !euo.mutation.StatusesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   equipment.StatusesTable,
+			Columns: []string{equipment.StatusesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: statuses.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := euo.mutation.StatusesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   equipment.StatusesTable,
+			Columns: []string{equipment.StatusesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: statuses.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if euo.mutation.LocationsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   equipment.LocationsTable,
+			Columns: []string{equipment.LocationsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: locations.FieldID,
+				},
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := euo.mutation.RemovedLocationsIDs(); len(nodes) > 0 && !euo.mutation.LocationsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   equipment.LocationsTable,
+			Columns: []string{equipment.LocationsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: locations.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := euo.mutation.LocationsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   equipment.LocationsTable,
+			Columns: []string{equipment.LocationsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: locations.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	_node = &Equipment{config: euo.config}
 	_spec.Assign = _node.assignValues

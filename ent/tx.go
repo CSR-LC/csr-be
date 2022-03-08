@@ -18,8 +18,8 @@ type Tx struct {
 	Group *GroupClient
 	// Kinds is the client for interacting with the Kinds builders.
 	Kinds *KindsClient
-	// Locationts is the client for interacting with the Locationts builders.
-	Locationts *LocationtsClient
+	// Locations is the client for interacting with the Locations builders.
+	Locations *LocationsClient
 	// Permission is the client for interacting with the Permission builders.
 	Permission *PermissionClient
 	// Statuses is the client for interacting with the Statuses builders.
@@ -164,7 +164,7 @@ func (tx *Tx) init() {
 	tx.Equipment = NewEquipmentClient(tx.config)
 	tx.Group = NewGroupClient(tx.config)
 	tx.Kinds = NewKindsClient(tx.config)
-	tx.Locationts = NewLocationtsClient(tx.config)
+	tx.Locations = NewLocationsClient(tx.config)
 	tx.Permission = NewPermissionClient(tx.config)
 	tx.Statuses = NewStatusesClient(tx.config)
 	tx.User = NewUserClient(tx.config)
