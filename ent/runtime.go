@@ -16,15 +16,15 @@ func init() {
 	equipmentFields := schema.Equipment{}.Fields()
 	_ = equipmentFields
 	// equipmentDescSku is the schema descriptor for sku field.
-	equipmentDescSku := equipmentFields[1].Descriptor()
+	equipmentDescSku := equipmentFields[0].Descriptor()
 	// equipment.DefaultSku holds the default value on creation for the sku field.
 	equipment.DefaultSku = equipmentDescSku.Default.(string)
 	// equipmentDescName is the schema descriptor for name field.
-	equipmentDescName := equipmentFields[2].Descriptor()
+	equipmentDescName := equipmentFields[1].Descriptor()
 	// equipment.DefaultName holds the default value on creation for the name field.
 	equipment.DefaultName = equipmentDescName.Default.(string)
 	// equipmentDescDescription is the schema descriptor for description field.
-	equipmentDescDescription := equipmentFields[8].Descriptor()
+	equipmentDescDescription := equipmentFields[4].Descriptor()
 	// equipment.DefaultDescription holds the default value on creation for the description field.
 	equipment.DefaultDescription = equipmentDescDescription.Default.(string)
 	permissionFields := schema.Permission{}.Fields()

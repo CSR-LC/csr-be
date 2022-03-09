@@ -16,10 +16,11 @@ func (Equipment) Fields() []ent.Field {
 	return []ent.Field{
 		field.String("sku").Default("unknown"),
 		field.String("name").Default("unknown"),
-		field.Float("rate_hour"),
-		field.Float("rate_day"),
+		field.Int64("rate_hour"),
+		field.Int64("rate_day"),
 		field.String("description").Default("unknown"),
 	}
+
 }
 
 // Edges of the Equipment.
@@ -29,4 +30,5 @@ func (Equipment) Edges() []ent.Edge {
 		edge.To("statuses", Statuses.Type),
 		edge.To("locations", Locations.Type),
 	}
+
 }

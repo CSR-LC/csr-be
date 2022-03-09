@@ -107,7 +107,7 @@ func (sq *StatusesQuery) FirstIDX(ctx context.Context) int {
 }
 
 // Only returns a single Statuses entity found by the query, ensuring it only returns one.
-// Returns a *NotSingularError when exactly one Statuses entity is not found.
+// Returns a *NotSingularError when more than one Statuses entity is found.
 // Returns a *NotFoundError when no Statuses entities are found.
 func (sq *StatusesQuery) Only(ctx context.Context) (*Statuses, error) {
 	nodes, err := sq.Limit(2).All(ctx)
@@ -134,7 +134,7 @@ func (sq *StatusesQuery) OnlyX(ctx context.Context) *Statuses {
 }
 
 // OnlyID is like Only, but returns the only Statuses ID in the query.
-// Returns a *NotSingularError when exactly one Statuses ID is not found.
+// Returns a *NotSingularError when more than one Statuses ID is found.
 // Returns a *NotFoundError when no entities are found.
 func (sq *StatusesQuery) OnlyID(ctx context.Context) (id int, err error) {
 	var ids []int
@@ -243,13 +243,27 @@ func (sq *StatusesQuery) Clone() *StatusesQuery {
 		order:      append([]OrderFunc{}, sq.order...),
 		predicates: append([]predicate.Statuses{}, sq.predicates...),
 		// clone intermediate query.
-		sql:  sq.sql.Clone(),
-		path: sq.path,
+		sql:    sq.sql.Clone(),
+		path:   sq.path,
+		unique: sq.unique,
 	}
 }
 
 // GroupBy is used to group vertices by one or more fields/columns.
 // It is often used with aggregate functions, like: count, max, mean, min, sum.
+//
+// Example:
+//
+//	var v []struct {
+//		Name string `json:"name,omitempty"`
+//		Count int `json:"count,omitempty"`
+//	}
+//
+//	client.Statuses.Query().
+//		GroupBy(statuses.FieldName).
+//		Aggregate(ent.Count()).
+//		Scan(ctx, &v)
+//
 func (sq *StatusesQuery) GroupBy(field string, fields ...string) *StatusesGroupBy {
 	group := &StatusesGroupBy{config: sq.config}
 	group.fields = append([]string{field}, fields...)
@@ -264,6 +278,17 @@ func (sq *StatusesQuery) GroupBy(field string, fields ...string) *StatusesGroupB
 
 // Select allows the selection one or more fields/columns for the given query,
 // instead of selecting all fields in the entity.
+//
+// Example:
+//
+//	var v []struct {
+//		Name string `json:"name,omitempty"`
+//	}
+//
+//	client.Statuses.Query().
+//		Select(statuses.FieldName).
+//		Scan(ctx, &v)
+//
 func (sq *StatusesQuery) Select(fields ...string) *StatusesSelect {
 	sq.fields = append(sq.fields, fields...)
 	return &StatusesSelect{StatusesQuery: sq}

@@ -27,6 +27,12 @@ func (su *StatusesUpdate) Where(ps ...predicate.Statuses) *StatusesUpdate {
 	return su
 }
 
+// SetName sets the "name" field.
+func (su *StatusesUpdate) SetName(s string) *StatusesUpdate {
+	su.mutation.SetName(s)
+	return su
+}
+
 // Mutation returns the StatusesMutation object of the builder.
 func (su *StatusesUpdate) Mutation() *StatusesMutation {
 	return su.mutation
@@ -104,6 +110,13 @@ func (su *StatusesUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			}
 		}
 	}
+	if value, ok := su.mutation.Name(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: statuses.FieldName,
+		})
+	}
 	if n, err = sqlgraph.UpdateNodes(ctx, su.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{statuses.Label}
@@ -121,6 +134,12 @@ type StatusesUpdateOne struct {
 	fields   []string
 	hooks    []Hook
 	mutation *StatusesMutation
+}
+
+// SetName sets the "name" field.
+func (suo *StatusesUpdateOne) SetName(s string) *StatusesUpdateOne {
+	suo.mutation.SetName(s)
+	return suo
 }
 
 // Mutation returns the StatusesMutation object of the builder.
@@ -223,6 +242,13 @@ func (suo *StatusesUpdateOne) sqlSave(ctx context.Context) (_node *Statuses, err
 				ps[i](selector)
 			}
 		}
+	}
+	if value, ok := suo.mutation.Name(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: statuses.FieldName,
+		})
 	}
 	_node = &Statuses{config: suo.config}
 	_spec.Assign = _node.assignValues

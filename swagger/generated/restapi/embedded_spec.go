@@ -35,18 +35,18 @@ func init() {
   },
   "basePath": "/api/",
   "paths": {
-    "/equipment/kinds": {
+    "/equipment": {
       "get": {
         "tags": [
-          "Kinds"
+          "Equipment"
         ],
-        "summary": "Get all kinds.",
-        "operationId": "GetAllKinds",
+        "summary": "Get all equipment",
+        "operationId": "GetAllEquipment",
         "responses": {
-          "200": {
+          "201": {
             "description": "Success",
             "schema": {
-              "$ref": "#/definitions/ListOfKinds"
+              "$ref": "#/definitions/ListEquipment"
             }
           },
           "default": {
@@ -58,27 +58,30 @@ func init() {
         }
       },
       "post": {
-        "tags": [
-          "Kinds"
+        "consumes": [
+          "application/json"
         ],
-        "summary": "Create a new kind.",
-        "operationId": "CreateNewKind",
+        "tags": [
+          "Equipment"
+        ],
+        "summary": "Register a new equipment",
+        "operationId": "CreateNewEquipment",
         "parameters": [
           {
-            "description": "Name of a kind",
-            "name": "name",
+            "description": "Create a new equipment",
+            "name": "newEquipment",
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/CreateNewKind"
+              "$ref": "#/definitions/Equipment"
             }
           }
         ],
         "responses": {
           "201": {
-            "description": "Success",
+            "description": "Equipment created",
             "schema": {
-              "$ref": "#/definitions/CreateNewKindResponse"
+              "$ref": "#/definitions/EquipmentResponse"
             }
           },
           "default": {
@@ -89,59 +92,6 @@ func init() {
           }
         }
       }
-    },
-    "/equipment/kinds/{kindId}": {
-      "get": {
-        "tags": [
-          "Kinds"
-        ],
-        "summary": "Get information about the kind of equipment by id.",
-        "operationId": "getKindByID",
-        "responses": {
-          "200": {
-            "description": "Success",
-            "schema": {
-              "$ref": "#/definitions/GetKindByIDResponse"
-            }
-          },
-          "default": {
-            "description": "Unexpected error.",
-            "schema": {
-              "$ref": "#/definitions/Error"
-            }
-          }
-        }
-      },
-      "delete": {
-        "tags": [
-          "Kinds"
-        ],
-        "summary": "Delete kind of equipment from db by id.",
-        "operationId": "deleteKind",
-        "responses": {
-          "201": {
-            "description": "kind of equipment successfully deleted from db",
-            "schema": {
-              "$ref": "#/definitions/DeleteKindResponse"
-            }
-          },
-          "default": {
-            "description": "Unexpected error.",
-            "schema": {
-              "$ref": "#/definitions/Error"
-            }
-          }
-        }
-      },
-      "parameters": [
-        {
-          "type": "string",
-          "description": "kind id",
-          "name": "kindId",
-          "in": "path",
-          "required": true
-        }
-      ]
     },
     "/equipment/statuses": {
       "get": {
@@ -251,6 +201,91 @@ func init() {
         }
       ]
     },
+    "/equipment/{equipmentId}": {
+      "get": {
+        "tags": [
+          "Equipment"
+        ],
+        "summary": "Get equipment by id",
+        "operationId": "GetEquipment",
+        "responses": {
+          "201": {
+            "description": "Equipment has been found",
+            "schema": {
+              "$ref": "#/definitions/Equipment"
+            }
+          },
+          "default": {
+            "description": "Unexpected error.",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Equipment"
+        ],
+        "summary": "Edit equipment by id",
+        "operationId": "EditEquipment",
+        "parameters": [
+          {
+            "description": "Edit an equipment",
+            "name": "EditEquipment",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/Equipment"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Equipment edited",
+            "schema": {
+              "$ref": "#/definitions/Equipment"
+            }
+          },
+          "default": {
+            "description": "Unexpected error.",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Equipment"
+        ],
+        "summary": "Delete equipment by id",
+        "operationId": "DeleteEquipment",
+        "responses": {
+          "201": {
+            "description": "Equipment has been deleted",
+            "schema": {
+              "$ref": "#/definitions/Equipment"
+            }
+          },
+          "default": {
+            "description": "Unexpected error.",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      },
+      "parameters": [
+        {
+          "type": "string",
+          "description": "equipment id",
+          "name": "equipmentId",
+          "in": "path",
+          "required": true
+        }
+      ]
+    },
     "/v1/users": {
       "post": {
         "tags": [
@@ -341,28 +376,6 @@ func init() {
     }
   },
   "definitions": {
-    "CreateNewKind": {
-      "type": "object",
-      "required": [
-        "data"
-      ],
-      "properties": {
-        "data": {
-          "$ref": "#/definitions/Kind"
-        }
-      }
-    },
-    "CreateNewKindResponse": {
-      "type": "object",
-      "required": [
-        "data"
-      ],
-      "properties": {
-        "data": {
-          "$ref": "#/definitions/Kind"
-        }
-      }
-    },
     "CreateUserResponse": {
       "type": "object",
       "required": [
@@ -382,14 +395,108 @@ func init() {
         }
       }
     },
-    "DeleteKindResponse": {
+    "Equipment": {
       "type": "object",
       "required": [
-        "data"
+        "sku",
+        "name",
+        "kind",
+        "status",
+        "rate_hour",
+        "rate_day",
+        "location",
+        "description",
+        "photo"
       ],
       "properties": {
-        "data": {
-          "$ref": "#/definitions/Kind"
+        "description": {
+          "type": "string",
+          "example": "This is a dog harness.\nWARNING: do not put on cats!"
+        },
+        "kind": {
+          "type": "integer",
+          "example": 5
+        },
+        "location": {
+          "type": "integer",
+          "example": 71
+        },
+        "name": {
+          "type": "string",
+          "example": "Dog harness 3000"
+        },
+        "photo": {
+          "type": "string",
+          "example": "https://..."
+        },
+        "rate_day": {
+          "type": "integer"
+        },
+        "rate_hour": {
+          "type": "integer"
+        },
+        "sku": {
+          "type": "string",
+          "example": "ABC012345678"
+        },
+        "status": {
+          "type": "integer",
+          "example": 1
+        }
+      }
+    },
+    "EquipmentResponse": {
+      "type": "object",
+      "required": [
+        "id",
+        "sku",
+        "name",
+        "kind",
+        "status",
+        "rate_hour",
+        "rate_day",
+        "location",
+        "description",
+        "photo"
+      ],
+      "properties": {
+        "description": {
+          "type": "string",
+          "example": "This is a dog harness.\nWARNING: do not put on cats!"
+        },
+        "id": {
+          "type": "string",
+          "example": 2
+        },
+        "kind": {
+          "type": "integer",
+          "example": 5
+        },
+        "location": {
+          "type": "integer",
+          "example": 71
+        },
+        "name": {
+          "type": "string",
+          "example": "Dog harness 3000"
+        },
+        "photo": {
+          "type": "string",
+          "example": "https://..."
+        },
+        "rate_day": {
+          "type": "integer"
+        },
+        "rate_hour": {
+          "type": "integer"
+        },
+        "sku": {
+          "type": "string",
+          "example": "ABC012345678"
+        },
+        "status": {
+          "type": "integer",
+          "example": 1
         }
       }
     },
@@ -412,17 +519,6 @@ func init() {
         }
       }
     },
-    "GetKindByIDResponse": {
-      "type": "object",
-      "required": [
-        "data"
-      ],
-      "properties": {
-        "data": {
-          "$ref": "#/definitions/Kind"
-        }
-      }
-    },
     "GetUserResponse": {
       "type": "object",
       "required": [
@@ -434,25 +530,10 @@ func init() {
         }
       }
     },
-    "Kind": {
-      "type": "object",
-      "required": [
-        "id",
-        "name"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "name": {
-          "type": "string"
-        }
-      }
-    },
-    "ListOfKinds": {
+    "ListEquipment": {
       "type": "array",
       "items": {
-        "$ref": "#/definitions/Kind"
+        "$ref": "#/definitions/EquipmentResponse"
       }
     },
     "ListStatuses": {
@@ -581,18 +662,18 @@ func init() {
   },
   "basePath": "/api/",
   "paths": {
-    "/equipment/kinds": {
+    "/equipment": {
       "get": {
         "tags": [
-          "Kinds"
+          "Equipment"
         ],
-        "summary": "Get all kinds.",
-        "operationId": "GetAllKinds",
+        "summary": "Get all equipment",
+        "operationId": "GetAllEquipment",
         "responses": {
-          "200": {
+          "201": {
             "description": "Success",
             "schema": {
-              "$ref": "#/definitions/ListOfKinds"
+              "$ref": "#/definitions/ListEquipment"
             }
           },
           "default": {
@@ -604,27 +685,30 @@ func init() {
         }
       },
       "post": {
-        "tags": [
-          "Kinds"
+        "consumes": [
+          "application/json"
         ],
-        "summary": "Create a new kind.",
-        "operationId": "CreateNewKind",
+        "tags": [
+          "Equipment"
+        ],
+        "summary": "Register a new equipment",
+        "operationId": "CreateNewEquipment",
         "parameters": [
           {
-            "description": "Name of a kind",
-            "name": "name",
+            "description": "Create a new equipment",
+            "name": "newEquipment",
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/CreateNewKind"
+              "$ref": "#/definitions/Equipment"
             }
           }
         ],
         "responses": {
           "201": {
-            "description": "Success",
+            "description": "Equipment created",
             "schema": {
-              "$ref": "#/definitions/CreateNewKindResponse"
+              "$ref": "#/definitions/EquipmentResponse"
             }
           },
           "default": {
@@ -635,59 +719,6 @@ func init() {
           }
         }
       }
-    },
-    "/equipment/kinds/{kindId}": {
-      "get": {
-        "tags": [
-          "Kinds"
-        ],
-        "summary": "Get information about the kind of equipment by id.",
-        "operationId": "getKindByID",
-        "responses": {
-          "200": {
-            "description": "Success",
-            "schema": {
-              "$ref": "#/definitions/GetKindByIDResponse"
-            }
-          },
-          "default": {
-            "description": "Unexpected error.",
-            "schema": {
-              "$ref": "#/definitions/Error"
-            }
-          }
-        }
-      },
-      "delete": {
-        "tags": [
-          "Kinds"
-        ],
-        "summary": "Delete kind of equipment from db by id.",
-        "operationId": "deleteKind",
-        "responses": {
-          "201": {
-            "description": "kind of equipment successfully deleted from db",
-            "schema": {
-              "$ref": "#/definitions/DeleteKindResponse"
-            }
-          },
-          "default": {
-            "description": "Unexpected error.",
-            "schema": {
-              "$ref": "#/definitions/Error"
-            }
-          }
-        }
-      },
-      "parameters": [
-        {
-          "type": "string",
-          "description": "kind id",
-          "name": "kindId",
-          "in": "path",
-          "required": true
-        }
-      ]
     },
     "/equipment/statuses": {
       "get": {
@@ -797,6 +828,91 @@ func init() {
         }
       ]
     },
+    "/equipment/{equipmentId}": {
+      "get": {
+        "tags": [
+          "Equipment"
+        ],
+        "summary": "Get equipment by id",
+        "operationId": "GetEquipment",
+        "responses": {
+          "201": {
+            "description": "Equipment has been found",
+            "schema": {
+              "$ref": "#/definitions/Equipment"
+            }
+          },
+          "default": {
+            "description": "Unexpected error.",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Equipment"
+        ],
+        "summary": "Edit equipment by id",
+        "operationId": "EditEquipment",
+        "parameters": [
+          {
+            "description": "Edit an equipment",
+            "name": "EditEquipment",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/Equipment"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Equipment edited",
+            "schema": {
+              "$ref": "#/definitions/Equipment"
+            }
+          },
+          "default": {
+            "description": "Unexpected error.",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Equipment"
+        ],
+        "summary": "Delete equipment by id",
+        "operationId": "DeleteEquipment",
+        "responses": {
+          "201": {
+            "description": "Equipment has been deleted",
+            "schema": {
+              "$ref": "#/definitions/Equipment"
+            }
+          },
+          "default": {
+            "description": "Unexpected error.",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      },
+      "parameters": [
+        {
+          "type": "string",
+          "description": "equipment id",
+          "name": "equipmentId",
+          "in": "path",
+          "required": true
+        }
+      ]
+    },
     "/v1/users": {
       "post": {
         "tags": [
@@ -887,28 +1003,6 @@ func init() {
     }
   },
   "definitions": {
-    "CreateNewKind": {
-      "type": "object",
-      "required": [
-        "data"
-      ],
-      "properties": {
-        "data": {
-          "$ref": "#/definitions/Kind"
-        }
-      }
-    },
-    "CreateNewKindResponse": {
-      "type": "object",
-      "required": [
-        "data"
-      ],
-      "properties": {
-        "data": {
-          "$ref": "#/definitions/Kind"
-        }
-      }
-    },
     "CreateUserResponse": {
       "type": "object",
       "required": [
@@ -939,14 +1033,108 @@ func init() {
         }
       }
     },
-    "DeleteKindResponse": {
+    "Equipment": {
       "type": "object",
       "required": [
-        "data"
+        "sku",
+        "name",
+        "kind",
+        "status",
+        "rate_hour",
+        "rate_day",
+        "location",
+        "description",
+        "photo"
       ],
       "properties": {
-        "data": {
-          "$ref": "#/definitions/Kind"
+        "description": {
+          "type": "string",
+          "example": "This is a dog harness.\nWARNING: do not put on cats!"
+        },
+        "kind": {
+          "type": "integer",
+          "example": 5
+        },
+        "location": {
+          "type": "integer",
+          "example": 71
+        },
+        "name": {
+          "type": "string",
+          "example": "Dog harness 3000"
+        },
+        "photo": {
+          "type": "string",
+          "example": "https://..."
+        },
+        "rate_day": {
+          "type": "integer"
+        },
+        "rate_hour": {
+          "type": "integer"
+        },
+        "sku": {
+          "type": "string",
+          "example": "ABC012345678"
+        },
+        "status": {
+          "type": "integer",
+          "example": 1
+        }
+      }
+    },
+    "EquipmentResponse": {
+      "type": "object",
+      "required": [
+        "id",
+        "sku",
+        "name",
+        "kind",
+        "status",
+        "rate_hour",
+        "rate_day",
+        "location",
+        "description",
+        "photo"
+      ],
+      "properties": {
+        "description": {
+          "type": "string",
+          "example": "This is a dog harness.\nWARNING: do not put on cats!"
+        },
+        "id": {
+          "type": "string",
+          "example": 2
+        },
+        "kind": {
+          "type": "integer",
+          "example": 5
+        },
+        "location": {
+          "type": "integer",
+          "example": 71
+        },
+        "name": {
+          "type": "string",
+          "example": "Dog harness 3000"
+        },
+        "photo": {
+          "type": "string",
+          "example": "https://..."
+        },
+        "rate_day": {
+          "type": "integer"
+        },
+        "rate_hour": {
+          "type": "integer"
+        },
+        "sku": {
+          "type": "string",
+          "example": "ABC012345678"
+        },
+        "status": {
+          "type": "integer",
+          "example": 1
         }
       }
     },
@@ -980,17 +1168,6 @@ func init() {
         }
       }
     },
-    "GetKindByIDResponse": {
-      "type": "object",
-      "required": [
-        "data"
-      ],
-      "properties": {
-        "data": {
-          "$ref": "#/definitions/Kind"
-        }
-      }
-    },
     "GetUserResponse": {
       "type": "object",
       "required": [
@@ -1002,25 +1179,10 @@ func init() {
         }
       }
     },
-    "Kind": {
-      "type": "object",
-      "required": [
-        "id",
-        "name"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "name": {
-          "type": "string"
-        }
-      }
-    },
-    "ListOfKinds": {
+    "ListEquipment": {
       "type": "array",
       "items": {
-        "$ref": "#/definitions/Kind"
+        "$ref": "#/definitions/EquipmentResponse"
       }
     },
     "ListStatuses": {

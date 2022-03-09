@@ -10,14 +10,11 @@ import (
 var (
 	// EquipmentColumns holds the columns for the "equipment" table.
 	EquipmentColumns = []*schema.Column{
-		{Name: "id", Type: field.TypeUUID},
+		{Name: "id", Type: field.TypeInt, Increment: true},
 		{Name: "sku", Type: field.TypeString, Default: "unknown"},
 		{Name: "name", Type: field.TypeString, Default: "unknown"},
-		{Name: "kinds", Type: field.TypeUUID},
-		{Name: "statuses", Type: field.TypeUUID},
-		{Name: "rate_hour", Type: field.TypeFloat64},
-		{Name: "rate_day", Type: field.TypeFloat64},
-		{Name: "locations", Type: field.TypeUUID},
+		{Name: "rate_hour", Type: field.TypeInt64},
+		{Name: "rate_day", Type: field.TypeInt64},
 		{Name: "description", Type: field.TypeString, Default: "unknown"},
 	}
 	// EquipmentTable holds the schema information for the "equipment" table.
@@ -39,7 +36,7 @@ var (
 	// KindsColumns holds the columns for the "kinds" table.
 	KindsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
-		{Name: "equipment_kinds", Type: field.TypeUUID, Nullable: true},
+		{Name: "equipment_kinds", Type: field.TypeInt, Nullable: true},
 	}
 	// KindsTable holds the schema information for the "kinds" table.
 	KindsTable = &schema.Table{
@@ -58,7 +55,7 @@ var (
 	// LocationsColumns holds the columns for the "locations" table.
 	LocationsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
-		{Name: "equipment_locations", Type: field.TypeUUID, Nullable: true},
+		{Name: "equipment_locations", Type: field.TypeInt, Nullable: true},
 	}
 	// LocationsTable holds the schema information for the "locations" table.
 	LocationsTable = &schema.Table{
@@ -88,7 +85,8 @@ var (
 	// StatusesColumns holds the columns for the "statuses" table.
 	StatusesColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
-		{Name: "equipment_statuses", Type: field.TypeUUID, Nullable: true},
+		{Name: "name", Type: field.TypeString, Unique: true},
+		{Name: "equipment_statuses", Type: field.TypeInt, Nullable: true},
 	}
 	// StatusesTable holds the schema information for the "statuses" table.
 	StatusesTable = &schema.Table{
@@ -98,7 +96,7 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "statuses_equipment_statuses",
-				Columns:    []*schema.Column{StatusesColumns[1]},
+				Columns:    []*schema.Column{StatusesColumns[2]},
 				RefColumns: []*schema.Column{EquipmentColumns[0]},
 				OnDelete:   schema.SetNull,
 			},

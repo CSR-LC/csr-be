@@ -58,12 +58,4 @@ To generate server files from spec:
 swagger generate server -f ./swagger/spec.yaml -s swagger/generated/restapi -m swagger/generated/models --exclude-main
 ```
 
-To generate ent files from ./ent/schema run from root directory of your project:
-```
-go generate ./ent
-```
 
-To create new schema from ./ent/schema run from root directory of your project:
-```
-go run entgo.io/ent/cmd/ent init YourSchemaName
-```

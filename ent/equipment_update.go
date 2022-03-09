@@ -15,7 +15,6 @@ import (
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/ent/locations"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/ent/predicate"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/ent/statuses"
-	"github.com/gofrs/uuid"
 )
 
 // EquipmentUpdate is the builder for updating Equipment entities.
@@ -59,47 +58,29 @@ func (eu *EquipmentUpdate) SetNillableName(s *string) *EquipmentUpdate {
 	return eu
 }
 
-// SetKind sets the "kind" field.
-func (eu *EquipmentUpdate) SetKind(u uuid.UUID) *EquipmentUpdate {
-	eu.mutation.SetKind(u)
-	return eu
-}
-
-// SetStatus sets the "status" field.
-func (eu *EquipmentUpdate) SetStatus(u uuid.UUID) *EquipmentUpdate {
-	eu.mutation.SetStatus(u)
-	return eu
-}
-
 // SetRateHour sets the "rate_hour" field.
-func (eu *EquipmentUpdate) SetRateHour(f float64) *EquipmentUpdate {
+func (eu *EquipmentUpdate) SetRateHour(i int64) *EquipmentUpdate {
 	eu.mutation.ResetRateHour()
-	eu.mutation.SetRateHour(f)
+	eu.mutation.SetRateHour(i)
 	return eu
 }
 
-// AddRateHour adds f to the "rate_hour" field.
-func (eu *EquipmentUpdate) AddRateHour(f float64) *EquipmentUpdate {
-	eu.mutation.AddRateHour(f)
+// AddRateHour adds i to the "rate_hour" field.
+func (eu *EquipmentUpdate) AddRateHour(i int64) *EquipmentUpdate {
+	eu.mutation.AddRateHour(i)
 	return eu
 }
 
 // SetRateDay sets the "rate_day" field.
-func (eu *EquipmentUpdate) SetRateDay(f float64) *EquipmentUpdate {
+func (eu *EquipmentUpdate) SetRateDay(i int64) *EquipmentUpdate {
 	eu.mutation.ResetRateDay()
-	eu.mutation.SetRateDay(f)
+	eu.mutation.SetRateDay(i)
 	return eu
 }
 
-// AddRateDay adds f to the "rate_day" field.
-func (eu *EquipmentUpdate) AddRateDay(f float64) *EquipmentUpdate {
-	eu.mutation.AddRateDay(f)
-	return eu
-}
-
-// SetLocation sets the "location" field.
-func (eu *EquipmentUpdate) SetLocation(u uuid.UUID) *EquipmentUpdate {
-	eu.mutation.SetLocation(u)
+// AddRateDay adds i to the "rate_day" field.
+func (eu *EquipmentUpdate) AddRateDay(i int64) *EquipmentUpdate {
+	eu.mutation.AddRateDay(i)
 	return eu
 }
 
@@ -290,7 +271,7 @@ func (eu *EquipmentUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Table:   equipment.Table,
 			Columns: equipment.Columns,
 			ID: &sqlgraph.FieldSpec{
-				Type:   field.TypeUUID,
+				Type:   field.TypeInt,
 				Column: equipment.FieldID,
 			},
 		},
@@ -316,53 +297,32 @@ func (eu *EquipmentUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Column: equipment.FieldName,
 		})
 	}
-	if value, ok := eu.mutation.Kind(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeUUID,
-			Value:  value,
-			Column: equipment.FieldKind,
-		})
-	}
-	if value, ok := eu.mutation.Status(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeUUID,
-			Value:  value,
-			Column: equipment.FieldStatus,
-		})
-	}
 	if value, ok := eu.mutation.RateHour(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeFloat64,
+			Type:   field.TypeInt64,
 			Value:  value,
 			Column: equipment.FieldRateHour,
 		})
 	}
 	if value, ok := eu.mutation.AddedRateHour(); ok {
 		_spec.Fields.Add = append(_spec.Fields.Add, &sqlgraph.FieldSpec{
-			Type:   field.TypeFloat64,
+			Type:   field.TypeInt64,
 			Value:  value,
 			Column: equipment.FieldRateHour,
 		})
 	}
 	if value, ok := eu.mutation.RateDay(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeFloat64,
+			Type:   field.TypeInt64,
 			Value:  value,
 			Column: equipment.FieldRateDay,
 		})
 	}
 	if value, ok := eu.mutation.AddedRateDay(); ok {
 		_spec.Fields.Add = append(_spec.Fields.Add, &sqlgraph.FieldSpec{
-			Type:   field.TypeFloat64,
+			Type:   field.TypeInt64,
 			Value:  value,
 			Column: equipment.FieldRateDay,
-		})
-	}
-	if value, ok := eu.mutation.Location(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeUUID,
-			Value:  value,
-			Column: equipment.FieldLocation,
 		})
 	}
 	if value, ok := eu.mutation.Description(); ok {
@@ -581,47 +541,29 @@ func (euo *EquipmentUpdateOne) SetNillableName(s *string) *EquipmentUpdateOne {
 	return euo
 }
 
-// SetKind sets the "kind" field.
-func (euo *EquipmentUpdateOne) SetKind(u uuid.UUID) *EquipmentUpdateOne {
-	euo.mutation.SetKind(u)
-	return euo
-}
-
-// SetStatus sets the "status" field.
-func (euo *EquipmentUpdateOne) SetStatus(u uuid.UUID) *EquipmentUpdateOne {
-	euo.mutation.SetStatus(u)
-	return euo
-}
-
 // SetRateHour sets the "rate_hour" field.
-func (euo *EquipmentUpdateOne) SetRateHour(f float64) *EquipmentUpdateOne {
+func (euo *EquipmentUpdateOne) SetRateHour(i int64) *EquipmentUpdateOne {
 	euo.mutation.ResetRateHour()
-	euo.mutation.SetRateHour(f)
+	euo.mutation.SetRateHour(i)
 	return euo
 }
 
-// AddRateHour adds f to the "rate_hour" field.
-func (euo *EquipmentUpdateOne) AddRateHour(f float64) *EquipmentUpdateOne {
-	euo.mutation.AddRateHour(f)
+// AddRateHour adds i to the "rate_hour" field.
+func (euo *EquipmentUpdateOne) AddRateHour(i int64) *EquipmentUpdateOne {
+	euo.mutation.AddRateHour(i)
 	return euo
 }
 
 // SetRateDay sets the "rate_day" field.
-func (euo *EquipmentUpdateOne) SetRateDay(f float64) *EquipmentUpdateOne {
+func (euo *EquipmentUpdateOne) SetRateDay(i int64) *EquipmentUpdateOne {
 	euo.mutation.ResetRateDay()
-	euo.mutation.SetRateDay(f)
+	euo.mutation.SetRateDay(i)
 	return euo
 }
 
-// AddRateDay adds f to the "rate_day" field.
-func (euo *EquipmentUpdateOne) AddRateDay(f float64) *EquipmentUpdateOne {
-	euo.mutation.AddRateDay(f)
-	return euo
-}
-
-// SetLocation sets the "location" field.
-func (euo *EquipmentUpdateOne) SetLocation(u uuid.UUID) *EquipmentUpdateOne {
-	euo.mutation.SetLocation(u)
+// AddRateDay adds i to the "rate_day" field.
+func (euo *EquipmentUpdateOne) AddRateDay(i int64) *EquipmentUpdateOne {
+	euo.mutation.AddRateDay(i)
 	return euo
 }
 
@@ -819,7 +761,7 @@ func (euo *EquipmentUpdateOne) sqlSave(ctx context.Context) (_node *Equipment, e
 			Table:   equipment.Table,
 			Columns: equipment.Columns,
 			ID: &sqlgraph.FieldSpec{
-				Type:   field.TypeUUID,
+				Type:   field.TypeInt,
 				Column: equipment.FieldID,
 			},
 		},
@@ -862,53 +804,32 @@ func (euo *EquipmentUpdateOne) sqlSave(ctx context.Context) (_node *Equipment, e
 			Column: equipment.FieldName,
 		})
 	}
-	if value, ok := euo.mutation.Kind(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeUUID,
-			Value:  value,
-			Column: equipment.FieldKind,
-		})
-	}
-	if value, ok := euo.mutation.Status(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeUUID,
-			Value:  value,
-			Column: equipment.FieldStatus,
-		})
-	}
 	if value, ok := euo.mutation.RateHour(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeFloat64,
+			Type:   field.TypeInt64,
 			Value:  value,
 			Column: equipment.FieldRateHour,
 		})
 	}
 	if value, ok := euo.mutation.AddedRateHour(); ok {
 		_spec.Fields.Add = append(_spec.Fields.Add, &sqlgraph.FieldSpec{
-			Type:   field.TypeFloat64,
+			Type:   field.TypeInt64,
 			Value:  value,
 			Column: equipment.FieldRateHour,
 		})
 	}
 	if value, ok := euo.mutation.RateDay(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeFloat64,
+			Type:   field.TypeInt64,
 			Value:  value,
 			Column: equipment.FieldRateDay,
 		})
 	}
 	if value, ok := euo.mutation.AddedRateDay(); ok {
 		_spec.Fields.Add = append(_spec.Fields.Add, &sqlgraph.FieldSpec{
-			Type:   field.TypeFloat64,
+			Type:   field.TypeInt64,
 			Value:  value,
 			Column: equipment.FieldRateDay,
-		})
-	}
-	if value, ok := euo.mutation.Location(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeUUID,
-			Value:  value,
-			Column: equipment.FieldLocation,
 		})
 	}
 	if value, ok := euo.mutation.Description(); ok {

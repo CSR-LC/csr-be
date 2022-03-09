@@ -8,28 +8,21 @@ import (
 
 	"entgo.io/ent/dialect/sql"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/ent/equipment"
-	"github.com/gofrs/uuid"
 )
 
 // Equipment is the model entity for the Equipment schema.
 type Equipment struct {
 	config `json:"-"`
 	// ID of the ent.
-	ID uuid.UUID `json:"id,omitempty"`
+	ID int `json:"id,omitempty"`
 	// Sku holds the value of the "sku" field.
 	Sku string `json:"sku,omitempty"`
 	// Name holds the value of the "name" field.
 	Name string `json:"name,omitempty"`
-	// Kind holds the value of the "kind" field.
-	Kind uuid.UUID `json:"kind,omitempty"`
-	// Status holds the value of the "status" field.
-	Status uuid.UUID `json:"status,omitempty"`
 	// RateHour holds the value of the "rate_hour" field.
-	RateHour float64 `json:"rate_hour,omitempty"`
+	RateHour int64 `json:"rate_hour,omitempty"`
 	// RateDay holds the value of the "rate_day" field.
-	RateDay float64 `json:"rate_day,omitempty"`
-	// Location holds the value of the "location" field.
-	Location uuid.UUID `json:"location,omitempty"`
+	RateDay int64 `json:"rate_day,omitempty"`
 	// Description holds the value of the "description" field.
 	Description string `json:"description,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
@@ -82,12 +75,10 @@ func (*Equipment) scanValues(columns []string) ([]interface{}, error) {
 	values := make([]interface{}, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case equipment.FieldRateHour, equipment.FieldRateDay:
-			values[i] = new(sql.NullFloat64)
+		case equipment.FieldID, equipment.FieldRateHour, equipment.FieldRateDay:
+			values[i] = new(sql.NullInt64)
 		case equipment.FieldSku, equipment.FieldName, equipment.FieldDescription:
 			values[i] = new(sql.NullString)
-		case equipment.FieldID, equipment.FieldKind, equipment.FieldStatus, equipment.FieldLocation:
-			values[i] = new(uuid.UUID)
 		default:
 			return nil, fmt.Errorf("unexpected column %q for type Equipment", columns[i])
 		}
@@ -104,11 +95,11 @@ func (e *Equipment) assignValues(columns []string, values []interface{}) error {
 	for i := range columns {
 		switch columns[i] {
 		case equipment.FieldID:
-			if value, ok := values[i].(*uuid.UUID); !ok {
-				return fmt.Errorf("unexpected type %T for field id", values[i])
-			} else if value != nil {
-				e.ID = *value
+			value, ok := values[i].(*sql.NullInt64)
+			if !ok {
+				return fmt.Errorf("unexpected type %T for field id", value)
 			}
+			e.ID = int(value.Int64)
 		case equipment.FieldSku:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field sku", values[i])
@@ -121,35 +112,17 @@ func (e *Equipment) assignValues(columns []string, values []interface{}) error {
 			} else if value.Valid {
 				e.Name = value.String
 			}
-		case equipment.FieldKind:
-			if value, ok := values[i].(*uuid.UUID); !ok {
-				return fmt.Errorf("unexpected type %T for field kind", values[i])
-			} else if value != nil {
-				e.Kind = *value
-			}
-		case equipment.FieldStatus:
-			if value, ok := values[i].(*uuid.UUID); !ok {
-				return fmt.Errorf("unexpected type %T for field status", values[i])
-			} else if value != nil {
-				e.Status = *value
-			}
 		case equipment.FieldRateHour:
-			if value, ok := values[i].(*sql.NullFloat64); !ok {
+			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field rate_hour", values[i])
 			} else if value.Valid {
-				e.RateHour = value.Float64
+				e.RateHour = value.Int64
 			}
 		case equipment.FieldRateDay:
-			if value, ok := values[i].(*sql.NullFloat64); !ok {
+			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field rate_day", values[i])
 			} else if value.Valid {
-				e.RateDay = value.Float64
-			}
-		case equipment.FieldLocation:
-			if value, ok := values[i].(*uuid.UUID); !ok {
-				return fmt.Errorf("unexpected type %T for field location", values[i])
-			} else if value != nil {
-				e.Location = *value
+				e.RateDay = value.Int64
 			}
 		case equipment.FieldDescription:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -204,16 +177,10 @@ func (e *Equipment) String() string {
 	builder.WriteString(e.Sku)
 	builder.WriteString(", name=")
 	builder.WriteString(e.Name)
-	builder.WriteString(", kind=")
-	builder.WriteString(fmt.Sprintf("%v", e.Kind))
-	builder.WriteString(", status=")
-	builder.WriteString(fmt.Sprintf("%v", e.Status))
 	builder.WriteString(", rate_hour=")
 	builder.WriteString(fmt.Sprintf("%v", e.RateHour))
 	builder.WriteString(", rate_day=")
 	builder.WriteString(fmt.Sprintf("%v", e.RateDay))
-	builder.WriteString(", location=")
-	builder.WriteString(fmt.Sprintf("%v", e.Location))
 	builder.WriteString(", description=")
 	builder.WriteString(e.Description)
 	builder.WriteByte(')')

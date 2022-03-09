@@ -11,16 +11,10 @@ const (
 	FieldSku = "sku"
 	// FieldName holds the string denoting the name field in the database.
 	FieldName = "name"
-	// FieldKind holds the string denoting the kind field in the database.
-	FieldKind = "kinds"
-	// FieldStatus holds the string denoting the status field in the database.
-	FieldStatus = "statuses"
 	// FieldRateHour holds the string denoting the rate_hour field in the database.
 	FieldRateHour = "rate_hour"
 	// FieldRateDay holds the string denoting the rate_day field in the database.
 	FieldRateDay = "rate_day"
-	// FieldLocation holds the string denoting the location field in the database.
-	FieldLocation = "locations"
 	// FieldDescription holds the string denoting the description field in the database.
 	FieldDescription = "description"
 	// EdgeKinds holds the string denoting the kinds edge name in mutations.
@@ -59,11 +53,8 @@ var Columns = []string{
 	FieldID,
 	FieldSku,
 	FieldName,
-	FieldKind,
-	FieldStatus,
 	FieldRateHour,
 	FieldRateDay,
-	FieldLocation,
 	FieldDescription,
 }
 

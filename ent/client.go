@@ -8,7 +8,6 @@ import (
 	"log"
 
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/ent/migrate"
-	"github.com/gofrs/uuid"
 
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/ent/equipment"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/ent/group"
@@ -206,7 +205,7 @@ func (c *EquipmentClient) UpdateOne(e *Equipment) *EquipmentUpdateOne {
 }
 
 // UpdateOneID returns an update builder for the given id.
-func (c *EquipmentClient) UpdateOneID(id uuid.UUID) *EquipmentUpdateOne {
+func (c *EquipmentClient) UpdateOneID(id int) *EquipmentUpdateOne {
 	mutation := newEquipmentMutation(c.config, OpUpdateOne, withEquipmentID(id))
 	return &EquipmentUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
@@ -223,7 +222,7 @@ func (c *EquipmentClient) DeleteOne(e *Equipment) *EquipmentDeleteOne {
 }
 
 // DeleteOneID returns a delete builder for the given id.
-func (c *EquipmentClient) DeleteOneID(id uuid.UUID) *EquipmentDeleteOne {
+func (c *EquipmentClient) DeleteOneID(id int) *EquipmentDeleteOne {
 	builder := c.Delete().Where(equipment.ID(id))
 	builder.mutation.id = &id
 	builder.mutation.op = OpDeleteOne
@@ -238,12 +237,12 @@ func (c *EquipmentClient) Query() *EquipmentQuery {
 }
 
 // Get returns a Equipment entity by its id.
-func (c *EquipmentClient) Get(ctx context.Context, id uuid.UUID) (*Equipment, error) {
+func (c *EquipmentClient) Get(ctx context.Context, id int) (*Equipment, error) {
 	return c.Query().Where(equipment.ID(id)).Only(ctx)
 }
 
 // GetX is like Get, but panics if an error occurs.
-func (c *EquipmentClient) GetX(ctx context.Context, id uuid.UUID) *Equipment {
+func (c *EquipmentClient) GetX(ctx context.Context, id int) *Equipment {
 	obj, err := c.Get(ctx, id)
 	if err != nil {
 		panic(err)

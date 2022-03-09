@@ -17,7 +17,6 @@ import (
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/ent/locations"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/ent/predicate"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/ent/statuses"
-	"github.com/gofrs/uuid"
 )
 
 // EquipmentQuery is the builder for querying Equipment entities.
@@ -159,8 +158,8 @@ func (eq *EquipmentQuery) FirstX(ctx context.Context) *Equipment {
 
 // FirstID returns the first Equipment ID from the query.
 // Returns a *NotFoundError when no Equipment ID was found.
-func (eq *EquipmentQuery) FirstID(ctx context.Context) (id uuid.UUID, err error) {
-	var ids []uuid.UUID
+func (eq *EquipmentQuery) FirstID(ctx context.Context) (id int, err error) {
+	var ids []int
 	if ids, err = eq.Limit(1).IDs(ctx); err != nil {
 		return
 	}
@@ -172,7 +171,7 @@ func (eq *EquipmentQuery) FirstID(ctx context.Context) (id uuid.UUID, err error)
 }
 
 // FirstIDX is like FirstID, but panics if an error occurs.
-func (eq *EquipmentQuery) FirstIDX(ctx context.Context) uuid.UUID {
+func (eq *EquipmentQuery) FirstIDX(ctx context.Context) int {
 	id, err := eq.FirstID(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
@@ -181,7 +180,7 @@ func (eq *EquipmentQuery) FirstIDX(ctx context.Context) uuid.UUID {
 }
 
 // Only returns a single Equipment entity found by the query, ensuring it only returns one.
-// Returns a *NotSingularError when exactly one Equipment entity is not found.
+// Returns a *NotSingularError when more than one Equipment entity is found.
 // Returns a *NotFoundError when no Equipment entities are found.
 func (eq *EquipmentQuery) Only(ctx context.Context) (*Equipment, error) {
 	nodes, err := eq.Limit(2).All(ctx)
@@ -208,10 +207,10 @@ func (eq *EquipmentQuery) OnlyX(ctx context.Context) *Equipment {
 }
 
 // OnlyID is like Only, but returns the only Equipment ID in the query.
-// Returns a *NotSingularError when exactly one Equipment ID is not found.
+// Returns a *NotSingularError when more than one Equipment ID is found.
 // Returns a *NotFoundError when no entities are found.
-func (eq *EquipmentQuery) OnlyID(ctx context.Context) (id uuid.UUID, err error) {
-	var ids []uuid.UUID
+func (eq *EquipmentQuery) OnlyID(ctx context.Context) (id int, err error) {
+	var ids []int
 	if ids, err = eq.Limit(2).IDs(ctx); err != nil {
 		return
 	}
@@ -227,7 +226,7 @@ func (eq *EquipmentQuery) OnlyID(ctx context.Context) (id uuid.UUID, err error) 
 }
 
 // OnlyIDX is like OnlyID, but panics if an error occurs.
-func (eq *EquipmentQuery) OnlyIDX(ctx context.Context) uuid.UUID {
+func (eq *EquipmentQuery) OnlyIDX(ctx context.Context) int {
 	id, err := eq.OnlyID(ctx)
 	if err != nil {
 		panic(err)
@@ -253,8 +252,8 @@ func (eq *EquipmentQuery) AllX(ctx context.Context) []*Equipment {
 }
 
 // IDs executes the query and returns a list of Equipment IDs.
-func (eq *EquipmentQuery) IDs(ctx context.Context) ([]uuid.UUID, error) {
-	var ids []uuid.UUID
+func (eq *EquipmentQuery) IDs(ctx context.Context) ([]int, error) {
+	var ids []int
 	if err := eq.Select(equipment.FieldID).Scan(ctx, &ids); err != nil {
 		return nil, err
 	}
@@ -262,7 +261,7 @@ func (eq *EquipmentQuery) IDs(ctx context.Context) ([]uuid.UUID, error) {
 }
 
 // IDsX is like IDs, but panics if an error occurs.
-func (eq *EquipmentQuery) IDsX(ctx context.Context) []uuid.UUID {
+func (eq *EquipmentQuery) IDsX(ctx context.Context) []int {
 	ids, err := eq.IDs(ctx)
 	if err != nil {
 		panic(err)
@@ -320,8 +319,9 @@ func (eq *EquipmentQuery) Clone() *EquipmentQuery {
 		withStatuses:  eq.withStatuses.Clone(),
 		withLocations: eq.withLocations.Clone(),
 		// clone intermediate query.
-		sql:  eq.sql.Clone(),
-		path: eq.path,
+		sql:    eq.sql.Clone(),
+		path:   eq.path,
+		unique: eq.unique,
 	}
 }
 
@@ -451,7 +451,7 @@ func (eq *EquipmentQuery) sqlAll(ctx context.Context) ([]*Equipment, error) {
 
 	if query := eq.withKinds; query != nil {
 		fks := make([]driver.Value, 0, len(nodes))
-		nodeids := make(map[uuid.UUID]*Equipment)
+		nodeids := make(map[int]*Equipment)
 		for i := range nodes {
 			fks = append(fks, nodes[i].ID)
 			nodeids[nodes[i].ID] = nodes[i]
@@ -480,7 +480,7 @@ func (eq *EquipmentQuery) sqlAll(ctx context.Context) ([]*Equipment, error) {
 
 	if query := eq.withStatuses; query != nil {
 		fks := make([]driver.Value, 0, len(nodes))
-		nodeids := make(map[uuid.UUID]*Equipment)
+		nodeids := make(map[int]*Equipment)
 		for i := range nodes {
 			fks = append(fks, nodes[i].ID)
 			nodeids[nodes[i].ID] = nodes[i]
@@ -509,7 +509,7 @@ func (eq *EquipmentQuery) sqlAll(ctx context.Context) ([]*Equipment, error) {
 
 	if query := eq.withLocations; query != nil {
 		fks := make([]driver.Value, 0, len(nodes))
-		nodeids := make(map[uuid.UUID]*Equipment)
+		nodeids := make(map[int]*Equipment)
 		for i := range nodes {
 			fks = append(fks, nodes[i].ID)
 			nodeids[nodes[i].ID] = nodes[i]
@@ -562,7 +562,7 @@ func (eq *EquipmentQuery) querySpec() *sqlgraph.QuerySpec {
 			Table:   equipment.Table,
 			Columns: equipment.Columns,
 			ID: &sqlgraph.FieldSpec{
-				Type:   field.TypeUUID,
+				Type:   field.TypeInt,
 				Column: equipment.FieldID,
 			},
 		},

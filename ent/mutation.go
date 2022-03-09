@@ -12,8 +12,8 @@ import (
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/ent/group"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/ent/permission"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/ent/predicate"
+	"git.epam.com/epm-lstr/epm-lstr-lc/be/ent/statuses"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/ent/user"
-	"github.com/gofrs/uuid"
 
 	"entgo.io/ent"
 )
@@ -41,16 +41,13 @@ type EquipmentMutation struct {
 	config
 	op               Op
 	typ              string
-	id               *uuid.UUID
+	id               *int
 	sku              *string
 	name             *string
-	kind             *uuid.UUID
-	status           *uuid.UUID
-	rate_hour        *float64
-	addrate_hour     *float64
-	rate_day         *float64
-	addrate_day      *float64
-	location         *uuid.UUID
+	rate_hour        *int64
+	addrate_hour     *int64
+	rate_day         *int64
+	addrate_day      *int64
 	description      *string
 	clearedFields    map[string]struct{}
 	kinds            map[int]struct{}
@@ -87,7 +84,7 @@ func newEquipmentMutation(c config, op Op, opts ...equipmentOption) *EquipmentMu
 }
 
 // withEquipmentID sets the ID field of the mutation.
-func withEquipmentID(id uuid.UUID) equipmentOption {
+func withEquipmentID(id int) equipmentOption {
 	return func(m *EquipmentMutation) {
 		var (
 			err   error
@@ -137,15 +134,9 @@ func (m EquipmentMutation) Tx() (*Tx, error) {
 	return tx, nil
 }
 
-// SetID sets the value of the id field. Note that this
-// operation is only accepted on creation of Equipment entities.
-func (m *EquipmentMutation) SetID(id uuid.UUID) {
-	m.id = &id
-}
-
 // ID returns the ID value in the mutation. Note that the ID is only available
 // if it was provided to the builder or after it was returned from the database.
-func (m *EquipmentMutation) ID() (id uuid.UUID, exists bool) {
+func (m *EquipmentMutation) ID() (id int, exists bool) {
 	if m.id == nil {
 		return
 	}
@@ -156,12 +147,12 @@ func (m *EquipmentMutation) ID() (id uuid.UUID, exists bool) {
 // That means, if the mutation is applied within a transaction with an isolation level such
 // as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
 // or updated by the mutation.
-func (m *EquipmentMutation) IDs(ctx context.Context) ([]uuid.UUID, error) {
+func (m *EquipmentMutation) IDs(ctx context.Context) ([]int, error) {
 	switch {
 	case m.op.Is(OpUpdateOne | OpDeleteOne):
 		id, exists := m.ID()
 		if exists {
-			return []uuid.UUID{id}, nil
+			return []int{id}, nil
 		}
 		fallthrough
 	case m.op.Is(OpUpdate | OpDelete):
@@ -243,86 +234,14 @@ func (m *EquipmentMutation) ResetName() {
 	m.name = nil
 }
 
-// SetKind sets the "kind" field.
-func (m *EquipmentMutation) SetKind(u uuid.UUID) {
-	m.kind = &u
-}
-
-// Kind returns the value of the "kind" field in the mutation.
-func (m *EquipmentMutation) Kind() (r uuid.UUID, exists bool) {
-	v := m.kind
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// OldKind returns the old "kind" field's value of the Equipment entity.
-// If the Equipment object wasn't provided to the builder, the object is fetched from the database.
-// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *EquipmentMutation) OldKind(ctx context.Context) (v uuid.UUID, err error) {
-	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldKind is only allowed on UpdateOne operations")
-	}
-	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldKind requires an ID field in the mutation")
-	}
-	oldValue, err := m.oldValue(ctx)
-	if err != nil {
-		return v, fmt.Errorf("querying old value for OldKind: %w", err)
-	}
-	return oldValue.Kind, nil
-}
-
-// ResetKind resets all changes to the "kind" field.
-func (m *EquipmentMutation) ResetKind() {
-	m.kind = nil
-}
-
-// SetStatus sets the "status" field.
-func (m *EquipmentMutation) SetStatus(u uuid.UUID) {
-	m.status = &u
-}
-
-// Status returns the value of the "status" field in the mutation.
-func (m *EquipmentMutation) Status() (r uuid.UUID, exists bool) {
-	v := m.status
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// OldStatus returns the old "status" field's value of the Equipment entity.
-// If the Equipment object wasn't provided to the builder, the object is fetched from the database.
-// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *EquipmentMutation) OldStatus(ctx context.Context) (v uuid.UUID, err error) {
-	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldStatus is only allowed on UpdateOne operations")
-	}
-	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldStatus requires an ID field in the mutation")
-	}
-	oldValue, err := m.oldValue(ctx)
-	if err != nil {
-		return v, fmt.Errorf("querying old value for OldStatus: %w", err)
-	}
-	return oldValue.Status, nil
-}
-
-// ResetStatus resets all changes to the "status" field.
-func (m *EquipmentMutation) ResetStatus() {
-	m.status = nil
-}
-
 // SetRateHour sets the "rate_hour" field.
-func (m *EquipmentMutation) SetRateHour(f float64) {
-	m.rate_hour = &f
+func (m *EquipmentMutation) SetRateHour(i int64) {
+	m.rate_hour = &i
 	m.addrate_hour = nil
 }
 
 // RateHour returns the value of the "rate_hour" field in the mutation.
-func (m *EquipmentMutation) RateHour() (r float64, exists bool) {
+func (m *EquipmentMutation) RateHour() (r int64, exists bool) {
 	v := m.rate_hour
 	if v == nil {
 		return
@@ -333,7 +252,7 @@ func (m *EquipmentMutation) RateHour() (r float64, exists bool) {
 // OldRateHour returns the old "rate_hour" field's value of the Equipment entity.
 // If the Equipment object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *EquipmentMutation) OldRateHour(ctx context.Context) (v float64, err error) {
+func (m *EquipmentMutation) OldRateHour(ctx context.Context) (v int64, err error) {
 	if !m.op.Is(OpUpdateOne) {
 		return v, errors.New("OldRateHour is only allowed on UpdateOne operations")
 	}
@@ -347,17 +266,17 @@ func (m *EquipmentMutation) OldRateHour(ctx context.Context) (v float64, err err
 	return oldValue.RateHour, nil
 }
 
-// AddRateHour adds f to the "rate_hour" field.
-func (m *EquipmentMutation) AddRateHour(f float64) {
+// AddRateHour adds i to the "rate_hour" field.
+func (m *EquipmentMutation) AddRateHour(i int64) {
 	if m.addrate_hour != nil {
-		*m.addrate_hour += f
+		*m.addrate_hour += i
 	} else {
-		m.addrate_hour = &f
+		m.addrate_hour = &i
 	}
 }
 
 // AddedRateHour returns the value that was added to the "rate_hour" field in this mutation.
-func (m *EquipmentMutation) AddedRateHour() (r float64, exists bool) {
+func (m *EquipmentMutation) AddedRateHour() (r int64, exists bool) {
 	v := m.addrate_hour
 	if v == nil {
 		return
@@ -372,13 +291,13 @@ func (m *EquipmentMutation) ResetRateHour() {
 }
 
 // SetRateDay sets the "rate_day" field.
-func (m *EquipmentMutation) SetRateDay(f float64) {
-	m.rate_day = &f
+func (m *EquipmentMutation) SetRateDay(i int64) {
+	m.rate_day = &i
 	m.addrate_day = nil
 }
 
 // RateDay returns the value of the "rate_day" field in the mutation.
-func (m *EquipmentMutation) RateDay() (r float64, exists bool) {
+func (m *EquipmentMutation) RateDay() (r int64, exists bool) {
 	v := m.rate_day
 	if v == nil {
 		return
@@ -389,7 +308,7 @@ func (m *EquipmentMutation) RateDay() (r float64, exists bool) {
 // OldRateDay returns the old "rate_day" field's value of the Equipment entity.
 // If the Equipment object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *EquipmentMutation) OldRateDay(ctx context.Context) (v float64, err error) {
+func (m *EquipmentMutation) OldRateDay(ctx context.Context) (v int64, err error) {
 	if !m.op.Is(OpUpdateOne) {
 		return v, errors.New("OldRateDay is only allowed on UpdateOne operations")
 	}
@@ -403,17 +322,17 @@ func (m *EquipmentMutation) OldRateDay(ctx context.Context) (v float64, err erro
 	return oldValue.RateDay, nil
 }
 
-// AddRateDay adds f to the "rate_day" field.
-func (m *EquipmentMutation) AddRateDay(f float64) {
+// AddRateDay adds i to the "rate_day" field.
+func (m *EquipmentMutation) AddRateDay(i int64) {
 	if m.addrate_day != nil {
-		*m.addrate_day += f
+		*m.addrate_day += i
 	} else {
-		m.addrate_day = &f
+		m.addrate_day = &i
 	}
 }
 
 // AddedRateDay returns the value that was added to the "rate_day" field in this mutation.
-func (m *EquipmentMutation) AddedRateDay() (r float64, exists bool) {
+func (m *EquipmentMutation) AddedRateDay() (r int64, exists bool) {
 	v := m.addrate_day
 	if v == nil {
 		return
@@ -425,42 +344,6 @@ func (m *EquipmentMutation) AddedRateDay() (r float64, exists bool) {
 func (m *EquipmentMutation) ResetRateDay() {
 	m.rate_day = nil
 	m.addrate_day = nil
-}
-
-// SetLocation sets the "location" field.
-func (m *EquipmentMutation) SetLocation(u uuid.UUID) {
-	m.location = &u
-}
-
-// Location returns the value of the "location" field in the mutation.
-func (m *EquipmentMutation) Location() (r uuid.UUID, exists bool) {
-	v := m.location
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// OldLocation returns the old "location" field's value of the Equipment entity.
-// If the Equipment object wasn't provided to the builder, the object is fetched from the database.
-// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *EquipmentMutation) OldLocation(ctx context.Context) (v uuid.UUID, err error) {
-	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldLocation is only allowed on UpdateOne operations")
-	}
-	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldLocation requires an ID field in the mutation")
-	}
-	oldValue, err := m.oldValue(ctx)
-	if err != nil {
-		return v, fmt.Errorf("querying old value for OldLocation: %w", err)
-	}
-	return oldValue.Location, nil
-}
-
-// ResetLocation resets all changes to the "location" field.
-func (m *EquipmentMutation) ResetLocation() {
-	m.location = nil
 }
 
 // SetDescription sets the "description" field.
@@ -680,27 +563,18 @@ func (m *EquipmentMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *EquipmentMutation) Fields() []string {
-	fields := make([]string, 0, 8)
+	fields := make([]string, 0, 5)
 	if m.sku != nil {
 		fields = append(fields, equipment.FieldSku)
 	}
 	if m.name != nil {
 		fields = append(fields, equipment.FieldName)
 	}
-	if m.kind != nil {
-		fields = append(fields, equipment.FieldKind)
-	}
-	if m.status != nil {
-		fields = append(fields, equipment.FieldStatus)
-	}
 	if m.rate_hour != nil {
 		fields = append(fields, equipment.FieldRateHour)
 	}
 	if m.rate_day != nil {
 		fields = append(fields, equipment.FieldRateDay)
-	}
-	if m.location != nil {
-		fields = append(fields, equipment.FieldLocation)
 	}
 	if m.description != nil {
 		fields = append(fields, equipment.FieldDescription)
@@ -717,16 +591,10 @@ func (m *EquipmentMutation) Field(name string) (ent.Value, bool) {
 		return m.Sku()
 	case equipment.FieldName:
 		return m.Name()
-	case equipment.FieldKind:
-		return m.Kind()
-	case equipment.FieldStatus:
-		return m.Status()
 	case equipment.FieldRateHour:
 		return m.RateHour()
 	case equipment.FieldRateDay:
 		return m.RateDay()
-	case equipment.FieldLocation:
-		return m.Location()
 	case equipment.FieldDescription:
 		return m.Description()
 	}
@@ -742,16 +610,10 @@ func (m *EquipmentMutation) OldField(ctx context.Context, name string) (ent.Valu
 		return m.OldSku(ctx)
 	case equipment.FieldName:
 		return m.OldName(ctx)
-	case equipment.FieldKind:
-		return m.OldKind(ctx)
-	case equipment.FieldStatus:
-		return m.OldStatus(ctx)
 	case equipment.FieldRateHour:
 		return m.OldRateHour(ctx)
 	case equipment.FieldRateDay:
 		return m.OldRateDay(ctx)
-	case equipment.FieldLocation:
-		return m.OldLocation(ctx)
 	case equipment.FieldDescription:
 		return m.OldDescription(ctx)
 	}
@@ -777,40 +639,19 @@ func (m *EquipmentMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetName(v)
 		return nil
-	case equipment.FieldKind:
-		v, ok := value.(uuid.UUID)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.SetKind(v)
-		return nil
-	case equipment.FieldStatus:
-		v, ok := value.(uuid.UUID)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.SetStatus(v)
-		return nil
 	case equipment.FieldRateHour:
-		v, ok := value.(float64)
+		v, ok := value.(int64)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetRateHour(v)
 		return nil
 	case equipment.FieldRateDay:
-		v, ok := value.(float64)
+		v, ok := value.(int64)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetRateDay(v)
-		return nil
-	case equipment.FieldLocation:
-		v, ok := value.(uuid.UUID)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.SetLocation(v)
 		return nil
 	case equipment.FieldDescription:
 		v, ok := value.(string)
@@ -855,14 +696,14 @@ func (m *EquipmentMutation) AddedField(name string) (ent.Value, bool) {
 func (m *EquipmentMutation) AddField(name string, value ent.Value) error {
 	switch name {
 	case equipment.FieldRateHour:
-		v, ok := value.(float64)
+		v, ok := value.(int64)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.AddRateHour(v)
 		return nil
 	case equipment.FieldRateDay:
-		v, ok := value.(float64)
+		v, ok := value.(int64)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
@@ -901,20 +742,11 @@ func (m *EquipmentMutation) ResetField(name string) error {
 	case equipment.FieldName:
 		m.ResetName()
 		return nil
-	case equipment.FieldKind:
-		m.ResetKind()
-		return nil
-	case equipment.FieldStatus:
-		m.ResetStatus()
-		return nil
 	case equipment.FieldRateHour:
 		m.ResetRateHour()
 		return nil
 	case equipment.FieldRateDay:
 		m.ResetRateDay()
-		return nil
-	case equipment.FieldLocation:
-		m.ResetLocation()
 		return nil
 	case equipment.FieldDescription:
 		m.ResetDescription()
@@ -2392,6 +2224,7 @@ type StatusesMutation struct {
 	op            Op
 	typ           string
 	id            *int
+	name          *string
 	clearedFields map[string]struct{}
 	done          bool
 	oldValue      func(context.Context) (*Statuses, error)
@@ -2496,6 +2329,42 @@ func (m *StatusesMutation) IDs(ctx context.Context) ([]int, error) {
 	}
 }
 
+// SetName sets the "name" field.
+func (m *StatusesMutation) SetName(s string) {
+	m.name = &s
+}
+
+// Name returns the value of the "name" field in the mutation.
+func (m *StatusesMutation) Name() (r string, exists bool) {
+	v := m.name
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldName returns the old "name" field's value of the Statuses entity.
+// If the Statuses object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *StatusesMutation) OldName(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldName is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldName requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldName: %w", err)
+	}
+	return oldValue.Name, nil
+}
+
+// ResetName resets all changes to the "name" field.
+func (m *StatusesMutation) ResetName() {
+	m.name = nil
+}
+
 // Where appends a list predicates to the StatusesMutation builder.
 func (m *StatusesMutation) Where(ps ...predicate.Statuses) {
 	m.predicates = append(m.predicates, ps...)
@@ -2515,7 +2384,10 @@ func (m *StatusesMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *StatusesMutation) Fields() []string {
-	fields := make([]string, 0, 0)
+	fields := make([]string, 0, 1)
+	if m.name != nil {
+		fields = append(fields, statuses.FieldName)
+	}
 	return fields
 }
 
@@ -2523,6 +2395,10 @@ func (m *StatusesMutation) Fields() []string {
 // return value indicates that this field was not set, or was not defined in the
 // schema.
 func (m *StatusesMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case statuses.FieldName:
+		return m.Name()
+	}
 	return nil, false
 }
 
@@ -2530,6 +2406,10 @@ func (m *StatusesMutation) Field(name string) (ent.Value, bool) {
 // returned if the mutation operation is not UpdateOne, or the query to the
 // database failed.
 func (m *StatusesMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case statuses.FieldName:
+		return m.OldName(ctx)
+	}
 	return nil, fmt.Errorf("unknown Statuses field %s", name)
 }
 
@@ -2538,6 +2418,13 @@ func (m *StatusesMutation) OldField(ctx context.Context, name string) (ent.Value
 // type.
 func (m *StatusesMutation) SetField(name string, value ent.Value) error {
 	switch name {
+	case statuses.FieldName:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetName(v)
+		return nil
 	}
 	return fmt.Errorf("unknown Statuses field %s", name)
 }
@@ -2559,6 +2446,8 @@ func (m *StatusesMutation) AddedField(name string) (ent.Value, bool) {
 // the field is not defined in the schema, or if the type mismatched the field
 // type.
 func (m *StatusesMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	}
 	return fmt.Errorf("unknown Statuses numeric field %s", name)
 }
 
@@ -2584,6 +2473,11 @@ func (m *StatusesMutation) ClearField(name string) error {
 // ResetField resets all changes in the mutation for the field with the given name.
 // It returns an error if the field is not defined in the schema.
 func (m *StatusesMutation) ResetField(name string) error {
+	switch name {
+	case statuses.FieldName:
+		m.ResetName()
+		return nil
+	}
 	return fmt.Errorf("unknown Statuses field %s", name)
 }
 

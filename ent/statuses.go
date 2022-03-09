@@ -8,15 +8,16 @@ import (
 
 	"entgo.io/ent/dialect/sql"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/ent/statuses"
-	"github.com/gofrs/uuid"
 )
 
 // Statuses is the model entity for the Statuses schema.
 type Statuses struct {
-	config
+	config `json:"-"`
 	// ID of the ent.
-	ID                 int `json:"id,omitempty"`
-	equipment_statuses *uuid.UUID
+	ID int `json:"id,omitempty"`
+	// Name holds the value of the "name" field.
+	Name               string `json:"name,omitempty"`
+	equipment_statuses *int
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -26,8 +27,10 @@ func (*Statuses) scanValues(columns []string) ([]interface{}, error) {
 		switch columns[i] {
 		case statuses.FieldID:
 			values[i] = new(sql.NullInt64)
+		case statuses.FieldName:
+			values[i] = new(sql.NullString)
 		case statuses.ForeignKeys[0]: // equipment_statuses
-			values[i] = &sql.NullScanner{S: new(uuid.UUID)}
+			values[i] = new(sql.NullInt64)
 		default:
 			return nil, fmt.Errorf("unexpected column %q for type Statuses", columns[i])
 		}
@@ -49,12 +52,18 @@ func (s *Statuses) assignValues(columns []string, values []interface{}) error {
 				return fmt.Errorf("unexpected type %T for field id", value)
 			}
 			s.ID = int(value.Int64)
-		case statuses.ForeignKeys[0]:
-			if value, ok := values[i].(*sql.NullScanner); !ok {
-				return fmt.Errorf("unexpected type %T for field equipment_statuses", values[i])
+		case statuses.FieldName:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field name", values[i])
 			} else if value.Valid {
-				s.equipment_statuses = new(uuid.UUID)
-				*s.equipment_statuses = *value.S.(*uuid.UUID)
+				s.Name = value.String
+			}
+		case statuses.ForeignKeys[0]:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for edge-field equipment_statuses", value)
+			} else if value.Valid {
+				s.equipment_statuses = new(int)
+				*s.equipment_statuses = int(value.Int64)
 			}
 		}
 	}
@@ -84,6 +93,8 @@ func (s *Statuses) String() string {
 	var builder strings.Builder
 	builder.WriteString("Statuses(")
 	builder.WriteString(fmt.Sprintf("id=%v", s.ID))
+	builder.WriteString(", name=")
+	builder.WriteString(s.Name)
 	builder.WriteByte(')')
 	return builder.String()
 }

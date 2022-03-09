@@ -19,7 +19,7 @@ import (
 	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
 
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/swagger/generated/restapi/operations/kinds"
+	"git.epam.com/epm-lstr/epm-lstr-lc/be/swagger/generated/restapi/operations/equipment"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/swagger/generated/restapi/operations/status"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/swagger/generated/restapi/operations/users"
 )
@@ -46,14 +46,23 @@ func NewBeAPI(spec *loads.Document) *BeAPI {
 
 		JSONProducer: runtime.JSONProducer(),
 
-		KindsCreateNewKindHandler: kinds.CreateNewKindHandlerFunc(func(params kinds.CreateNewKindParams) middleware.Responder {
-			return middleware.NotImplemented("operation kinds.CreateNewKind has not yet been implemented")
+		EquipmentCreateNewEquipmentHandler: equipment.CreateNewEquipmentHandlerFunc(func(params equipment.CreateNewEquipmentParams) middleware.Responder {
+			return middleware.NotImplemented("operation equipment.CreateNewEquipment has not yet been implemented")
+		}),
+		EquipmentDeleteEquipmentHandler: equipment.DeleteEquipmentHandlerFunc(func(params equipment.DeleteEquipmentParams) middleware.Responder {
+			return middleware.NotImplemented("operation equipment.DeleteEquipment has not yet been implemented")
 		}),
 		StatusDeleteStatusHandler: status.DeleteStatusHandlerFunc(func(params status.DeleteStatusParams) middleware.Responder {
 			return middleware.NotImplemented("operation status.DeleteStatus has not yet been implemented")
 		}),
-		KindsGetAllKindsHandler: kinds.GetAllKindsHandlerFunc(func(params kinds.GetAllKindsParams) middleware.Responder {
-			return middleware.NotImplemented("operation kinds.GetAllKinds has not yet been implemented")
+		EquipmentEditEquipmentHandler: equipment.EditEquipmentHandlerFunc(func(params equipment.EditEquipmentParams) middleware.Responder {
+			return middleware.NotImplemented("operation equipment.EditEquipment has not yet been implemented")
+		}),
+		EquipmentGetAllEquipmentHandler: equipment.GetAllEquipmentHandlerFunc(func(params equipment.GetAllEquipmentParams) middleware.Responder {
+			return middleware.NotImplemented("operation equipment.GetAllEquipment has not yet been implemented")
+		}),
+		EquipmentGetEquipmentHandler: equipment.GetEquipmentHandlerFunc(func(params equipment.GetEquipmentParams) middleware.Responder {
+			return middleware.NotImplemented("operation equipment.GetEquipment has not yet been implemented")
 		}),
 		StatusGetStatusHandler: status.GetStatusHandlerFunc(func(params status.GetStatusParams) middleware.Responder {
 			return middleware.NotImplemented("operation status.GetStatus has not yet been implemented")
@@ -61,14 +70,8 @@ func NewBeAPI(spec *loads.Document) *BeAPI {
 		StatusGetStatusesHandler: status.GetStatusesHandlerFunc(func(params status.GetStatusesParams) middleware.Responder {
 			return middleware.NotImplemented("operation status.GetStatuses has not yet been implemented")
 		}),
-		KindsDeleteKindHandler: kinds.DeleteKindHandlerFunc(func(params kinds.DeleteKindParams) middleware.Responder {
-			return middleware.NotImplemented("operation kinds.DeleteKind has not yet been implemented")
-		}),
 		UsersGetCurrentUserHandler: users.GetCurrentUserHandlerFunc(func(params users.GetCurrentUserParams, principal interface{}) middleware.Responder {
 			return middleware.NotImplemented("operation users.GetCurrentUser has not yet been implemented")
-		}),
-		KindsGetKindByIDHandler: kinds.GetKindByIDHandlerFunc(func(params kinds.GetKindByIDParams) middleware.Responder {
-			return middleware.NotImplemented("operation kinds.GetKindByID has not yet been implemented")
 		}),
 		UsersPatchUserHandler: users.PatchUserHandlerFunc(func(params users.PatchUserParams, principal interface{}) middleware.Responder {
 			return middleware.NotImplemented("operation users.PatchUser has not yet been implemented")
@@ -130,22 +133,24 @@ type BeAPI struct {
 	// APIAuthorizer provides access control (ACL/RBAC/ABAC) by providing access to the request and authenticated principal
 	APIAuthorizer runtime.Authorizer
 
-	// KindsCreateNewKindHandler sets the operation handler for the create new kind operation
-	KindsCreateNewKindHandler kinds.CreateNewKindHandler
+	// EquipmentCreateNewEquipmentHandler sets the operation handler for the create new equipment operation
+	EquipmentCreateNewEquipmentHandler equipment.CreateNewEquipmentHandler
+	// EquipmentDeleteEquipmentHandler sets the operation handler for the delete equipment operation
+	EquipmentDeleteEquipmentHandler equipment.DeleteEquipmentHandler
 	// StatusDeleteStatusHandler sets the operation handler for the delete status operation
 	StatusDeleteStatusHandler status.DeleteStatusHandler
-	// KindsGetAllKindsHandler sets the operation handler for the get all kinds operation
-	KindsGetAllKindsHandler kinds.GetAllKindsHandler
+	// EquipmentEditEquipmentHandler sets the operation handler for the edit equipment operation
+	EquipmentEditEquipmentHandler equipment.EditEquipmentHandler
+	// EquipmentGetAllEquipmentHandler sets the operation handler for the get all equipment operation
+	EquipmentGetAllEquipmentHandler equipment.GetAllEquipmentHandler
+	// EquipmentGetEquipmentHandler sets the operation handler for the get equipment operation
+	EquipmentGetEquipmentHandler equipment.GetEquipmentHandler
 	// StatusGetStatusHandler sets the operation handler for the get status operation
 	StatusGetStatusHandler status.GetStatusHandler
 	// StatusGetStatusesHandler sets the operation handler for the get statuses operation
 	StatusGetStatusesHandler status.GetStatusesHandler
-	// KindsDeleteKindHandler sets the operation handler for the delete kind operation
-	KindsDeleteKindHandler kinds.DeleteKindHandler
 	// UsersGetCurrentUserHandler sets the operation handler for the get current user operation
 	UsersGetCurrentUserHandler users.GetCurrentUserHandler
-	// KindsGetKindByIDHandler sets the operation handler for the get kind by ID operation
-	KindsGetKindByIDHandler kinds.GetKindByIDHandler
 	// UsersPatchUserHandler sets the operation handler for the patch user operation
 	UsersPatchUserHandler users.PatchUserHandler
 	// StatusPostStatusHandler sets the operation handler for the post status operation
@@ -233,14 +238,23 @@ func (o *BeAPI) Validate() error {
 		unregistered = append(unregistered, "AuthorizationAuth")
 	}
 
-	if o.KindsCreateNewKindHandler == nil {
-		unregistered = append(unregistered, "kinds.CreateNewKindHandler")
+	if o.EquipmentCreateNewEquipmentHandler == nil {
+		unregistered = append(unregistered, "equipment.CreateNewEquipmentHandler")
+	}
+	if o.EquipmentDeleteEquipmentHandler == nil {
+		unregistered = append(unregistered, "equipment.DeleteEquipmentHandler")
 	}
 	if o.StatusDeleteStatusHandler == nil {
 		unregistered = append(unregistered, "status.DeleteStatusHandler")
 	}
-	if o.KindsGetAllKindsHandler == nil {
-		unregistered = append(unregistered, "kinds.GetAllKindsHandler")
+	if o.EquipmentEditEquipmentHandler == nil {
+		unregistered = append(unregistered, "equipment.EditEquipmentHandler")
+	}
+	if o.EquipmentGetAllEquipmentHandler == nil {
+		unregistered = append(unregistered, "equipment.GetAllEquipmentHandler")
+	}
+	if o.EquipmentGetEquipmentHandler == nil {
+		unregistered = append(unregistered, "equipment.GetEquipmentHandler")
 	}
 	if o.StatusGetStatusHandler == nil {
 		unregistered = append(unregistered, "status.GetStatusHandler")
@@ -248,14 +262,8 @@ func (o *BeAPI) Validate() error {
 	if o.StatusGetStatusesHandler == nil {
 		unregistered = append(unregistered, "status.GetStatusesHandler")
 	}
-	if o.KindsDeleteKindHandler == nil {
-		unregistered = append(unregistered, "kinds.DeleteKindHandler")
-	}
 	if o.UsersGetCurrentUserHandler == nil {
 		unregistered = append(unregistered, "users.GetCurrentUserHandler")
-	}
-	if o.KindsGetKindByIDHandler == nil {
-		unregistered = append(unregistered, "kinds.GetKindByIDHandler")
 	}
 	if o.UsersPatchUserHandler == nil {
 		unregistered = append(unregistered, "users.PatchUserHandler")
@@ -366,15 +374,27 @@ func (o *BeAPI) initHandlerCache() {
 	if o.handlers["POST"] == nil {
 		o.handlers["POST"] = make(map[string]http.Handler)
 	}
-	o.handlers["POST"]["/equipment/kinds"] = kinds.NewCreateNewKind(o.context, o.KindsCreateNewKindHandler)
+	o.handlers["POST"]["/equipment"] = equipment.NewCreateNewEquipment(o.context, o.EquipmentCreateNewEquipmentHandler)
+	if o.handlers["DELETE"] == nil {
+		o.handlers["DELETE"] = make(map[string]http.Handler)
+	}
+	o.handlers["DELETE"]["/equipment/{equipmentId}"] = equipment.NewDeleteEquipment(o.context, o.EquipmentDeleteEquipmentHandler)
 	if o.handlers["DELETE"] == nil {
 		o.handlers["DELETE"] = make(map[string]http.Handler)
 	}
 	o.handlers["DELETE"]["/equipment/statuses/{statusId}"] = status.NewDeleteStatus(o.context, o.StatusDeleteStatusHandler)
+	if o.handlers["PUT"] == nil {
+		o.handlers["PUT"] = make(map[string]http.Handler)
+	}
+	o.handlers["PUT"]["/equipment/{equipmentId}"] = equipment.NewEditEquipment(o.context, o.EquipmentEditEquipmentHandler)
 	if o.handlers["GET"] == nil {
 		o.handlers["GET"] = make(map[string]http.Handler)
 	}
-	o.handlers["GET"]["/equipment/kinds"] = kinds.NewGetAllKinds(o.context, o.KindsGetAllKindsHandler)
+	o.handlers["GET"]["/equipment"] = equipment.NewGetAllEquipment(o.context, o.EquipmentGetAllEquipmentHandler)
+	if o.handlers["GET"] == nil {
+		o.handlers["GET"] = make(map[string]http.Handler)
+	}
+	o.handlers["GET"]["/equipment/{equipmentId}"] = equipment.NewGetEquipment(o.context, o.EquipmentGetEquipmentHandler)
 	if o.handlers["GET"] == nil {
 		o.handlers["GET"] = make(map[string]http.Handler)
 	}
@@ -383,18 +403,10 @@ func (o *BeAPI) initHandlerCache() {
 		o.handlers["GET"] = make(map[string]http.Handler)
 	}
 	o.handlers["GET"]["/equipment/statuses"] = status.NewGetStatuses(o.context, o.StatusGetStatusesHandler)
-	if o.handlers["DELETE"] == nil {
-		o.handlers["DELETE"] = make(map[string]http.Handler)
-	}
-	o.handlers["DELETE"]["/equipment/kinds/{kindId}"] = kinds.NewDeleteKind(o.context, o.KindsDeleteKindHandler)
 	if o.handlers["GET"] == nil {
 		o.handlers["GET"] = make(map[string]http.Handler)
 	}
 	o.handlers["GET"]["/v1/users/me"] = users.NewGetCurrentUser(o.context, o.UsersGetCurrentUserHandler)
-	if o.handlers["GET"] == nil {
-		o.handlers["GET"] = make(map[string]http.Handler)
-	}
-	o.handlers["GET"]["/equipment/kinds/{kindId}"] = kinds.NewGetKindByID(o.context, o.KindsGetKindByIDHandler)
 	if o.handlers["PATCH"] == nil {
 		o.handlers["PATCH"] = make(map[string]http.Handler)
 	}

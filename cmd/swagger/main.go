@@ -3,8 +3,6 @@ package main
 import (
 	"context"
 	"database/sql"
-	"github.com/golang-migrate/migrate/v4"
-	"github.com/golang-migrate/migrate/v4/database/postgres"
 	"log"
 	"os"
 
@@ -16,7 +14,6 @@ import (
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/swagger/handlers"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/swagger/middlewares"
 	"github.com/go-openapi/loads"
-	_ "github.com/golang-migrate/migrate/v4/source/file"
 	_ "github.com/jackc/pgx/v4/stdlib"
 	"go.uber.org/zap"
 )
@@ -38,17 +35,6 @@ func main() {
 		log.Fatal(err)
 	}
 
-	driver, err := postgres.WithInstance(db, &postgres.Config{})
-	m, err := migrate.NewWithDatabaseInstance(
-		"file://db/migrations",
-		"csr", driver)
-	if err := m.Up(); err != nil {
-		if err != migrate.ErrNoChange {
-			log.Fatal(err)
-		}
-		log.Println(err)
-	}
-
 	// Create an ent.Driver from `db`.
 	drv := entsql.OpenDB(dialect.Postgres, db)
 	client := ent.NewClient(ent.Driver(drv))
@@ -66,15 +52,16 @@ func main() {
 		return
 	}
 
+	equipmentHandler := handlers.NewEquipment(
+		client,
+		logger,
+	)
+
 	userHandler := handlers.NewUser(
 		client,
 		logger,
 	)
 
-	kindsHandler := handlers.NewKind(
-		client,
-		logger,
-	)
 	statusHandler := handlers.NewStatus(
 		client,
 		logger,
@@ -88,15 +75,16 @@ func main() {
 	api.UsersGetCurrentUserHandler = userHandler.GetUserFunc()
 	api.UsersPatchUserHandler = userHandler.PatchUserFunc()
 
-	api.KindsCreateNewKindHandler = kindsHandler.CreateNewKindFunc()
-	api.KindsGetKindByIDHandler = kindsHandler.GetKindByIDFunc()
-	api.KindsDeleteKindHandler = kindsHandler.DeleteKindFunc()
-	api.KindsGetAllKindsHandler = kindsHandler.GetAllKindsFunc()
-
 	api.StatusPostStatusHandler = statusHandler.PostStatusFunc()
 	api.StatusGetStatusesHandler = statusHandler.GetStatusesFunc()
 	api.StatusGetStatusHandler = statusHandler.GetStatusFunc()
 	api.StatusDeleteStatusHandler = statusHandler.DeleteStatusFunc()
+
+	api.EquipmentCreateNewEquipmentHandler = equipmentHandler.PostEquipmentFunc()
+	api.EquipmentGetEquipmentHandler = equipmentHandler.GetEquipmentFunc()
+	api.EquipmentDeleteEquipmentHandler = equipmentHandler.DeleteEquipmentFunc()
+	api.EquipmentGetAllEquipmentHandler = equipmentHandler.ListEquipmentFunc()
+	api.EquipmentEditEquipmentHandler = equipmentHandler.EditEquipmentFunc()
 
 	server := restapi.NewServer(api)
 	listeners := []string{"http"}

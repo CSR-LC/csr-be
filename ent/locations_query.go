@@ -107,7 +107,7 @@ func (lq *LocationsQuery) FirstIDX(ctx context.Context) int {
 }
 
 // Only returns a single Locations entity found by the query, ensuring it only returns one.
-// Returns a *NotSingularError when exactly one Locations entity is not found.
+// Returns a *NotSingularError when more than one Locations entity is found.
 // Returns a *NotFoundError when no Locations entities are found.
 func (lq *LocationsQuery) Only(ctx context.Context) (*Locations, error) {
 	nodes, err := lq.Limit(2).All(ctx)
@@ -134,7 +134,7 @@ func (lq *LocationsQuery) OnlyX(ctx context.Context) *Locations {
 }
 
 // OnlyID is like Only, but returns the only Locations ID in the query.
-// Returns a *NotSingularError when exactly one Locations ID is not found.
+// Returns a *NotSingularError when more than one Locations ID is found.
 // Returns a *NotFoundError when no entities are found.
 func (lq *LocationsQuery) OnlyID(ctx context.Context) (id int, err error) {
 	var ids []int
@@ -243,8 +243,9 @@ func (lq *LocationsQuery) Clone() *LocationsQuery {
 		order:      append([]OrderFunc{}, lq.order...),
 		predicates: append([]predicate.Locations{}, lq.predicates...),
 		// clone intermediate query.
-		sql:  lq.sql.Clone(),
-		path: lq.path,
+		sql:    lq.sql.Clone(),
+		path:   lq.path,
+		unique: lq.unique,
 	}
 }
 

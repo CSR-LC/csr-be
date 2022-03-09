@@ -8,7 +8,6 @@ import (
 
 	"entgo.io/ent/dialect/sql"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/ent/locations"
-	"github.com/gofrs/uuid"
 )
 
 // Locations is the model entity for the Locations schema.
@@ -16,7 +15,7 @@ type Locations struct {
 	config
 	// ID of the ent.
 	ID                  int `json:"id,omitempty"`
-	equipment_locations *uuid.UUID
+	equipment_locations *int
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -27,7 +26,7 @@ func (*Locations) scanValues(columns []string) ([]interface{}, error) {
 		case locations.FieldID:
 			values[i] = new(sql.NullInt64)
 		case locations.ForeignKeys[0]: // equipment_locations
-			values[i] = &sql.NullScanner{S: new(uuid.UUID)}
+			values[i] = new(sql.NullInt64)
 		default:
 			return nil, fmt.Errorf("unexpected column %q for type Locations", columns[i])
 		}
@@ -50,11 +49,11 @@ func (l *Locations) assignValues(columns []string, values []interface{}) error {
 			}
 			l.ID = int(value.Int64)
 		case locations.ForeignKeys[0]:
-			if value, ok := values[i].(*sql.NullScanner); !ok {
-				return fmt.Errorf("unexpected type %T for field equipment_locations", values[i])
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for edge-field equipment_locations", value)
 			} else if value.Valid {
-				l.equipment_locations = new(uuid.UUID)
-				*l.equipment_locations = *value.S.(*uuid.UUID)
+				l.equipment_locations = new(int)
+				*l.equipment_locations = int(value.Int64)
 			}
 		}
 	}

@@ -7,6 +7,8 @@ const (
 	Label = "statuses"
 	// FieldID holds the string denoting the id field in the database.
 	FieldID = "id"
+	// FieldName holds the string denoting the name field in the database.
+	FieldName = "name"
 	// Table holds the table name of the statuses in the database.
 	Table = "statuses"
 )
@@ -14,6 +16,7 @@ const (
 // Columns holds all SQL columns for statuses fields.
 var Columns = []string{
 	FieldID,
+	FieldName,
 }
 
 // ForeignKeys holds the SQL foreign-keys that are owned by the "statuses"

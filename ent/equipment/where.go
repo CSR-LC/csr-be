@@ -6,32 +6,31 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/ent/predicate"
-	"github.com/gofrs/uuid"
 )
 
 // ID filters vertices based on their ID field.
-func ID(id uuid.UUID) predicate.Equipment {
+func ID(id int) predicate.Equipment {
 	return predicate.Equipment(func(s *sql.Selector) {
 		s.Where(sql.EQ(s.C(FieldID), id))
 	})
 }
 
 // IDEQ applies the EQ predicate on the ID field.
-func IDEQ(id uuid.UUID) predicate.Equipment {
+func IDEQ(id int) predicate.Equipment {
 	return predicate.Equipment(func(s *sql.Selector) {
 		s.Where(sql.EQ(s.C(FieldID), id))
 	})
 }
 
 // IDNEQ applies the NEQ predicate on the ID field.
-func IDNEQ(id uuid.UUID) predicate.Equipment {
+func IDNEQ(id int) predicate.Equipment {
 	return predicate.Equipment(func(s *sql.Selector) {
 		s.Where(sql.NEQ(s.C(FieldID), id))
 	})
 }
 
 // IDIn applies the In predicate on the ID field.
-func IDIn(ids ...uuid.UUID) predicate.Equipment {
+func IDIn(ids ...int) predicate.Equipment {
 	return predicate.Equipment(func(s *sql.Selector) {
 		// if not arguments were provided, append the FALSE constants,
 		// since we can't apply "IN ()". This will make this predicate falsy.
@@ -48,7 +47,7 @@ func IDIn(ids ...uuid.UUID) predicate.Equipment {
 }
 
 // IDNotIn applies the NotIn predicate on the ID field.
-func IDNotIn(ids ...uuid.UUID) predicate.Equipment {
+func IDNotIn(ids ...int) predicate.Equipment {
 	return predicate.Equipment(func(s *sql.Selector) {
 		// if not arguments were provided, append the FALSE constants,
 		// since we can't apply "IN ()". This will make this predicate falsy.
@@ -65,28 +64,28 @@ func IDNotIn(ids ...uuid.UUID) predicate.Equipment {
 }
 
 // IDGT applies the GT predicate on the ID field.
-func IDGT(id uuid.UUID) predicate.Equipment {
+func IDGT(id int) predicate.Equipment {
 	return predicate.Equipment(func(s *sql.Selector) {
 		s.Where(sql.GT(s.C(FieldID), id))
 	})
 }
 
 // IDGTE applies the GTE predicate on the ID field.
-func IDGTE(id uuid.UUID) predicate.Equipment {
+func IDGTE(id int) predicate.Equipment {
 	return predicate.Equipment(func(s *sql.Selector) {
 		s.Where(sql.GTE(s.C(FieldID), id))
 	})
 }
 
 // IDLT applies the LT predicate on the ID field.
-func IDLT(id uuid.UUID) predicate.Equipment {
+func IDLT(id int) predicate.Equipment {
 	return predicate.Equipment(func(s *sql.Selector) {
 		s.Where(sql.LT(s.C(FieldID), id))
 	})
 }
 
 // IDLTE applies the LTE predicate on the ID field.
-func IDLTE(id uuid.UUID) predicate.Equipment {
+func IDLTE(id int) predicate.Equipment {
 	return predicate.Equipment(func(s *sql.Selector) {
 		s.Where(sql.LTE(s.C(FieldID), id))
 	})
@@ -106,38 +105,17 @@ func Name(v string) predicate.Equipment {
 	})
 }
 
-// Kind applies equality check predicate on the "kind" field. It's identical to KindEQ.
-func Kind(v uuid.UUID) predicate.Equipment {
-	return predicate.Equipment(func(s *sql.Selector) {
-		s.Where(sql.EQ(s.C(FieldKind), v))
-	})
-}
-
-// Status applies equality check predicate on the "status" field. It's identical to StatusEQ.
-func Status(v uuid.UUID) predicate.Equipment {
-	return predicate.Equipment(func(s *sql.Selector) {
-		s.Where(sql.EQ(s.C(FieldStatus), v))
-	})
-}
-
 // RateHour applies equality check predicate on the "rate_hour" field. It's identical to RateHourEQ.
-func RateHour(v float64) predicate.Equipment {
+func RateHour(v int64) predicate.Equipment {
 	return predicate.Equipment(func(s *sql.Selector) {
 		s.Where(sql.EQ(s.C(FieldRateHour), v))
 	})
 }
 
 // RateDay applies equality check predicate on the "rate_day" field. It's identical to RateDayEQ.
-func RateDay(v float64) predicate.Equipment {
+func RateDay(v int64) predicate.Equipment {
 	return predicate.Equipment(func(s *sql.Selector) {
 		s.Where(sql.EQ(s.C(FieldRateDay), v))
-	})
-}
-
-// Location applies equality check predicate on the "location" field. It's identical to LocationEQ.
-func Location(v uuid.UUID) predicate.Equipment {
-	return predicate.Equipment(func(s *sql.Selector) {
-		s.Where(sql.EQ(s.C(FieldLocation), v))
 	})
 }
 
@@ -370,174 +348,22 @@ func NameContainsFold(v string) predicate.Equipment {
 	})
 }
 
-// KindEQ applies the EQ predicate on the "kind" field.
-func KindEQ(v uuid.UUID) predicate.Equipment {
-	return predicate.Equipment(func(s *sql.Selector) {
-		s.Where(sql.EQ(s.C(FieldKind), v))
-	})
-}
-
-// KindNEQ applies the NEQ predicate on the "kind" field.
-func KindNEQ(v uuid.UUID) predicate.Equipment {
-	return predicate.Equipment(func(s *sql.Selector) {
-		s.Where(sql.NEQ(s.C(FieldKind), v))
-	})
-}
-
-// KindIn applies the In predicate on the "kind" field.
-func KindIn(vs ...uuid.UUID) predicate.Equipment {
-	v := make([]interface{}, len(vs))
-	for i := range v {
-		v[i] = vs[i]
-	}
-	return predicate.Equipment(func(s *sql.Selector) {
-		// if not arguments were provided, append the FALSE constants,
-		// since we can't apply "IN ()". This will make this predicate falsy.
-		if len(v) == 0 {
-			s.Where(sql.False())
-			return
-		}
-		s.Where(sql.In(s.C(FieldKind), v...))
-	})
-}
-
-// KindNotIn applies the NotIn predicate on the "kind" field.
-func KindNotIn(vs ...uuid.UUID) predicate.Equipment {
-	v := make([]interface{}, len(vs))
-	for i := range v {
-		v[i] = vs[i]
-	}
-	return predicate.Equipment(func(s *sql.Selector) {
-		// if not arguments were provided, append the FALSE constants,
-		// since we can't apply "IN ()". This will make this predicate falsy.
-		if len(v) == 0 {
-			s.Where(sql.False())
-			return
-		}
-		s.Where(sql.NotIn(s.C(FieldKind), v...))
-	})
-}
-
-// KindGT applies the GT predicate on the "kind" field.
-func KindGT(v uuid.UUID) predicate.Equipment {
-	return predicate.Equipment(func(s *sql.Selector) {
-		s.Where(sql.GT(s.C(FieldKind), v))
-	})
-}
-
-// KindGTE applies the GTE predicate on the "kind" field.
-func KindGTE(v uuid.UUID) predicate.Equipment {
-	return predicate.Equipment(func(s *sql.Selector) {
-		s.Where(sql.GTE(s.C(FieldKind), v))
-	})
-}
-
-// KindLT applies the LT predicate on the "kind" field.
-func KindLT(v uuid.UUID) predicate.Equipment {
-	return predicate.Equipment(func(s *sql.Selector) {
-		s.Where(sql.LT(s.C(FieldKind), v))
-	})
-}
-
-// KindLTE applies the LTE predicate on the "kind" field.
-func KindLTE(v uuid.UUID) predicate.Equipment {
-	return predicate.Equipment(func(s *sql.Selector) {
-		s.Where(sql.LTE(s.C(FieldKind), v))
-	})
-}
-
-// StatusEQ applies the EQ predicate on the "status" field.
-func StatusEQ(v uuid.UUID) predicate.Equipment {
-	return predicate.Equipment(func(s *sql.Selector) {
-		s.Where(sql.EQ(s.C(FieldStatus), v))
-	})
-}
-
-// StatusNEQ applies the NEQ predicate on the "status" field.
-func StatusNEQ(v uuid.UUID) predicate.Equipment {
-	return predicate.Equipment(func(s *sql.Selector) {
-		s.Where(sql.NEQ(s.C(FieldStatus), v))
-	})
-}
-
-// StatusIn applies the In predicate on the "status" field.
-func StatusIn(vs ...uuid.UUID) predicate.Equipment {
-	v := make([]interface{}, len(vs))
-	for i := range v {
-		v[i] = vs[i]
-	}
-	return predicate.Equipment(func(s *sql.Selector) {
-		// if not arguments were provided, append the FALSE constants,
-		// since we can't apply "IN ()". This will make this predicate falsy.
-		if len(v) == 0 {
-			s.Where(sql.False())
-			return
-		}
-		s.Where(sql.In(s.C(FieldStatus), v...))
-	})
-}
-
-// StatusNotIn applies the NotIn predicate on the "status" field.
-func StatusNotIn(vs ...uuid.UUID) predicate.Equipment {
-	v := make([]interface{}, len(vs))
-	for i := range v {
-		v[i] = vs[i]
-	}
-	return predicate.Equipment(func(s *sql.Selector) {
-		// if not arguments were provided, append the FALSE constants,
-		// since we can't apply "IN ()". This will make this predicate falsy.
-		if len(v) == 0 {
-			s.Where(sql.False())
-			return
-		}
-		s.Where(sql.NotIn(s.C(FieldStatus), v...))
-	})
-}
-
-// StatusGT applies the GT predicate on the "status" field.
-func StatusGT(v uuid.UUID) predicate.Equipment {
-	return predicate.Equipment(func(s *sql.Selector) {
-		s.Where(sql.GT(s.C(FieldStatus), v))
-	})
-}
-
-// StatusGTE applies the GTE predicate on the "status" field.
-func StatusGTE(v uuid.UUID) predicate.Equipment {
-	return predicate.Equipment(func(s *sql.Selector) {
-		s.Where(sql.GTE(s.C(FieldStatus), v))
-	})
-}
-
-// StatusLT applies the LT predicate on the "status" field.
-func StatusLT(v uuid.UUID) predicate.Equipment {
-	return predicate.Equipment(func(s *sql.Selector) {
-		s.Where(sql.LT(s.C(FieldStatus), v))
-	})
-}
-
-// StatusLTE applies the LTE predicate on the "status" field.
-func StatusLTE(v uuid.UUID) predicate.Equipment {
-	return predicate.Equipment(func(s *sql.Selector) {
-		s.Where(sql.LTE(s.C(FieldStatus), v))
-	})
-}
-
 // RateHourEQ applies the EQ predicate on the "rate_hour" field.
-func RateHourEQ(v float64) predicate.Equipment {
+func RateHourEQ(v int64) predicate.Equipment {
 	return predicate.Equipment(func(s *sql.Selector) {
 		s.Where(sql.EQ(s.C(FieldRateHour), v))
 	})
 }
 
 // RateHourNEQ applies the NEQ predicate on the "rate_hour" field.
-func RateHourNEQ(v float64) predicate.Equipment {
+func RateHourNEQ(v int64) predicate.Equipment {
 	return predicate.Equipment(func(s *sql.Selector) {
 		s.Where(sql.NEQ(s.C(FieldRateHour), v))
 	})
 }
 
 // RateHourIn applies the In predicate on the "rate_hour" field.
-func RateHourIn(vs ...float64) predicate.Equipment {
+func RateHourIn(vs ...int64) predicate.Equipment {
 	v := make([]interface{}, len(vs))
 	for i := range v {
 		v[i] = vs[i]
@@ -554,7 +380,7 @@ func RateHourIn(vs ...float64) predicate.Equipment {
 }
 
 // RateHourNotIn applies the NotIn predicate on the "rate_hour" field.
-func RateHourNotIn(vs ...float64) predicate.Equipment {
+func RateHourNotIn(vs ...int64) predicate.Equipment {
 	v := make([]interface{}, len(vs))
 	for i := range v {
 		v[i] = vs[i]
@@ -571,49 +397,49 @@ func RateHourNotIn(vs ...float64) predicate.Equipment {
 }
 
 // RateHourGT applies the GT predicate on the "rate_hour" field.
-func RateHourGT(v float64) predicate.Equipment {
+func RateHourGT(v int64) predicate.Equipment {
 	return predicate.Equipment(func(s *sql.Selector) {
 		s.Where(sql.GT(s.C(FieldRateHour), v))
 	})
 }
 
 // RateHourGTE applies the GTE predicate on the "rate_hour" field.
-func RateHourGTE(v float64) predicate.Equipment {
+func RateHourGTE(v int64) predicate.Equipment {
 	return predicate.Equipment(func(s *sql.Selector) {
 		s.Where(sql.GTE(s.C(FieldRateHour), v))
 	})
 }
 
 // RateHourLT applies the LT predicate on the "rate_hour" field.
-func RateHourLT(v float64) predicate.Equipment {
+func RateHourLT(v int64) predicate.Equipment {
 	return predicate.Equipment(func(s *sql.Selector) {
 		s.Where(sql.LT(s.C(FieldRateHour), v))
 	})
 }
 
 // RateHourLTE applies the LTE predicate on the "rate_hour" field.
-func RateHourLTE(v float64) predicate.Equipment {
+func RateHourLTE(v int64) predicate.Equipment {
 	return predicate.Equipment(func(s *sql.Selector) {
 		s.Where(sql.LTE(s.C(FieldRateHour), v))
 	})
 }
 
 // RateDayEQ applies the EQ predicate on the "rate_day" field.
-func RateDayEQ(v float64) predicate.Equipment {
+func RateDayEQ(v int64) predicate.Equipment {
 	return predicate.Equipment(func(s *sql.Selector) {
 		s.Where(sql.EQ(s.C(FieldRateDay), v))
 	})
 }
 
 // RateDayNEQ applies the NEQ predicate on the "rate_day" field.
-func RateDayNEQ(v float64) predicate.Equipment {
+func RateDayNEQ(v int64) predicate.Equipment {
 	return predicate.Equipment(func(s *sql.Selector) {
 		s.Where(sql.NEQ(s.C(FieldRateDay), v))
 	})
 }
 
 // RateDayIn applies the In predicate on the "rate_day" field.
-func RateDayIn(vs ...float64) predicate.Equipment {
+func RateDayIn(vs ...int64) predicate.Equipment {
 	v := make([]interface{}, len(vs))
 	for i := range v {
 		v[i] = vs[i]
@@ -630,7 +456,7 @@ func RateDayIn(vs ...float64) predicate.Equipment {
 }
 
 // RateDayNotIn applies the NotIn predicate on the "rate_day" field.
-func RateDayNotIn(vs ...float64) predicate.Equipment {
+func RateDayNotIn(vs ...int64) predicate.Equipment {
 	v := make([]interface{}, len(vs))
 	for i := range v {
 		v[i] = vs[i]
@@ -647,106 +473,30 @@ func RateDayNotIn(vs ...float64) predicate.Equipment {
 }
 
 // RateDayGT applies the GT predicate on the "rate_day" field.
-func RateDayGT(v float64) predicate.Equipment {
+func RateDayGT(v int64) predicate.Equipment {
 	return predicate.Equipment(func(s *sql.Selector) {
 		s.Where(sql.GT(s.C(FieldRateDay), v))
 	})
 }
 
 // RateDayGTE applies the GTE predicate on the "rate_day" field.
-func RateDayGTE(v float64) predicate.Equipment {
+func RateDayGTE(v int64) predicate.Equipment {
 	return predicate.Equipment(func(s *sql.Selector) {
 		s.Where(sql.GTE(s.C(FieldRateDay), v))
 	})
 }
 
 // RateDayLT applies the LT predicate on the "rate_day" field.
-func RateDayLT(v float64) predicate.Equipment {
+func RateDayLT(v int64) predicate.Equipment {
 	return predicate.Equipment(func(s *sql.Selector) {
 		s.Where(sql.LT(s.C(FieldRateDay), v))
 	})
 }
 
 // RateDayLTE applies the LTE predicate on the "rate_day" field.
-func RateDayLTE(v float64) predicate.Equipment {
+func RateDayLTE(v int64) predicate.Equipment {
 	return predicate.Equipment(func(s *sql.Selector) {
 		s.Where(sql.LTE(s.C(FieldRateDay), v))
-	})
-}
-
-// LocationEQ applies the EQ predicate on the "location" field.
-func LocationEQ(v uuid.UUID) predicate.Equipment {
-	return predicate.Equipment(func(s *sql.Selector) {
-		s.Where(sql.EQ(s.C(FieldLocation), v))
-	})
-}
-
-// LocationNEQ applies the NEQ predicate on the "location" field.
-func LocationNEQ(v uuid.UUID) predicate.Equipment {
-	return predicate.Equipment(func(s *sql.Selector) {
-		s.Where(sql.NEQ(s.C(FieldLocation), v))
-	})
-}
-
-// LocationIn applies the In predicate on the "location" field.
-func LocationIn(vs ...uuid.UUID) predicate.Equipment {
-	v := make([]interface{}, len(vs))
-	for i := range v {
-		v[i] = vs[i]
-	}
-	return predicate.Equipment(func(s *sql.Selector) {
-		// if not arguments were provided, append the FALSE constants,
-		// since we can't apply "IN ()". This will make this predicate falsy.
-		if len(v) == 0 {
-			s.Where(sql.False())
-			return
-		}
-		s.Where(sql.In(s.C(FieldLocation), v...))
-	})
-}
-
-// LocationNotIn applies the NotIn predicate on the "location" field.
-func LocationNotIn(vs ...uuid.UUID) predicate.Equipment {
-	v := make([]interface{}, len(vs))
-	for i := range v {
-		v[i] = vs[i]
-	}
-	return predicate.Equipment(func(s *sql.Selector) {
-		// if not arguments were provided, append the FALSE constants,
-		// since we can't apply "IN ()". This will make this predicate falsy.
-		if len(v) == 0 {
-			s.Where(sql.False())
-			return
-		}
-		s.Where(sql.NotIn(s.C(FieldLocation), v...))
-	})
-}
-
-// LocationGT applies the GT predicate on the "location" field.
-func LocationGT(v uuid.UUID) predicate.Equipment {
-	return predicate.Equipment(func(s *sql.Selector) {
-		s.Where(sql.GT(s.C(FieldLocation), v))
-	})
-}
-
-// LocationGTE applies the GTE predicate on the "location" field.
-func LocationGTE(v uuid.UUID) predicate.Equipment {
-	return predicate.Equipment(func(s *sql.Selector) {
-		s.Where(sql.GTE(s.C(FieldLocation), v))
-	})
-}
-
-// LocationLT applies the LT predicate on the "location" field.
-func LocationLT(v uuid.UUID) predicate.Equipment {
-	return predicate.Equipment(func(s *sql.Selector) {
-		s.Where(sql.LT(s.C(FieldLocation), v))
-	})
-}
-
-// LocationLTE applies the LTE predicate on the "location" field.
-func LocationLTE(v uuid.UUID) predicate.Equipment {
-	return predicate.Equipment(func(s *sql.Selector) {
-		s.Where(sql.LTE(s.C(FieldLocation), v))
 	})
 }
 

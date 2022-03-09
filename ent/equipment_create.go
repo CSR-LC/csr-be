@@ -13,7 +13,6 @@ import (
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/ent/kinds"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/ent/locations"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/ent/statuses"
-	"github.com/gofrs/uuid"
 )
 
 // EquipmentCreate is the builder for creating a Equipment entity.
@@ -51,33 +50,15 @@ func (ec *EquipmentCreate) SetNillableName(s *string) *EquipmentCreate {
 	return ec
 }
 
-// SetKind sets the "kind" field.
-func (ec *EquipmentCreate) SetKind(u uuid.UUID) *EquipmentCreate {
-	ec.mutation.SetKind(u)
-	return ec
-}
-
-// SetStatus sets the "status" field.
-func (ec *EquipmentCreate) SetStatus(u uuid.UUID) *EquipmentCreate {
-	ec.mutation.SetStatus(u)
-	return ec
-}
-
 // SetRateHour sets the "rate_hour" field.
-func (ec *EquipmentCreate) SetRateHour(f float64) *EquipmentCreate {
-	ec.mutation.SetRateHour(f)
+func (ec *EquipmentCreate) SetRateHour(i int64) *EquipmentCreate {
+	ec.mutation.SetRateHour(i)
 	return ec
 }
 
 // SetRateDay sets the "rate_day" field.
-func (ec *EquipmentCreate) SetRateDay(f float64) *EquipmentCreate {
-	ec.mutation.SetRateDay(f)
-	return ec
-}
-
-// SetLocation sets the "location" field.
-func (ec *EquipmentCreate) SetLocation(u uuid.UUID) *EquipmentCreate {
-	ec.mutation.SetLocation(u)
+func (ec *EquipmentCreate) SetRateDay(i int64) *EquipmentCreate {
+	ec.mutation.SetRateDay(i)
 	return ec
 }
 
@@ -92,12 +73,6 @@ func (ec *EquipmentCreate) SetNillableDescription(s *string) *EquipmentCreate {
 	if s != nil {
 		ec.SetDescription(*s)
 	}
-	return ec
-}
-
-// SetID sets the "id" field.
-func (ec *EquipmentCreate) SetID(u uuid.UUID) *EquipmentCreate {
-	ec.mutation.SetID(u)
 	return ec
 }
 
@@ -239,20 +214,11 @@ func (ec *EquipmentCreate) check() error {
 	if _, ok := ec.mutation.Name(); !ok {
 		return &ValidationError{Name: "name", err: errors.New(`ent: missing required field "Equipment.name"`)}
 	}
-	if _, ok := ec.mutation.Kind(); !ok {
-		return &ValidationError{Name: "kind", err: errors.New(`ent: missing required field "Equipment.kind"`)}
-	}
-	if _, ok := ec.mutation.Status(); !ok {
-		return &ValidationError{Name: "status", err: errors.New(`ent: missing required field "Equipment.status"`)}
-	}
 	if _, ok := ec.mutation.RateHour(); !ok {
 		return &ValidationError{Name: "rate_hour", err: errors.New(`ent: missing required field "Equipment.rate_hour"`)}
 	}
 	if _, ok := ec.mutation.RateDay(); !ok {
 		return &ValidationError{Name: "rate_day", err: errors.New(`ent: missing required field "Equipment.rate_day"`)}
-	}
-	if _, ok := ec.mutation.Location(); !ok {
-		return &ValidationError{Name: "location", err: errors.New(`ent: missing required field "Equipment.location"`)}
 	}
 	if _, ok := ec.mutation.Description(); !ok {
 		return &ValidationError{Name: "description", err: errors.New(`ent: missing required field "Equipment.description"`)}
@@ -268,13 +234,8 @@ func (ec *EquipmentCreate) sqlSave(ctx context.Context) (*Equipment, error) {
 		}
 		return nil, err
 	}
-	if _spec.ID.Value != nil {
-		if id, ok := _spec.ID.Value.(*uuid.UUID); ok {
-			_node.ID = *id
-		} else if err := _node.ID.Scan(_spec.ID.Value); err != nil {
-			return nil, err
-		}
-	}
+	id := _spec.ID.Value.(int64)
+	_node.ID = int(id)
 	return _node, nil
 }
 
@@ -284,15 +245,11 @@ func (ec *EquipmentCreate) createSpec() (*Equipment, *sqlgraph.CreateSpec) {
 		_spec = &sqlgraph.CreateSpec{
 			Table: equipment.Table,
 			ID: &sqlgraph.FieldSpec{
-				Type:   field.TypeUUID,
+				Type:   field.TypeInt,
 				Column: equipment.FieldID,
 			},
 		}
 	)
-	if id, ok := ec.mutation.ID(); ok {
-		_node.ID = id
-		_spec.ID.Value = &id
-	}
 	if value, ok := ec.mutation.Sku(); ok {
 		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
 			Type:   field.TypeString,
@@ -309,25 +266,9 @@ func (ec *EquipmentCreate) createSpec() (*Equipment, *sqlgraph.CreateSpec) {
 		})
 		_node.Name = value
 	}
-	if value, ok := ec.mutation.Kind(); ok {
-		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
-			Type:   field.TypeUUID,
-			Value:  value,
-			Column: equipment.FieldKind,
-		})
-		_node.Kind = value
-	}
-	if value, ok := ec.mutation.Status(); ok {
-		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
-			Type:   field.TypeUUID,
-			Value:  value,
-			Column: equipment.FieldStatus,
-		})
-		_node.Status = value
-	}
 	if value, ok := ec.mutation.RateHour(); ok {
 		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
-			Type:   field.TypeFloat64,
+			Type:   field.TypeInt64,
 			Value:  value,
 			Column: equipment.FieldRateHour,
 		})
@@ -335,19 +276,11 @@ func (ec *EquipmentCreate) createSpec() (*Equipment, *sqlgraph.CreateSpec) {
 	}
 	if value, ok := ec.mutation.RateDay(); ok {
 		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
-			Type:   field.TypeFloat64,
+			Type:   field.TypeInt64,
 			Value:  value,
 			Column: equipment.FieldRateDay,
 		})
 		_node.RateDay = value
-	}
-	if value, ok := ec.mutation.Location(); ok {
-		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
-			Type:   field.TypeUUID,
-			Value:  value,
-			Column: equipment.FieldLocation,
-		})
-		_node.Location = value
 	}
 	if value, ok := ec.mutation.Description(); ok {
 		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
@@ -459,6 +392,10 @@ func (ecb *EquipmentCreateBulk) Save(ctx context.Context) ([]*Equipment, error) 
 				}
 				mutation.id = &nodes[i].ID
 				mutation.done = true
+				if specs[i].ID.Value != nil {
+					id := specs[i].ID.Value.(int64)
+					nodes[i].ID = int(id)
+				}
 				return nodes[i], nil
 			})
 			for i := len(builder.hooks) - 1; i >= 0; i-- {

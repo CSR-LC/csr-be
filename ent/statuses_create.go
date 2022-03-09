@@ -4,6 +4,7 @@ package ent
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"entgo.io/ent/dialect/sql/sqlgraph"
@@ -16,6 +17,12 @@ type StatusesCreate struct {
 	config
 	mutation *StatusesMutation
 	hooks    []Hook
+}
+
+// SetName sets the "name" field.
+func (sc *StatusesCreate) SetName(s string) *StatusesCreate {
+	sc.mutation.SetName(s)
+	return sc
 }
 
 // Mutation returns the StatusesMutation object of the builder.
@@ -88,6 +95,9 @@ func (sc *StatusesCreate) ExecX(ctx context.Context) {
 
 // check runs all checks and user-defined validators on the builder.
 func (sc *StatusesCreate) check() error {
+	if _, ok := sc.mutation.Name(); !ok {
+		return &ValidationError{Name: "name", err: errors.New(`ent: missing required field "Statuses.name"`)}
+	}
 	return nil
 }
 
@@ -115,6 +125,14 @@ func (sc *StatusesCreate) createSpec() (*Statuses, *sqlgraph.CreateSpec) {
 			},
 		}
 	)
+	if value, ok := sc.mutation.Name(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: statuses.FieldName,
+		})
+		_node.Name = value
+	}
 	return _node, _spec
 }
 
