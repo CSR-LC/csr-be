@@ -12,45 +12,39 @@ import (
 	"github.com/go-openapi/errors"
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/runtime/middleware"
-	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/validate"
 
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/swagger/generated/models"
 )
 
-// NewEditEquipmentParams creates a new EditEquipmentParams object
+// NewFindEquipmentParams creates a new FindEquipmentParams object
 //
 // There are no default values defined in the spec.
-func NewEditEquipmentParams() EditEquipmentParams {
+func NewFindEquipmentParams() FindEquipmentParams {
 
-	return EditEquipmentParams{}
+	return FindEquipmentParams{}
 }
 
-// EditEquipmentParams contains all the bound params for the edit equipment operation
+// FindEquipmentParams contains all the bound params for the find equipment operation
 // typically these are obtained from a http.Request
 //
-// swagger:parameters EditEquipment
-type EditEquipmentParams struct {
+// swagger:parameters FindEquipment
+type FindEquipmentParams struct {
 
 	// HTTP Request Object
 	HTTPRequest *http.Request `json:"-"`
 
-	/*Edit an equipment
+	/*Filtered list of an equipment
 	  In: body
 	*/
-	EditEquipment *models.Equipment
-	/*equipment id
-	  Required: true
-	  In: path
-	*/
-	EquipmentID string
+	FindEquipment *models.Equipment
 }
 
 // BindRequest both binds and validates a request, it assumes that complex things implement a Validatable(strfmt.Registry) error interface
 // for simple values it will use straight method calls.
 //
-// To ensure default values, the struct must have been initialized with NewEditEquipmentParams() beforehand.
-func (o *EditEquipmentParams) BindRequest(r *http.Request, route *middleware.MatchedRoute) error {
+// To ensure default values, the struct must have been initialized with NewFindEquipmentParams() beforehand.
+func (o *FindEquipmentParams) BindRequest(r *http.Request, route *middleware.MatchedRoute) error {
 	var res []error
 
 	o.HTTPRequest = r
@@ -59,7 +53,7 @@ func (o *EditEquipmentParams) BindRequest(r *http.Request, route *middleware.Mat
 		defer r.Body.Close()
 		var body models.Equipment
 		if err := route.Consumer.Consume(r.Body, &body); err != nil {
-			res = append(res, errors.NewParseError("editEquipment", "body", "", err))
+			res = append(res, errors.NewParseError("findEquipment", "body", "", err))
 		} else {
 			// validate body object
 			if err := body.Validate(route.Formats); err != nil {
@@ -72,31 +66,12 @@ func (o *EditEquipmentParams) BindRequest(r *http.Request, route *middleware.Mat
 			}
 
 			if len(res) == 0 {
-				o.EditEquipment = &body
+				o.FindEquipment = &body
 			}
 		}
-	}
-
-	rEquipmentID, rhkEquipmentID, _ := route.Params.GetOK("equipmentId")
-	if err := o.bindEquipmentID(rEquipmentID, rhkEquipmentID, route.Formats); err != nil {
-		res = append(res, err)
 	}
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
-	return nil
-}
-
-// bindEquipmentID binds and validates parameter EquipmentID from path.
-func (o *EditEquipmentParams) bindEquipmentID(rawData []string, hasKey bool, formats strfmt.Registry) error {
-	var raw string
-	if len(rawData) > 0 {
-		raw = rawData[len(rawData)-1]
-	}
-
-	// Required: true
-	// Parameter is provided by construction from the route
-	o.EquipmentID = raw
-
 	return nil
 }

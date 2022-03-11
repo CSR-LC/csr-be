@@ -234,7 +234,6 @@ func init() {
             "description": "Edit an equipment",
             "name": "EditEquipment",
             "in": "body",
-            "required": true,
             "schema": {
               "$ref": "#/definitions/Equipment"
             }
@@ -285,6 +284,39 @@ func init() {
           "required": true
         }
       ]
+    },
+    "/findEquipment": {
+      "post": {
+        "tags": [
+          "Equipment"
+        ],
+        "summary": "Equipment filtered list",
+        "operationId": "FindEquipment",
+        "parameters": [
+          {
+            "description": "Filtered list of an equipment",
+            "name": "FindEquipment",
+            "in": "body",
+            "schema": {
+              "$ref": "#/definitions/Equipment"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Equipment has been found",
+            "schema": {
+              "$ref": "#/definitions/ListEquipment"
+            }
+          },
+          "default": {
+            "description": "Unexpected error.",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
     },
     "/v1/users": {
       "post": {
@@ -861,7 +893,6 @@ func init() {
             "description": "Edit an equipment",
             "name": "EditEquipment",
             "in": "body",
-            "required": true,
             "schema": {
               "$ref": "#/definitions/Equipment"
             }
@@ -912,6 +943,39 @@ func init() {
           "required": true
         }
       ]
+    },
+    "/findEquipment": {
+      "post": {
+        "tags": [
+          "Equipment"
+        ],
+        "summary": "Equipment filtered list",
+        "operationId": "FindEquipment",
+        "parameters": [
+          {
+            "description": "Filtered list of an equipment",
+            "name": "FindEquipment",
+            "in": "body",
+            "schema": {
+              "$ref": "#/definitions/Equipment"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Equipment has been found",
+            "schema": {
+              "$ref": "#/definitions/ListEquipment"
+            }
+          },
+          "default": {
+            "description": "Unexpected error.",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
     },
     "/v1/users": {
       "post": {

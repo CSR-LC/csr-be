@@ -228,7 +228,7 @@ paths:
         - name: EditEquipment
           in: body
           description: Edit an equipment
-          required: true
+          required: false
           schema:
             $ref: "#/definitions/Equipment"
       responses:
@@ -236,6 +236,28 @@ paths:
           description: Equipment edited
           schema:
             $ref: "#/definitions/Equipment"
+        default:
+          description: Unexpected error.
+          schema:
+            $ref: "#/definitions/Error"
+  /findEquipment:
+    post:
+      summary: Equipment filtered list
+      tags:
+        - Equipment
+      operationId: FindEquipment
+      parameters:
+        - name: FindEquipment
+          in: body
+          description: Filtered list of an equipment
+          required: false
+          schema:
+            $ref: "#/definitions/Equipment"
+      responses:
+        201:
+          description: Equipment has been found
+          schema:
+            $ref: "#/definitions/ListEquipment"
         default:
           description: Unexpected error.
           schema:

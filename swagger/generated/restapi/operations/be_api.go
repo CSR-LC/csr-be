@@ -58,6 +58,9 @@ func NewBeAPI(spec *loads.Document) *BeAPI {
 		EquipmentEditEquipmentHandler: equipment.EditEquipmentHandlerFunc(func(params equipment.EditEquipmentParams) middleware.Responder {
 			return middleware.NotImplemented("operation equipment.EditEquipment has not yet been implemented")
 		}),
+		EquipmentFindEquipmentHandler: equipment.FindEquipmentHandlerFunc(func(params equipment.FindEquipmentParams) middleware.Responder {
+			return middleware.NotImplemented("operation equipment.FindEquipment has not yet been implemented")
+		}),
 		EquipmentGetAllEquipmentHandler: equipment.GetAllEquipmentHandlerFunc(func(params equipment.GetAllEquipmentParams) middleware.Responder {
 			return middleware.NotImplemented("operation equipment.GetAllEquipment has not yet been implemented")
 		}),
@@ -141,6 +144,8 @@ type BeAPI struct {
 	StatusDeleteStatusHandler status.DeleteStatusHandler
 	// EquipmentEditEquipmentHandler sets the operation handler for the edit equipment operation
 	EquipmentEditEquipmentHandler equipment.EditEquipmentHandler
+	// EquipmentFindEquipmentHandler sets the operation handler for the find equipment operation
+	EquipmentFindEquipmentHandler equipment.FindEquipmentHandler
 	// EquipmentGetAllEquipmentHandler sets the operation handler for the get all equipment operation
 	EquipmentGetAllEquipmentHandler equipment.GetAllEquipmentHandler
 	// EquipmentGetEquipmentHandler sets the operation handler for the get equipment operation
@@ -249,6 +254,9 @@ func (o *BeAPI) Validate() error {
 	}
 	if o.EquipmentEditEquipmentHandler == nil {
 		unregistered = append(unregistered, "equipment.EditEquipmentHandler")
+	}
+	if o.EquipmentFindEquipmentHandler == nil {
+		unregistered = append(unregistered, "equipment.FindEquipmentHandler")
 	}
 	if o.EquipmentGetAllEquipmentHandler == nil {
 		unregistered = append(unregistered, "equipment.GetAllEquipmentHandler")
@@ -387,6 +395,10 @@ func (o *BeAPI) initHandlerCache() {
 		o.handlers["PUT"] = make(map[string]http.Handler)
 	}
 	o.handlers["PUT"]["/equipment/{equipmentId}"] = equipment.NewEditEquipment(o.context, o.EquipmentEditEquipmentHandler)
+	if o.handlers["POST"] == nil {
+		o.handlers["POST"] = make(map[string]http.Handler)
+	}
+	o.handlers["POST"]["/findEquipment"] = equipment.NewFindEquipment(o.context, o.EquipmentFindEquipmentHandler)
 	if o.handlers["GET"] == nil {
 		o.handlers["GET"] = make(map[string]http.Handler)
 	}

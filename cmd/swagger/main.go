@@ -85,6 +85,7 @@ func main() {
 	api.EquipmentDeleteEquipmentHandler = equipmentHandler.DeleteEquipmentFunc()
 	api.EquipmentGetAllEquipmentHandler = equipmentHandler.ListEquipmentFunc()
 	api.EquipmentEditEquipmentHandler = equipmentHandler.EditEquipmentFunc()
+	api.EquipmentFindEquipmentHandler = equipmentHandler.FindEquipmentFunc()
 
 	server := restapi.NewServer(api)
 	listeners := []string{"http"}

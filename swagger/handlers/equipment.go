@@ -192,3 +192,35 @@ func (c Equipment) EditEquipmentFunc() equipment.EditEquipmentHandlerFunc {
 		})
 	}
 }
+
+func (c Equipment) FindEquipmentFunc() equipment.FindEquipmentHandlerFunc {
+	return func(s equipment.FindEquipmentParams) middleware.Responder {
+		all, err := c.client.Equipment.Query().All(s.HTTPRequest.Context())
+		if err != nil {
+			return equipment.NewFindEquipmentDefault(http.StatusInternalServerError).WithPayload(&models.Error{
+				Data: &models.ErrorData{
+					Message: err.Error(),
+				},
+			})
+		}
+		res := models.ListEquipment{}
+		for _, element := range all {
+			if (element.Name == *s.FindEquipment.Name || *s.FindEquipment.Name == "") &&
+				(element.Description == *s.FindEquipment.Description || *s.FindEquipment.Description == "") &&
+				(element.Sku == *s.FindEquipment.Sku || *s.FindEquipment.Sku == "") &&
+				(element.RateDay == *s.FindEquipment.RateDay || *s.FindEquipment.RateDay == 0) &&
+				(element.RateHour == *s.FindEquipment.RateHour || *s.FindEquipment.RateHour == 0) {
+				id := strconv.Itoa(element.ID)
+				res = append(res, &models.EquipmentResponse{
+					ID:          &id,
+					Name:        &element.Name,
+					Description: &element.Description,
+					Sku:         &element.Sku,
+					RateDay:     &element.RateDay,
+					RateHour:    &element.RateHour,
+				})
+			}
+		}
+		return equipment.NewFindEquipmentCreated().WithPayload(res)
+	}
+}
