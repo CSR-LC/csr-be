@@ -13,7 +13,6 @@ import (
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/ent/kinds"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/ent/locations"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/ent/permission"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/ent/role"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/ent/statuses"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/ent/user"
 )
@@ -41,7 +40,6 @@ func columnChecker(table string) func(string) error {
 		kinds.Table:      kinds.ValidColumn,
 		locations.Table:  locations.ValidColumn,
 		permission.Table: permission.ValidColumn,
-		role.Table:       role.ValidColumn,
 		statuses.Table:   statuses.ValidColumn,
 		user.Table:       user.ValidColumn,
 	}

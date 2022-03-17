@@ -3,8 +3,6 @@ package main
 import (
 	"context"
 	"database/sql"
-	"github.com/golang-migrate/migrate/v4"
-	"github.com/golang-migrate/migrate/v4/database/postgres"
 	"log"
 	"os"
 
@@ -16,7 +14,6 @@ import (
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/swagger/handlers"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/swagger/middlewares"
 	"github.com/go-openapi/loads"
-	_ "github.com/golang-migrate/migrate/v4/source/file"
 	_ "github.com/jackc/pgx/v4/stdlib"
 	"go.uber.org/zap"
 )
@@ -36,17 +33,6 @@ func main() {
 	db, err := sql.Open("pgx", connectionString)
 	if err != nil {
 		log.Fatal(err)
-	}
-
-	driver, err := postgres.WithInstance(db, &postgres.Config{})
-	m, err := migrate.NewWithDatabaseInstance(
-		"file://db/migrations",
-		"csr", driver)
-	if err := m.Up(); err != nil {
-		if err != migrate.ErrNoChange {
-			log.Fatal(err)
-		}
-		log.Println(err)
 	}
 
 	// Create an ent.Driver from `db`.

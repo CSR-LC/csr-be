@@ -29,7 +29,6 @@ type hooks struct {
 	Kinds      []ent.Hook
 	Locations  []ent.Hook
 	Permission []ent.Hook
-	Role       []ent.Hook
 	Statuses   []ent.Hook
 	User       []ent.Hook
 }
