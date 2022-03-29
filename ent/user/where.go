@@ -191,6 +191,34 @@ func Website(v string) predicate.User {
 	})
 }
 
+// Vk applies equality check predicate on the "vk" field. It's identical to VkEQ.
+func Vk(v string) predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldVk), v))
+	})
+}
+
+// Instagram applies equality check predicate on the "instagram" field. It's identical to InstagramEQ.
+func Instagram(v string) predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldInstagram), v))
+	})
+}
+
+// Facebook applies equality check predicate on the "facebook" field. It's identical to FacebookEQ.
+func Facebook(v string) predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldFacebook), v))
+	})
+}
+
+// Tiktok applies equality check predicate on the "tiktok" field. It's identical to TiktokEQ.
+func Tiktok(v string) predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldTiktok), v))
+	})
+}
+
 // LoginEQ applies the EQ predicate on the "login" field.
 func LoginEQ(v string) predicate.User {
 	return predicate.User(func(s *sql.Selector) {
@@ -1537,6 +1565,20 @@ func TypeNotIn(vs ...Type) predicate.User {
 	})
 }
 
+// TypeIsNil applies the IsNil predicate on the "type" field.
+func TypeIsNil() predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		s.Where(sql.IsNull(s.C(FieldType)))
+	})
+}
+
+// TypeNotNil applies the NotNil predicate on the "type" field.
+func TypeNotNil() predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		s.Where(sql.NotNull(s.C(FieldType)))
+	})
+}
+
 // OrgNameEQ applies the EQ predicate on the "org_name" field.
 func OrgNameEQ(v string) predicate.User {
 	return predicate.User(func(s *sql.Selector) {
@@ -1784,6 +1826,520 @@ func WebsiteEqualFold(v string) predicate.User {
 func WebsiteContainsFold(v string) predicate.User {
 	return predicate.User(func(s *sql.Selector) {
 		s.Where(sql.ContainsFold(s.C(FieldWebsite), v))
+	})
+}
+
+// VkEQ applies the EQ predicate on the "vk" field.
+func VkEQ(v string) predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldVk), v))
+	})
+}
+
+// VkNEQ applies the NEQ predicate on the "vk" field.
+func VkNEQ(v string) predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		s.Where(sql.NEQ(s.C(FieldVk), v))
+	})
+}
+
+// VkIn applies the In predicate on the "vk" field.
+func VkIn(vs ...string) predicate.User {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.User(func(s *sql.Selector) {
+		// if not arguments were provided, append the FALSE constants,
+		// since we can't apply "IN ()". This will make this predicate falsy.
+		if len(v) == 0 {
+			s.Where(sql.False())
+			return
+		}
+		s.Where(sql.In(s.C(FieldVk), v...))
+	})
+}
+
+// VkNotIn applies the NotIn predicate on the "vk" field.
+func VkNotIn(vs ...string) predicate.User {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.User(func(s *sql.Selector) {
+		// if not arguments were provided, append the FALSE constants,
+		// since we can't apply "IN ()". This will make this predicate falsy.
+		if len(v) == 0 {
+			s.Where(sql.False())
+			return
+		}
+		s.Where(sql.NotIn(s.C(FieldVk), v...))
+	})
+}
+
+// VkGT applies the GT predicate on the "vk" field.
+func VkGT(v string) predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		s.Where(sql.GT(s.C(FieldVk), v))
+	})
+}
+
+// VkGTE applies the GTE predicate on the "vk" field.
+func VkGTE(v string) predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		s.Where(sql.GTE(s.C(FieldVk), v))
+	})
+}
+
+// VkLT applies the LT predicate on the "vk" field.
+func VkLT(v string) predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		s.Where(sql.LT(s.C(FieldVk), v))
+	})
+}
+
+// VkLTE applies the LTE predicate on the "vk" field.
+func VkLTE(v string) predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		s.Where(sql.LTE(s.C(FieldVk), v))
+	})
+}
+
+// VkContains applies the Contains predicate on the "vk" field.
+func VkContains(v string) predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		s.Where(sql.Contains(s.C(FieldVk), v))
+	})
+}
+
+// VkHasPrefix applies the HasPrefix predicate on the "vk" field.
+func VkHasPrefix(v string) predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		s.Where(sql.HasPrefix(s.C(FieldVk), v))
+	})
+}
+
+// VkHasSuffix applies the HasSuffix predicate on the "vk" field.
+func VkHasSuffix(v string) predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		s.Where(sql.HasSuffix(s.C(FieldVk), v))
+	})
+}
+
+// VkIsNil applies the IsNil predicate on the "vk" field.
+func VkIsNil() predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		s.Where(sql.IsNull(s.C(FieldVk)))
+	})
+}
+
+// VkNotNil applies the NotNil predicate on the "vk" field.
+func VkNotNil() predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		s.Where(sql.NotNull(s.C(FieldVk)))
+	})
+}
+
+// VkEqualFold applies the EqualFold predicate on the "vk" field.
+func VkEqualFold(v string) predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		s.Where(sql.EqualFold(s.C(FieldVk), v))
+	})
+}
+
+// VkContainsFold applies the ContainsFold predicate on the "vk" field.
+func VkContainsFold(v string) predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		s.Where(sql.ContainsFold(s.C(FieldVk), v))
+	})
+}
+
+// InstagramEQ applies the EQ predicate on the "instagram" field.
+func InstagramEQ(v string) predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldInstagram), v))
+	})
+}
+
+// InstagramNEQ applies the NEQ predicate on the "instagram" field.
+func InstagramNEQ(v string) predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		s.Where(sql.NEQ(s.C(FieldInstagram), v))
+	})
+}
+
+// InstagramIn applies the In predicate on the "instagram" field.
+func InstagramIn(vs ...string) predicate.User {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.User(func(s *sql.Selector) {
+		// if not arguments were provided, append the FALSE constants,
+		// since we can't apply "IN ()". This will make this predicate falsy.
+		if len(v) == 0 {
+			s.Where(sql.False())
+			return
+		}
+		s.Where(sql.In(s.C(FieldInstagram), v...))
+	})
+}
+
+// InstagramNotIn applies the NotIn predicate on the "instagram" field.
+func InstagramNotIn(vs ...string) predicate.User {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.User(func(s *sql.Selector) {
+		// if not arguments were provided, append the FALSE constants,
+		// since we can't apply "IN ()". This will make this predicate falsy.
+		if len(v) == 0 {
+			s.Where(sql.False())
+			return
+		}
+		s.Where(sql.NotIn(s.C(FieldInstagram), v...))
+	})
+}
+
+// InstagramGT applies the GT predicate on the "instagram" field.
+func InstagramGT(v string) predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		s.Where(sql.GT(s.C(FieldInstagram), v))
+	})
+}
+
+// InstagramGTE applies the GTE predicate on the "instagram" field.
+func InstagramGTE(v string) predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		s.Where(sql.GTE(s.C(FieldInstagram), v))
+	})
+}
+
+// InstagramLT applies the LT predicate on the "instagram" field.
+func InstagramLT(v string) predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		s.Where(sql.LT(s.C(FieldInstagram), v))
+	})
+}
+
+// InstagramLTE applies the LTE predicate on the "instagram" field.
+func InstagramLTE(v string) predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		s.Where(sql.LTE(s.C(FieldInstagram), v))
+	})
+}
+
+// InstagramContains applies the Contains predicate on the "instagram" field.
+func InstagramContains(v string) predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		s.Where(sql.Contains(s.C(FieldInstagram), v))
+	})
+}
+
+// InstagramHasPrefix applies the HasPrefix predicate on the "instagram" field.
+func InstagramHasPrefix(v string) predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		s.Where(sql.HasPrefix(s.C(FieldInstagram), v))
+	})
+}
+
+// InstagramHasSuffix applies the HasSuffix predicate on the "instagram" field.
+func InstagramHasSuffix(v string) predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		s.Where(sql.HasSuffix(s.C(FieldInstagram), v))
+	})
+}
+
+// InstagramIsNil applies the IsNil predicate on the "instagram" field.
+func InstagramIsNil() predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		s.Where(sql.IsNull(s.C(FieldInstagram)))
+	})
+}
+
+// InstagramNotNil applies the NotNil predicate on the "instagram" field.
+func InstagramNotNil() predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		s.Where(sql.NotNull(s.C(FieldInstagram)))
+	})
+}
+
+// InstagramEqualFold applies the EqualFold predicate on the "instagram" field.
+func InstagramEqualFold(v string) predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		s.Where(sql.EqualFold(s.C(FieldInstagram), v))
+	})
+}
+
+// InstagramContainsFold applies the ContainsFold predicate on the "instagram" field.
+func InstagramContainsFold(v string) predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		s.Where(sql.ContainsFold(s.C(FieldInstagram), v))
+	})
+}
+
+// FacebookEQ applies the EQ predicate on the "facebook" field.
+func FacebookEQ(v string) predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldFacebook), v))
+	})
+}
+
+// FacebookNEQ applies the NEQ predicate on the "facebook" field.
+func FacebookNEQ(v string) predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		s.Where(sql.NEQ(s.C(FieldFacebook), v))
+	})
+}
+
+// FacebookIn applies the In predicate on the "facebook" field.
+func FacebookIn(vs ...string) predicate.User {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.User(func(s *sql.Selector) {
+		// if not arguments were provided, append the FALSE constants,
+		// since we can't apply "IN ()". This will make this predicate falsy.
+		if len(v) == 0 {
+			s.Where(sql.False())
+			return
+		}
+		s.Where(sql.In(s.C(FieldFacebook), v...))
+	})
+}
+
+// FacebookNotIn applies the NotIn predicate on the "facebook" field.
+func FacebookNotIn(vs ...string) predicate.User {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.User(func(s *sql.Selector) {
+		// if not arguments were provided, append the FALSE constants,
+		// since we can't apply "IN ()". This will make this predicate falsy.
+		if len(v) == 0 {
+			s.Where(sql.False())
+			return
+		}
+		s.Where(sql.NotIn(s.C(FieldFacebook), v...))
+	})
+}
+
+// FacebookGT applies the GT predicate on the "facebook" field.
+func FacebookGT(v string) predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		s.Where(sql.GT(s.C(FieldFacebook), v))
+	})
+}
+
+// FacebookGTE applies the GTE predicate on the "facebook" field.
+func FacebookGTE(v string) predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		s.Where(sql.GTE(s.C(FieldFacebook), v))
+	})
+}
+
+// FacebookLT applies the LT predicate on the "facebook" field.
+func FacebookLT(v string) predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		s.Where(sql.LT(s.C(FieldFacebook), v))
+	})
+}
+
+// FacebookLTE applies the LTE predicate on the "facebook" field.
+func FacebookLTE(v string) predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		s.Where(sql.LTE(s.C(FieldFacebook), v))
+	})
+}
+
+// FacebookContains applies the Contains predicate on the "facebook" field.
+func FacebookContains(v string) predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		s.Where(sql.Contains(s.C(FieldFacebook), v))
+	})
+}
+
+// FacebookHasPrefix applies the HasPrefix predicate on the "facebook" field.
+func FacebookHasPrefix(v string) predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		s.Where(sql.HasPrefix(s.C(FieldFacebook), v))
+	})
+}
+
+// FacebookHasSuffix applies the HasSuffix predicate on the "facebook" field.
+func FacebookHasSuffix(v string) predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		s.Where(sql.HasSuffix(s.C(FieldFacebook), v))
+	})
+}
+
+// FacebookIsNil applies the IsNil predicate on the "facebook" field.
+func FacebookIsNil() predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		s.Where(sql.IsNull(s.C(FieldFacebook)))
+	})
+}
+
+// FacebookNotNil applies the NotNil predicate on the "facebook" field.
+func FacebookNotNil() predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		s.Where(sql.NotNull(s.C(FieldFacebook)))
+	})
+}
+
+// FacebookEqualFold applies the EqualFold predicate on the "facebook" field.
+func FacebookEqualFold(v string) predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		s.Where(sql.EqualFold(s.C(FieldFacebook), v))
+	})
+}
+
+// FacebookContainsFold applies the ContainsFold predicate on the "facebook" field.
+func FacebookContainsFold(v string) predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		s.Where(sql.ContainsFold(s.C(FieldFacebook), v))
+	})
+}
+
+// TiktokEQ applies the EQ predicate on the "tiktok" field.
+func TiktokEQ(v string) predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldTiktok), v))
+	})
+}
+
+// TiktokNEQ applies the NEQ predicate on the "tiktok" field.
+func TiktokNEQ(v string) predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		s.Where(sql.NEQ(s.C(FieldTiktok), v))
+	})
+}
+
+// TiktokIn applies the In predicate on the "tiktok" field.
+func TiktokIn(vs ...string) predicate.User {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.User(func(s *sql.Selector) {
+		// if not arguments were provided, append the FALSE constants,
+		// since we can't apply "IN ()". This will make this predicate falsy.
+		if len(v) == 0 {
+			s.Where(sql.False())
+			return
+		}
+		s.Where(sql.In(s.C(FieldTiktok), v...))
+	})
+}
+
+// TiktokNotIn applies the NotIn predicate on the "tiktok" field.
+func TiktokNotIn(vs ...string) predicate.User {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.User(func(s *sql.Selector) {
+		// if not arguments were provided, append the FALSE constants,
+		// since we can't apply "IN ()". This will make this predicate falsy.
+		if len(v) == 0 {
+			s.Where(sql.False())
+			return
+		}
+		s.Where(sql.NotIn(s.C(FieldTiktok), v...))
+	})
+}
+
+// TiktokGT applies the GT predicate on the "tiktok" field.
+func TiktokGT(v string) predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		s.Where(sql.GT(s.C(FieldTiktok), v))
+	})
+}
+
+// TiktokGTE applies the GTE predicate on the "tiktok" field.
+func TiktokGTE(v string) predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		s.Where(sql.GTE(s.C(FieldTiktok), v))
+	})
+}
+
+// TiktokLT applies the LT predicate on the "tiktok" field.
+func TiktokLT(v string) predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		s.Where(sql.LT(s.C(FieldTiktok), v))
+	})
+}
+
+// TiktokLTE applies the LTE predicate on the "tiktok" field.
+func TiktokLTE(v string) predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		s.Where(sql.LTE(s.C(FieldTiktok), v))
+	})
+}
+
+// TiktokContains applies the Contains predicate on the "tiktok" field.
+func TiktokContains(v string) predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		s.Where(sql.Contains(s.C(FieldTiktok), v))
+	})
+}
+
+// TiktokHasPrefix applies the HasPrefix predicate on the "tiktok" field.
+func TiktokHasPrefix(v string) predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		s.Where(sql.HasPrefix(s.C(FieldTiktok), v))
+	})
+}
+
+// TiktokHasSuffix applies the HasSuffix predicate on the "tiktok" field.
+func TiktokHasSuffix(v string) predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		s.Where(sql.HasSuffix(s.C(FieldTiktok), v))
+	})
+}
+
+// TiktokIsNil applies the IsNil predicate on the "tiktok" field.
+func TiktokIsNil() predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		s.Where(sql.IsNull(s.C(FieldTiktok)))
+	})
+}
+
+// TiktokNotNil applies the NotNil predicate on the "tiktok" field.
+func TiktokNotNil() predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		s.Where(sql.NotNull(s.C(FieldTiktok)))
+	})
+}
+
+// TiktokEqualFold applies the EqualFold predicate on the "tiktok" field.
+func TiktokEqualFold(v string) predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		s.Where(sql.EqualFold(s.C(FieldTiktok), v))
+	})
+}
+
+// TiktokContainsFold applies the ContainsFold predicate on the "tiktok" field.
+func TiktokContainsFold(v string) predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		s.Where(sql.ContainsFold(s.C(FieldTiktok), v))
+	})
+}
+
+// ActiveAreasIsNil applies the IsNil predicate on the "active_areas" field.
+func ActiveAreasIsNil() predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		s.Where(sql.IsNull(s.C(FieldActiveAreas)))
+	})
+}
+
+// ActiveAreasNotNil applies the NotNil predicate on the "active_areas" field.
+func ActiveAreasNotNil() predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		s.Where(sql.NotNull(s.C(FieldActiveAreas)))
 	})
 }
 

@@ -2550,6 +2550,11 @@ type UserMutation struct {
 	_type               *user.Type
 	org_name            *string
 	website             *string
+	vk                  *string
+	instagram           *string
+	facebook            *string
+	tiktok              *string
+	active_areas        *[]int64
 	clearedFields       map[string]struct{}
 	groups              map[int]struct{}
 	removedgroups       map[int]struct{}
@@ -3213,9 +3218,22 @@ func (m *UserMutation) OldType(ctx context.Context) (v user.Type, err error) {
 	return oldValue.Type, nil
 }
 
+// ClearType clears the value of the "type" field.
+func (m *UserMutation) ClearType() {
+	m._type = nil
+	m.clearedFields[user.FieldType] = struct{}{}
+}
+
+// TypeCleared returns if the "type" field was cleared in this mutation.
+func (m *UserMutation) TypeCleared() bool {
+	_, ok := m.clearedFields[user.FieldType]
+	return ok
+}
+
 // ResetType resets all changes to the "type" field.
 func (m *UserMutation) ResetType() {
 	m._type = nil
+	delete(m.clearedFields, user.FieldType)
 }
 
 // SetOrgName sets the "org_name" field.
@@ -3314,6 +3332,251 @@ func (m *UserMutation) WebsiteCleared() bool {
 func (m *UserMutation) ResetWebsite() {
 	m.website = nil
 	delete(m.clearedFields, user.FieldWebsite)
+}
+
+// SetVk sets the "vk" field.
+func (m *UserMutation) SetVk(s string) {
+	m.vk = &s
+}
+
+// Vk returns the value of the "vk" field in the mutation.
+func (m *UserMutation) Vk() (r string, exists bool) {
+	v := m.vk
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldVk returns the old "vk" field's value of the User entity.
+// If the User object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UserMutation) OldVk(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldVk is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldVk requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldVk: %w", err)
+	}
+	return oldValue.Vk, nil
+}
+
+// ClearVk clears the value of the "vk" field.
+func (m *UserMutation) ClearVk() {
+	m.vk = nil
+	m.clearedFields[user.FieldVk] = struct{}{}
+}
+
+// VkCleared returns if the "vk" field was cleared in this mutation.
+func (m *UserMutation) VkCleared() bool {
+	_, ok := m.clearedFields[user.FieldVk]
+	return ok
+}
+
+// ResetVk resets all changes to the "vk" field.
+func (m *UserMutation) ResetVk() {
+	m.vk = nil
+	delete(m.clearedFields, user.FieldVk)
+}
+
+// SetInstagram sets the "instagram" field.
+func (m *UserMutation) SetInstagram(s string) {
+	m.instagram = &s
+}
+
+// Instagram returns the value of the "instagram" field in the mutation.
+func (m *UserMutation) Instagram() (r string, exists bool) {
+	v := m.instagram
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldInstagram returns the old "instagram" field's value of the User entity.
+// If the User object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UserMutation) OldInstagram(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldInstagram is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldInstagram requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldInstagram: %w", err)
+	}
+	return oldValue.Instagram, nil
+}
+
+// ClearInstagram clears the value of the "instagram" field.
+func (m *UserMutation) ClearInstagram() {
+	m.instagram = nil
+	m.clearedFields[user.FieldInstagram] = struct{}{}
+}
+
+// InstagramCleared returns if the "instagram" field was cleared in this mutation.
+func (m *UserMutation) InstagramCleared() bool {
+	_, ok := m.clearedFields[user.FieldInstagram]
+	return ok
+}
+
+// ResetInstagram resets all changes to the "instagram" field.
+func (m *UserMutation) ResetInstagram() {
+	m.instagram = nil
+	delete(m.clearedFields, user.FieldInstagram)
+}
+
+// SetFacebook sets the "facebook" field.
+func (m *UserMutation) SetFacebook(s string) {
+	m.facebook = &s
+}
+
+// Facebook returns the value of the "facebook" field in the mutation.
+func (m *UserMutation) Facebook() (r string, exists bool) {
+	v := m.facebook
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldFacebook returns the old "facebook" field's value of the User entity.
+// If the User object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UserMutation) OldFacebook(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldFacebook is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldFacebook requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldFacebook: %w", err)
+	}
+	return oldValue.Facebook, nil
+}
+
+// ClearFacebook clears the value of the "facebook" field.
+func (m *UserMutation) ClearFacebook() {
+	m.facebook = nil
+	m.clearedFields[user.FieldFacebook] = struct{}{}
+}
+
+// FacebookCleared returns if the "facebook" field was cleared in this mutation.
+func (m *UserMutation) FacebookCleared() bool {
+	_, ok := m.clearedFields[user.FieldFacebook]
+	return ok
+}
+
+// ResetFacebook resets all changes to the "facebook" field.
+func (m *UserMutation) ResetFacebook() {
+	m.facebook = nil
+	delete(m.clearedFields, user.FieldFacebook)
+}
+
+// SetTiktok sets the "tiktok" field.
+func (m *UserMutation) SetTiktok(s string) {
+	m.tiktok = &s
+}
+
+// Tiktok returns the value of the "tiktok" field in the mutation.
+func (m *UserMutation) Tiktok() (r string, exists bool) {
+	v := m.tiktok
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTiktok returns the old "tiktok" field's value of the User entity.
+// If the User object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UserMutation) OldTiktok(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldTiktok is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldTiktok requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTiktok: %w", err)
+	}
+	return oldValue.Tiktok, nil
+}
+
+// ClearTiktok clears the value of the "tiktok" field.
+func (m *UserMutation) ClearTiktok() {
+	m.tiktok = nil
+	m.clearedFields[user.FieldTiktok] = struct{}{}
+}
+
+// TiktokCleared returns if the "tiktok" field was cleared in this mutation.
+func (m *UserMutation) TiktokCleared() bool {
+	_, ok := m.clearedFields[user.FieldTiktok]
+	return ok
+}
+
+// ResetTiktok resets all changes to the "tiktok" field.
+func (m *UserMutation) ResetTiktok() {
+	m.tiktok = nil
+	delete(m.clearedFields, user.FieldTiktok)
+}
+
+// SetActiveAreas sets the "active_areas" field.
+func (m *UserMutation) SetActiveAreas(i []int64) {
+	m.active_areas = &i
+}
+
+// ActiveAreas returns the value of the "active_areas" field in the mutation.
+func (m *UserMutation) ActiveAreas() (r []int64, exists bool) {
+	v := m.active_areas
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldActiveAreas returns the old "active_areas" field's value of the User entity.
+// If the User object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UserMutation) OldActiveAreas(ctx context.Context) (v []int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldActiveAreas is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldActiveAreas requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldActiveAreas: %w", err)
+	}
+	return oldValue.ActiveAreas, nil
+}
+
+// ClearActiveAreas clears the value of the "active_areas" field.
+func (m *UserMutation) ClearActiveAreas() {
+	m.active_areas = nil
+	m.clearedFields[user.FieldActiveAreas] = struct{}{}
+}
+
+// ActiveAreasCleared returns if the "active_areas" field was cleared in this mutation.
+func (m *UserMutation) ActiveAreasCleared() bool {
+	_, ok := m.clearedFields[user.FieldActiveAreas]
+	return ok
+}
+
+// ResetActiveAreas resets all changes to the "active_areas" field.
+func (m *UserMutation) ResetActiveAreas() {
+	m.active_areas = nil
+	delete(m.clearedFields, user.FieldActiveAreas)
 }
 
 // AddGroupIDs adds the "groups" edge to the Group entity by ids.
@@ -3428,7 +3691,7 @@ func (m *UserMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *UserMutation) Fields() []string {
-	fields := make([]string, 0, 15)
+	fields := make([]string, 0, 20)
 	if m.login != nil {
 		fields = append(fields, user.FieldLogin)
 	}
@@ -3474,6 +3737,21 @@ func (m *UserMutation) Fields() []string {
 	if m.website != nil {
 		fields = append(fields, user.FieldWebsite)
 	}
+	if m.vk != nil {
+		fields = append(fields, user.FieldVk)
+	}
+	if m.instagram != nil {
+		fields = append(fields, user.FieldInstagram)
+	}
+	if m.facebook != nil {
+		fields = append(fields, user.FieldFacebook)
+	}
+	if m.tiktok != nil {
+		fields = append(fields, user.FieldTiktok)
+	}
+	if m.active_areas != nil {
+		fields = append(fields, user.FieldActiveAreas)
+	}
 	return fields
 }
 
@@ -3512,6 +3790,16 @@ func (m *UserMutation) Field(name string) (ent.Value, bool) {
 		return m.OrgName()
 	case user.FieldWebsite:
 		return m.Website()
+	case user.FieldVk:
+		return m.Vk()
+	case user.FieldInstagram:
+		return m.Instagram()
+	case user.FieldFacebook:
+		return m.Facebook()
+	case user.FieldTiktok:
+		return m.Tiktok()
+	case user.FieldActiveAreas:
+		return m.ActiveAreas()
 	}
 	return nil, false
 }
@@ -3551,6 +3839,16 @@ func (m *UserMutation) OldField(ctx context.Context, name string) (ent.Value, er
 		return m.OldOrgName(ctx)
 	case user.FieldWebsite:
 		return m.OldWebsite(ctx)
+	case user.FieldVk:
+		return m.OldVk(ctx)
+	case user.FieldInstagram:
+		return m.OldInstagram(ctx)
+	case user.FieldFacebook:
+		return m.OldFacebook(ctx)
+	case user.FieldTiktok:
+		return m.OldTiktok(ctx)
+	case user.FieldActiveAreas:
+		return m.OldActiveAreas(ctx)
 	}
 	return nil, fmt.Errorf("unknown User field %s", name)
 }
@@ -3665,6 +3963,41 @@ func (m *UserMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetWebsite(v)
 		return nil
+	case user.FieldVk:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetVk(v)
+		return nil
+	case user.FieldInstagram:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetInstagram(v)
+		return nil
+	case user.FieldFacebook:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetFacebook(v)
+		return nil
+	case user.FieldTiktok:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTiktok(v)
+		return nil
+	case user.FieldActiveAreas:
+		v, ok := value.([]int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetActiveAreas(v)
+		return nil
 	}
 	return fmt.Errorf("unknown User field %s", name)
 }
@@ -3716,11 +4049,29 @@ func (m *UserMutation) ClearedFields() []string {
 	if m.FieldCleared(user.FieldPhone) {
 		fields = append(fields, user.FieldPhone)
 	}
+	if m.FieldCleared(user.FieldType) {
+		fields = append(fields, user.FieldType)
+	}
 	if m.FieldCleared(user.FieldOrgName) {
 		fields = append(fields, user.FieldOrgName)
 	}
 	if m.FieldCleared(user.FieldWebsite) {
 		fields = append(fields, user.FieldWebsite)
+	}
+	if m.FieldCleared(user.FieldVk) {
+		fields = append(fields, user.FieldVk)
+	}
+	if m.FieldCleared(user.FieldInstagram) {
+		fields = append(fields, user.FieldInstagram)
+	}
+	if m.FieldCleared(user.FieldFacebook) {
+		fields = append(fields, user.FieldFacebook)
+	}
+	if m.FieldCleared(user.FieldTiktok) {
+		fields = append(fields, user.FieldTiktok)
+	}
+	if m.FieldCleared(user.FieldActiveAreas) {
+		fields = append(fields, user.FieldActiveAreas)
 	}
 	return fields
 }
@@ -3757,11 +4108,29 @@ func (m *UserMutation) ClearField(name string) error {
 	case user.FieldPhone:
 		m.ClearPhone()
 		return nil
+	case user.FieldType:
+		m.ClearType()
+		return nil
 	case user.FieldOrgName:
 		m.ClearOrgName()
 		return nil
 	case user.FieldWebsite:
 		m.ClearWebsite()
+		return nil
+	case user.FieldVk:
+		m.ClearVk()
+		return nil
+	case user.FieldInstagram:
+		m.ClearInstagram()
+		return nil
+	case user.FieldFacebook:
+		m.ClearFacebook()
+		return nil
+	case user.FieldTiktok:
+		m.ClearTiktok()
+		return nil
+	case user.FieldActiveAreas:
+		m.ClearActiveAreas()
 		return nil
 	}
 	return fmt.Errorf("unknown User nullable field %s", name)
@@ -3815,6 +4184,21 @@ func (m *UserMutation) ResetField(name string) error {
 		return nil
 	case user.FieldWebsite:
 		m.ResetWebsite()
+		return nil
+	case user.FieldVk:
+		m.ResetVk()
+		return nil
+	case user.FieldInstagram:
+		m.ResetInstagram()
+		return nil
+	case user.FieldFacebook:
+		m.ResetFacebook()
+		return nil
+	case user.FieldTiktok:
+		m.ResetTiktok()
+		return nil
+	case user.FieldActiveAreas:
+		m.ResetActiveAreas()
 		return nil
 	}
 	return fmt.Errorf("unknown User field %s", name)

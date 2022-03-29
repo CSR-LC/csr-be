@@ -98,6 +98,7 @@ func main() {
 	api.UsersGetCurrentUserHandler = userHandler.GetUserFunc()
 	api.UsersPatchUserHandler = userHandler.PatchUserFunc()
 	api.UsersAssignRoleToUserHandler = userHandler.AssignRoleToUserFunc()
+	api.UsersUserUpdateHandler = userHandler.UpdateUserByIDFunc()
 
 	api.RolesGetRolesHandler = roleHandler.GetRolesFunc()
 

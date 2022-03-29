@@ -122,6 +122,39 @@ paths:
           description: Unexpected error.
           schema:
             $ref: "#/definitions/Error"
+            
+  /v1/users/{userId}:
+    parameters:
+      - name: userId
+        in: path
+        required: true
+        description: user id
+        type: integer
+    post:
+      consumes:
+        - application/json
+      parameters:
+        - name: UpdateUserTask
+          in: body
+          description: Data to update.
+          required: true
+          schema:
+            $ref: "#/definitions/UpdateUserTask"
+      tags:
+        - Users
+      operationId: UserUpdate
+      summary: Updates user information by its id.
+      responses:
+        200:
+          description: User information has been updated.
+          schema:
+            $ref: "#/definitions/SuccessUserUpdateResponse"
+        default:
+          description: Unexpected error.
+          schema:
+            $ref: "#/definitions/Error"  
+          
+          
   /equipment/statuses:
     post:
       summary: Creating a new status.
@@ -328,6 +361,54 @@ definitions:
           max_reservation_units:
             type: integer
             description: max reservation units field
+            
+  UpdateUserTask:
+    type: object
+    required:
+      - data  
+    description: Update user object
+    properties:
+      data:
+        type: object
+        properties:
+          name:
+            type: string
+            description: Name of user.
+          surname:
+            type: string
+            description: Surname of user.
+          patronymic:
+            type: string
+            description: Patronymyc data.
+          passport_series:
+            type: string
+          passport_number:
+            type: string
+          passport_authority:
+            type: string
+          passport_issue_date:
+            type: string
+          phone_number:
+            type: string
+            description: Phone number.
+          email:
+            type: string
+          type:
+            type: string
+          active_areas:
+            type: array
+            items:
+              type: integer
+          org_name:
+            type: string
+          vk:
+            type: string
+          instagram:
+            type: string
+          facebook:
+            type: string
+          tiktok:
+            type: string
 
   PatchRequest:
     type: array
@@ -402,6 +483,13 @@ definitions:
       roleId:
         type: integer
 
+  SuccessUserUpdateResponse:
+   type: object  
+   required:
+    - data
+   properties:
+    data:
+      $ref: "#/definitions/User"        
   #Role
   Role:
     type: object

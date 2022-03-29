@@ -31,9 +31,14 @@ func (User) Fields() []ent.Field {
 			}),
 		field.String("phone").Optional().Nillable(),
 		field.Bool("is_blocked").Default(false),
-		field.Enum("type").Values("person", "organization").Default("person"),
+		field.Enum("type").Optional().Values("person", "organization").Default("person"),
 		field.String("org_name").Optional().Nillable(),
 		field.String("website").Optional().Nillable(),
+		field.String("vk").Optional().Nillable(),
+		field.String("instagram").Optional().Nillable(),
+		field.String("facebook").Optional().Nillable(),
+		field.String("tiktok").Optional().Nillable(),
+		field.JSON("active_areas", []int64{}).Optional(),
 	}
 }
 

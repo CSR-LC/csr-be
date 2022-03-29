@@ -3,6 +3,7 @@
 package ent
 
 import (
+	"encoding/json"
 	"fmt"
 	"strings"
 	"time"
@@ -47,6 +48,16 @@ type User struct {
 	OrgName *string `json:"org_name,omitempty"`
 	// Website holds the value of the "website" field.
 	Website *string `json:"website,omitempty"`
+	// Vk holds the value of the "vk" field.
+	Vk *string `json:"vk,omitempty"`
+	// Instagram holds the value of the "instagram" field.
+	Instagram *string `json:"instagram,omitempty"`
+	// Facebook holds the value of the "facebook" field.
+	Facebook *string `json:"facebook,omitempty"`
+	// Tiktok holds the value of the "tiktok" field.
+	Tiktok *string `json:"tiktok,omitempty"`
+	// ActiveAreas holds the value of the "active_areas" field.
+	ActiveAreas []int64 `json:"active_areas,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the UserQuery when eager-loading is set.
 	Edges             UserEdges `json:"edges"`
@@ -93,11 +104,13 @@ func (*User) scanValues(columns []string) ([]interface{}, error) {
 	values := make([]interface{}, len(columns))
 	for i := range columns {
 		switch columns[i] {
+		case user.FieldActiveAreas:
+			values[i] = new([]byte)
 		case user.FieldIsBlocked:
 			values[i] = new(sql.NullBool)
 		case user.FieldID:
 			values[i] = new(sql.NullInt64)
-		case user.FieldLogin, user.FieldEmail, user.FieldPassword, user.FieldName, user.FieldSurname, user.FieldPatronymic, user.FieldPassportSeries, user.FieldPassportNumber, user.FieldPassportAuthority, user.FieldPhone, user.FieldType, user.FieldOrgName, user.FieldWebsite:
+		case user.FieldLogin, user.FieldEmail, user.FieldPassword, user.FieldName, user.FieldSurname, user.FieldPatronymic, user.FieldPassportSeries, user.FieldPassportNumber, user.FieldPassportAuthority, user.FieldPhone, user.FieldType, user.FieldOrgName, user.FieldWebsite, user.FieldVk, user.FieldInstagram, user.FieldFacebook, user.FieldTiktok:
 			values[i] = new(sql.NullString)
 		case user.FieldPassportIssueDate:
 			values[i] = new(sql.NullTime)
@@ -224,6 +237,42 @@ func (u *User) assignValues(columns []string, values []interface{}) error {
 				u.Website = new(string)
 				*u.Website = value.String
 			}
+		case user.FieldVk:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field vk", values[i])
+			} else if value.Valid {
+				u.Vk = new(string)
+				*u.Vk = value.String
+			}
+		case user.FieldInstagram:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field instagram", values[i])
+			} else if value.Valid {
+				u.Instagram = new(string)
+				*u.Instagram = value.String
+			}
+		case user.FieldFacebook:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field facebook", values[i])
+			} else if value.Valid {
+				u.Facebook = new(string)
+				*u.Facebook = value.String
+			}
+		case user.FieldTiktok:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field tiktok", values[i])
+			} else if value.Valid {
+				u.Tiktok = new(string)
+				*u.Tiktok = value.String
+			}
+		case user.FieldActiveAreas:
+			if value, ok := values[i].(*[]byte); !ok {
+				return fmt.Errorf("unexpected type %T for field active_areas", values[i])
+			} else if value != nil && len(*value) > 0 {
+				if err := json.Unmarshal(*value, &u.ActiveAreas); err != nil {
+					return fmt.Errorf("unmarshal field active_areas: %w", err)
+				}
+			}
 		case user.ForeignKeys[0]:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for edge-field active_area_users", value)
@@ -322,6 +371,24 @@ func (u *User) String() string {
 		builder.WriteString(", website=")
 		builder.WriteString(*v)
 	}
+	if v := u.Vk; v != nil {
+		builder.WriteString(", vk=")
+		builder.WriteString(*v)
+	}
+	if v := u.Instagram; v != nil {
+		builder.WriteString(", instagram=")
+		builder.WriteString(*v)
+	}
+	if v := u.Facebook; v != nil {
+		builder.WriteString(", facebook=")
+		builder.WriteString(*v)
+	}
+	if v := u.Tiktok; v != nil {
+		builder.WriteString(", tiktok=")
+		builder.WriteString(*v)
+	}
+	builder.WriteString(", active_areas=")
+	builder.WriteString(fmt.Sprintf("%v", u.ActiveAreas))
 	builder.WriteByte(')')
 	return builder.String()
 }

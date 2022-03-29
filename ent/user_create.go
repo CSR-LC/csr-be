@@ -172,6 +172,14 @@ func (uc *UserCreate) SetType(u user.Type) *UserCreate {
 	return uc
 }
 
+// SetNillableType sets the "type" field if the given value is not nil.
+func (uc *UserCreate) SetNillableType(u *user.Type) *UserCreate {
+	if u != nil {
+		uc.SetType(*u)
+	}
+	return uc
+}
+
 // SetOrgName sets the "org_name" field.
 func (uc *UserCreate) SetOrgName(s string) *UserCreate {
 	uc.mutation.SetOrgName(s)
@@ -197,6 +205,68 @@ func (uc *UserCreate) SetNillableWebsite(s *string) *UserCreate {
 	if s != nil {
 		uc.SetWebsite(*s)
 	}
+	return uc
+}
+
+// SetVk sets the "vk" field.
+func (uc *UserCreate) SetVk(s string) *UserCreate {
+	uc.mutation.SetVk(s)
+	return uc
+}
+
+// SetNillableVk sets the "vk" field if the given value is not nil.
+func (uc *UserCreate) SetNillableVk(s *string) *UserCreate {
+	if s != nil {
+		uc.SetVk(*s)
+	}
+	return uc
+}
+
+// SetInstagram sets the "instagram" field.
+func (uc *UserCreate) SetInstagram(s string) *UserCreate {
+	uc.mutation.SetInstagram(s)
+	return uc
+}
+
+// SetNillableInstagram sets the "instagram" field if the given value is not nil.
+func (uc *UserCreate) SetNillableInstagram(s *string) *UserCreate {
+	if s != nil {
+		uc.SetInstagram(*s)
+	}
+	return uc
+}
+
+// SetFacebook sets the "facebook" field.
+func (uc *UserCreate) SetFacebook(s string) *UserCreate {
+	uc.mutation.SetFacebook(s)
+	return uc
+}
+
+// SetNillableFacebook sets the "facebook" field if the given value is not nil.
+func (uc *UserCreate) SetNillableFacebook(s *string) *UserCreate {
+	if s != nil {
+		uc.SetFacebook(*s)
+	}
+	return uc
+}
+
+// SetTiktok sets the "tiktok" field.
+func (uc *UserCreate) SetTiktok(s string) *UserCreate {
+	uc.mutation.SetTiktok(s)
+	return uc
+}
+
+// SetNillableTiktok sets the "tiktok" field if the given value is not nil.
+func (uc *UserCreate) SetNillableTiktok(s *string) *UserCreate {
+	if s != nil {
+		uc.SetTiktok(*s)
+	}
+	return uc
+}
+
+// SetActiveAreas sets the "active_areas" field.
+func (uc *UserCreate) SetActiveAreas(i []int64) *UserCreate {
+	uc.mutation.SetActiveAreas(i)
 	return uc
 }
 
@@ -313,6 +383,10 @@ func (uc *UserCreate) defaults() {
 		v := user.DefaultIsBlocked
 		uc.mutation.SetIsBlocked(v)
 	}
+	if _, ok := uc.mutation.GetType(); !ok {
+		v := user.DefaultType
+		uc.mutation.SetType(v)
+	}
 }
 
 // check runs all checks and user-defined validators on the builder.
@@ -331,9 +405,6 @@ func (uc *UserCreate) check() error {
 	}
 	if _, ok := uc.mutation.IsBlocked(); !ok {
 		return &ValidationError{Name: "is_blocked", err: errors.New(`ent: missing required field "User.is_blocked"`)}
-	}
-	if _, ok := uc.mutation.GetType(); !ok {
-		return &ValidationError{Name: "type", err: errors.New(`ent: missing required field "User.type"`)}
 	}
 	if v, ok := uc.mutation.GetType(); ok {
 		if err := user.TypeValidator(v); err != nil {
@@ -486,6 +557,46 @@ func (uc *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 			Column: user.FieldWebsite,
 		})
 		_node.Website = &value
+	}
+	if value, ok := uc.mutation.Vk(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: user.FieldVk,
+		})
+		_node.Vk = &value
+	}
+	if value, ok := uc.mutation.Instagram(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: user.FieldInstagram,
+		})
+		_node.Instagram = &value
+	}
+	if value, ok := uc.mutation.Facebook(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: user.FieldFacebook,
+		})
+		_node.Facebook = &value
+	}
+	if value, ok := uc.mutation.Tiktok(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: user.FieldTiktok,
+		})
+		_node.Tiktok = &value
+	}
+	if value, ok := uc.mutation.ActiveAreas(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeJSON,
+			Value:  value,
+			Column: user.FieldActiveAreas,
+		})
+		_node.ActiveAreas = value
 	}
 	if nodes := uc.mutation.GroupsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{

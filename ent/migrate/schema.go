@@ -91,9 +91,14 @@ var (
 		{Name: "passport_issue_date", Type: field.TypeTime, Nullable: true, SchemaType: map[string]string{"postgres": "timestamp"}},
 		{Name: "phone", Type: field.TypeString, Nullable: true},
 		{Name: "is_blocked", Type: field.TypeBool, Default: false},
-		{Name: "type", Type: field.TypeEnum, Enums: []string{"person", "organization"}},
+		{Name: "type", Type: field.TypeEnum, Nullable: true, Enums: []string{"person", "organization"}, Default: "person"},
 		{Name: "org_name", Type: field.TypeString, Nullable: true},
 		{Name: "website", Type: field.TypeString, Nullable: true},
+		{Name: "vk", Type: field.TypeString, Nullable: true},
+		{Name: "instagram", Type: field.TypeString, Nullable: true},
+		{Name: "facebook", Type: field.TypeString, Nullable: true},
+		{Name: "tiktok", Type: field.TypeString, Nullable: true},
+		{Name: "active_areas", Type: field.TypeJSON, Nullable: true},
 		{Name: "active_area_users", Type: field.TypeInt, Nullable: true},
 		{Name: "role_users", Type: field.TypeInt, Nullable: true},
 	}
@@ -105,13 +110,13 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "users_active_areas_users",
-				Columns:    []*schema.Column{UsersColumns[16]},
+				Columns:    []*schema.Column{UsersColumns[21]},
 				RefColumns: []*schema.Column{ActiveAreasColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
 			{
 				Symbol:     "users_roles_users",
-				Columns:    []*schema.Column{UsersColumns[17]},
+				Columns:    []*schema.Column{UsersColumns[22]},
 				RefColumns: []*schema.Column{RolesColumns[0]},
 				OnDelete:   schema.SetNull,
 			},

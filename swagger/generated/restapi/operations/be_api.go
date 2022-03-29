@@ -75,6 +75,9 @@ func NewBeAPI(spec *loads.Document) *BeAPI {
 		KindsPatchKindHandler: kinds.PatchKindHandlerFunc(func(params kinds.PatchKindParams) middleware.Responder {
 			return middleware.NotImplemented("operation kinds.PatchKind has not yet been implemented")
 		}),
+		UsersUserUpdateHandler: users.UserUpdateHandlerFunc(func(params users.UserUpdateParams) middleware.Responder {
+			return middleware.NotImplemented("operation users.UserUpdate has not yet been implemented")
+		}),
 		KindsDeleteKindHandler: kinds.DeleteKindHandlerFunc(func(params kinds.DeleteKindParams) middleware.Responder {
 			return middleware.NotImplemented("operation kinds.DeleteKind has not yet been implemented")
 		}),
@@ -162,6 +165,8 @@ type BeAPI struct {
 	StatusGetStatusesHandler status.GetStatusesHandler
 	// KindsPatchKindHandler sets the operation handler for the patch kind operation
 	KindsPatchKindHandler kinds.PatchKindHandler
+	// UsersUserUpdateHandler sets the operation handler for the user update operation
+	UsersUserUpdateHandler users.UserUpdateHandler
 	// KindsDeleteKindHandler sets the operation handler for the delete kind operation
 	KindsDeleteKindHandler kinds.DeleteKindHandler
 	// UsersGetCurrentUserHandler sets the operation handler for the get current user operation
@@ -281,6 +286,9 @@ func (o *BeAPI) Validate() error {
 	}
 	if o.KindsPatchKindHandler == nil {
 		unregistered = append(unregistered, "kinds.PatchKindHandler")
+	}
+	if o.UsersUserUpdateHandler == nil {
+		unregistered = append(unregistered, "users.UserUpdateHandler")
 	}
 	if o.KindsDeleteKindHandler == nil {
 		unregistered = append(unregistered, "kinds.DeleteKindHandler")
@@ -433,6 +441,10 @@ func (o *BeAPI) initHandlerCache() {
 		o.handlers["PATCH"] = make(map[string]http.Handler)
 	}
 	o.handlers["PATCH"]["/equipment/kinds/{kindId}"] = kinds.NewPatchKind(o.context, o.KindsPatchKindHandler)
+	if o.handlers["POST"] == nil {
+		o.handlers["POST"] = make(map[string]http.Handler)
+	}
+	o.handlers["POST"]["/v1/users/{userId}"] = users.NewUserUpdate(o.context, o.UsersUserUpdateHandler)
 	if o.handlers["DELETE"] == nil {
 		o.handlers["DELETE"] = make(map[string]http.Handler)
 	}

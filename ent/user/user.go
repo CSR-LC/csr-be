@@ -41,6 +41,16 @@ const (
 	FieldOrgName = "org_name"
 	// FieldWebsite holds the string denoting the website field in the database.
 	FieldWebsite = "website"
+	// FieldVk holds the string denoting the vk field in the database.
+	FieldVk = "vk"
+	// FieldInstagram holds the string denoting the instagram field in the database.
+	FieldInstagram = "instagram"
+	// FieldFacebook holds the string denoting the facebook field in the database.
+	FieldFacebook = "facebook"
+	// FieldTiktok holds the string denoting the tiktok field in the database.
+	FieldTiktok = "tiktok"
+	// FieldActiveAreas holds the string denoting the active_areas field in the database.
+	FieldActiveAreas = "active_areas"
 	// EdgeGroups holds the string denoting the groups edge name in mutations.
 	EdgeGroups = "groups"
 	// EdgeRole holds the string denoting the role edge name in mutations.
@@ -79,6 +89,11 @@ var Columns = []string{
 	FieldType,
 	FieldOrgName,
 	FieldWebsite,
+	FieldVk,
+	FieldInstagram,
+	FieldFacebook,
+	FieldTiktok,
+	FieldActiveAreas,
 }
 
 // ForeignKeys holds the SQL foreign-keys that are owned by the "users"
@@ -118,6 +133,9 @@ var (
 
 // Type defines the type for the "type" enum field.
 type Type string
+
+// TypePerson is the default value of the Type enum.
+const DefaultType = TypePerson
 
 // Type values.
 const (

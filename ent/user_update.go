@@ -222,6 +222,20 @@ func (uu *UserUpdate) SetType(u user.Type) *UserUpdate {
 	return uu
 }
 
+// SetNillableType sets the "type" field if the given value is not nil.
+func (uu *UserUpdate) SetNillableType(u *user.Type) *UserUpdate {
+	if u != nil {
+		uu.SetType(*u)
+	}
+	return uu
+}
+
+// ClearType clears the value of the "type" field.
+func (uu *UserUpdate) ClearType() *UserUpdate {
+	uu.mutation.ClearType()
+	return uu
+}
+
 // SetOrgName sets the "org_name" field.
 func (uu *UserUpdate) SetOrgName(s string) *UserUpdate {
 	uu.mutation.SetOrgName(s)
@@ -259,6 +273,98 @@ func (uu *UserUpdate) SetNillableWebsite(s *string) *UserUpdate {
 // ClearWebsite clears the value of the "website" field.
 func (uu *UserUpdate) ClearWebsite() *UserUpdate {
 	uu.mutation.ClearWebsite()
+	return uu
+}
+
+// SetVk sets the "vk" field.
+func (uu *UserUpdate) SetVk(s string) *UserUpdate {
+	uu.mutation.SetVk(s)
+	return uu
+}
+
+// SetNillableVk sets the "vk" field if the given value is not nil.
+func (uu *UserUpdate) SetNillableVk(s *string) *UserUpdate {
+	if s != nil {
+		uu.SetVk(*s)
+	}
+	return uu
+}
+
+// ClearVk clears the value of the "vk" field.
+func (uu *UserUpdate) ClearVk() *UserUpdate {
+	uu.mutation.ClearVk()
+	return uu
+}
+
+// SetInstagram sets the "instagram" field.
+func (uu *UserUpdate) SetInstagram(s string) *UserUpdate {
+	uu.mutation.SetInstagram(s)
+	return uu
+}
+
+// SetNillableInstagram sets the "instagram" field if the given value is not nil.
+func (uu *UserUpdate) SetNillableInstagram(s *string) *UserUpdate {
+	if s != nil {
+		uu.SetInstagram(*s)
+	}
+	return uu
+}
+
+// ClearInstagram clears the value of the "instagram" field.
+func (uu *UserUpdate) ClearInstagram() *UserUpdate {
+	uu.mutation.ClearInstagram()
+	return uu
+}
+
+// SetFacebook sets the "facebook" field.
+func (uu *UserUpdate) SetFacebook(s string) *UserUpdate {
+	uu.mutation.SetFacebook(s)
+	return uu
+}
+
+// SetNillableFacebook sets the "facebook" field if the given value is not nil.
+func (uu *UserUpdate) SetNillableFacebook(s *string) *UserUpdate {
+	if s != nil {
+		uu.SetFacebook(*s)
+	}
+	return uu
+}
+
+// ClearFacebook clears the value of the "facebook" field.
+func (uu *UserUpdate) ClearFacebook() *UserUpdate {
+	uu.mutation.ClearFacebook()
+	return uu
+}
+
+// SetTiktok sets the "tiktok" field.
+func (uu *UserUpdate) SetTiktok(s string) *UserUpdate {
+	uu.mutation.SetTiktok(s)
+	return uu
+}
+
+// SetNillableTiktok sets the "tiktok" field if the given value is not nil.
+func (uu *UserUpdate) SetNillableTiktok(s *string) *UserUpdate {
+	if s != nil {
+		uu.SetTiktok(*s)
+	}
+	return uu
+}
+
+// ClearTiktok clears the value of the "tiktok" field.
+func (uu *UserUpdate) ClearTiktok() *UserUpdate {
+	uu.mutation.ClearTiktok()
+	return uu
+}
+
+// SetActiveAreas sets the "active_areas" field.
+func (uu *UserUpdate) SetActiveAreas(i []int64) *UserUpdate {
+	uu.mutation.SetActiveAreas(i)
+	return uu
+}
+
+// ClearActiveAreas clears the value of the "active_areas" field.
+func (uu *UserUpdate) ClearActiveAreas() *UserUpdate {
+	uu.mutation.ClearActiveAreas()
 	return uu
 }
 
@@ -549,6 +655,12 @@ func (uu *UserUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Column: user.FieldType,
 		})
 	}
+	if uu.mutation.TypeCleared() {
+		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
+			Type:   field.TypeEnum,
+			Column: user.FieldType,
+		})
+	}
 	if value, ok := uu.mutation.OrgName(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
 			Type:   field.TypeString,
@@ -573,6 +685,71 @@ func (uu *UserUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
 			Type:   field.TypeString,
 			Column: user.FieldWebsite,
+		})
+	}
+	if value, ok := uu.mutation.Vk(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: user.FieldVk,
+		})
+	}
+	if uu.mutation.VkCleared() {
+		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Column: user.FieldVk,
+		})
+	}
+	if value, ok := uu.mutation.Instagram(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: user.FieldInstagram,
+		})
+	}
+	if uu.mutation.InstagramCleared() {
+		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Column: user.FieldInstagram,
+		})
+	}
+	if value, ok := uu.mutation.Facebook(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: user.FieldFacebook,
+		})
+	}
+	if uu.mutation.FacebookCleared() {
+		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Column: user.FieldFacebook,
+		})
+	}
+	if value, ok := uu.mutation.Tiktok(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: user.FieldTiktok,
+		})
+	}
+	if uu.mutation.TiktokCleared() {
+		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Column: user.FieldTiktok,
+		})
+	}
+	if value, ok := uu.mutation.ActiveAreas(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeJSON,
+			Value:  value,
+			Column: user.FieldActiveAreas,
+		})
+	}
+	if uu.mutation.ActiveAreasCleared() {
+		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
+			Type:   field.TypeJSON,
+			Column: user.FieldActiveAreas,
 		})
 	}
 	if uu.mutation.GroupsCleared() {
@@ -875,6 +1052,20 @@ func (uuo *UserUpdateOne) SetType(u user.Type) *UserUpdateOne {
 	return uuo
 }
 
+// SetNillableType sets the "type" field if the given value is not nil.
+func (uuo *UserUpdateOne) SetNillableType(u *user.Type) *UserUpdateOne {
+	if u != nil {
+		uuo.SetType(*u)
+	}
+	return uuo
+}
+
+// ClearType clears the value of the "type" field.
+func (uuo *UserUpdateOne) ClearType() *UserUpdateOne {
+	uuo.mutation.ClearType()
+	return uuo
+}
+
 // SetOrgName sets the "org_name" field.
 func (uuo *UserUpdateOne) SetOrgName(s string) *UserUpdateOne {
 	uuo.mutation.SetOrgName(s)
@@ -912,6 +1103,98 @@ func (uuo *UserUpdateOne) SetNillableWebsite(s *string) *UserUpdateOne {
 // ClearWebsite clears the value of the "website" field.
 func (uuo *UserUpdateOne) ClearWebsite() *UserUpdateOne {
 	uuo.mutation.ClearWebsite()
+	return uuo
+}
+
+// SetVk sets the "vk" field.
+func (uuo *UserUpdateOne) SetVk(s string) *UserUpdateOne {
+	uuo.mutation.SetVk(s)
+	return uuo
+}
+
+// SetNillableVk sets the "vk" field if the given value is not nil.
+func (uuo *UserUpdateOne) SetNillableVk(s *string) *UserUpdateOne {
+	if s != nil {
+		uuo.SetVk(*s)
+	}
+	return uuo
+}
+
+// ClearVk clears the value of the "vk" field.
+func (uuo *UserUpdateOne) ClearVk() *UserUpdateOne {
+	uuo.mutation.ClearVk()
+	return uuo
+}
+
+// SetInstagram sets the "instagram" field.
+func (uuo *UserUpdateOne) SetInstagram(s string) *UserUpdateOne {
+	uuo.mutation.SetInstagram(s)
+	return uuo
+}
+
+// SetNillableInstagram sets the "instagram" field if the given value is not nil.
+func (uuo *UserUpdateOne) SetNillableInstagram(s *string) *UserUpdateOne {
+	if s != nil {
+		uuo.SetInstagram(*s)
+	}
+	return uuo
+}
+
+// ClearInstagram clears the value of the "instagram" field.
+func (uuo *UserUpdateOne) ClearInstagram() *UserUpdateOne {
+	uuo.mutation.ClearInstagram()
+	return uuo
+}
+
+// SetFacebook sets the "facebook" field.
+func (uuo *UserUpdateOne) SetFacebook(s string) *UserUpdateOne {
+	uuo.mutation.SetFacebook(s)
+	return uuo
+}
+
+// SetNillableFacebook sets the "facebook" field if the given value is not nil.
+func (uuo *UserUpdateOne) SetNillableFacebook(s *string) *UserUpdateOne {
+	if s != nil {
+		uuo.SetFacebook(*s)
+	}
+	return uuo
+}
+
+// ClearFacebook clears the value of the "facebook" field.
+func (uuo *UserUpdateOne) ClearFacebook() *UserUpdateOne {
+	uuo.mutation.ClearFacebook()
+	return uuo
+}
+
+// SetTiktok sets the "tiktok" field.
+func (uuo *UserUpdateOne) SetTiktok(s string) *UserUpdateOne {
+	uuo.mutation.SetTiktok(s)
+	return uuo
+}
+
+// SetNillableTiktok sets the "tiktok" field if the given value is not nil.
+func (uuo *UserUpdateOne) SetNillableTiktok(s *string) *UserUpdateOne {
+	if s != nil {
+		uuo.SetTiktok(*s)
+	}
+	return uuo
+}
+
+// ClearTiktok clears the value of the "tiktok" field.
+func (uuo *UserUpdateOne) ClearTiktok() *UserUpdateOne {
+	uuo.mutation.ClearTiktok()
+	return uuo
+}
+
+// SetActiveAreas sets the "active_areas" field.
+func (uuo *UserUpdateOne) SetActiveAreas(i []int64) *UserUpdateOne {
+	uuo.mutation.SetActiveAreas(i)
+	return uuo
+}
+
+// ClearActiveAreas clears the value of the "active_areas" field.
+func (uuo *UserUpdateOne) ClearActiveAreas() *UserUpdateOne {
+	uuo.mutation.ClearActiveAreas()
 	return uuo
 }
 
@@ -1226,6 +1509,12 @@ func (uuo *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) 
 			Column: user.FieldType,
 		})
 	}
+	if uuo.mutation.TypeCleared() {
+		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
+			Type:   field.TypeEnum,
+			Column: user.FieldType,
+		})
+	}
 	if value, ok := uuo.mutation.OrgName(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
 			Type:   field.TypeString,
@@ -1250,6 +1539,71 @@ func (uuo *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) 
 		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
 			Type:   field.TypeString,
 			Column: user.FieldWebsite,
+		})
+	}
+	if value, ok := uuo.mutation.Vk(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: user.FieldVk,
+		})
+	}
+	if uuo.mutation.VkCleared() {
+		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Column: user.FieldVk,
+		})
+	}
+	if value, ok := uuo.mutation.Instagram(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: user.FieldInstagram,
+		})
+	}
+	if uuo.mutation.InstagramCleared() {
+		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Column: user.FieldInstagram,
+		})
+	}
+	if value, ok := uuo.mutation.Facebook(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: user.FieldFacebook,
+		})
+	}
+	if uuo.mutation.FacebookCleared() {
+		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Column: user.FieldFacebook,
+		})
+	}
+	if value, ok := uuo.mutation.Tiktok(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: user.FieldTiktok,
+		})
+	}
+	if uuo.mutation.TiktokCleared() {
+		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Column: user.FieldTiktok,
+		})
+	}
+	if value, ok := uuo.mutation.ActiveAreas(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeJSON,
+			Value:  value,
+			Column: user.FieldActiveAreas,
+		})
+	}
+	if uuo.mutation.ActiveAreasCleared() {
+		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
+			Type:   field.TypeJSON,
+			Column: user.FieldActiveAreas,
 		})
 	}
 	if uuo.mutation.GroupsCleared() {

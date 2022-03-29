@@ -461,6 +461,52 @@ func init() {
           }
         }
       }
+    },
+    "/v1/users/{userId}": {
+      "post": {
+        "consumes": [
+          "application/json"
+        ],
+        "tags": [
+          "Users"
+        ],
+        "summary": "Updates user information by its id.",
+        "operationId": "UserUpdate",
+        "parameters": [
+          {
+            "description": "Data to update.",
+            "name": "UpdateUserTask",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/UpdateUserTask"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User information has been updated.",
+            "schema": {
+              "$ref": "#/definitions/SuccessUserUpdateResponse"
+            }
+          },
+          "default": {
+            "description": "Unexpected error.",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      },
+      "parameters": [
+        {
+          "type": "integer",
+          "description": "user id",
+          "name": "userId",
+          "in": "path",
+          "required": true
+        }
+      ]
     }
   },
   "definitions": {
@@ -753,6 +799,86 @@ func init() {
       "properties": {
         "data": {
           "$ref": "#/definitions/Status"
+        }
+      }
+    },
+    "SuccessUserUpdateResponse": {
+      "type": "object",
+      "required": [
+        "data"
+      ],
+      "properties": {
+        "data": {
+          "$ref": "#/definitions/User"
+        }
+      }
+    },
+    "UpdateUserTask": {
+      "description": "Update user object",
+      "type": "object",
+      "required": [
+        "data"
+      ],
+      "properties": {
+        "data": {
+          "type": "object",
+          "properties": {
+            "active_areas": {
+              "type": "array",
+              "items": {
+                "type": "integer"
+              }
+            },
+            "email": {
+              "type": "string"
+            },
+            "facebook": {
+              "type": "string"
+            },
+            "instagram": {
+              "type": "string"
+            },
+            "name": {
+              "description": "Name of user.",
+              "type": "string"
+            },
+            "org_name": {
+              "type": "string"
+            },
+            "passport_authority": {
+              "type": "string"
+            },
+            "passport_issue_date": {
+              "type": "string"
+            },
+            "passport_number": {
+              "type": "string"
+            },
+            "passport_series": {
+              "type": "string"
+            },
+            "patronymic": {
+              "description": "Patronymyc data.",
+              "type": "string"
+            },
+            "phone_number": {
+              "description": "Phone number.",
+              "type": "string"
+            },
+            "surname": {
+              "description": "Surname of user.",
+              "type": "string"
+            },
+            "tiktok": {
+              "type": "string"
+            },
+            "type": {
+              "type": "string"
+            },
+            "vk": {
+              "type": "string"
+            }
+          }
         }
       }
     },
@@ -1229,6 +1355,52 @@ func init() {
           }
         }
       }
+    },
+    "/v1/users/{userId}": {
+      "post": {
+        "consumes": [
+          "application/json"
+        ],
+        "tags": [
+          "Users"
+        ],
+        "summary": "Updates user information by its id.",
+        "operationId": "UserUpdate",
+        "parameters": [
+          {
+            "description": "Data to update.",
+            "name": "UpdateUserTask",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/UpdateUserTask"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User information has been updated.",
+            "schema": {
+              "$ref": "#/definitions/SuccessUserUpdateResponse"
+            }
+          },
+          "default": {
+            "description": "Unexpected error.",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      },
+      "parameters": [
+        {
+          "type": "integer",
+          "description": "user id",
+          "name": "userId",
+          "in": "path",
+          "required": true
+        }
+      ]
     }
   },
   "definitions": {
@@ -1556,6 +1728,146 @@ func init() {
       "properties": {
         "data": {
           "$ref": "#/definitions/Status"
+        }
+      }
+    },
+    "SuccessUserUpdateResponse": {
+      "type": "object",
+      "required": [
+        "data"
+      ],
+      "properties": {
+        "data": {
+          "$ref": "#/definitions/User"
+        }
+      }
+    },
+    "UpdateUserTask": {
+      "description": "Update user object",
+      "type": "object",
+      "required": [
+        "data"
+      ],
+      "properties": {
+        "data": {
+          "type": "object",
+          "properties": {
+            "active_areas": {
+              "type": "array",
+              "items": {
+                "type": "integer"
+              }
+            },
+            "email": {
+              "type": "string"
+            },
+            "facebook": {
+              "type": "string"
+            },
+            "instagram": {
+              "type": "string"
+            },
+            "name": {
+              "description": "Name of user.",
+              "type": "string"
+            },
+            "org_name": {
+              "type": "string"
+            },
+            "passport_authority": {
+              "type": "string"
+            },
+            "passport_issue_date": {
+              "type": "string"
+            },
+            "passport_number": {
+              "type": "string"
+            },
+            "passport_series": {
+              "type": "string"
+            },
+            "patronymic": {
+              "description": "Patronymyc data.",
+              "type": "string"
+            },
+            "phone_number": {
+              "description": "Phone number.",
+              "type": "string"
+            },
+            "surname": {
+              "description": "Surname of user.",
+              "type": "string"
+            },
+            "tiktok": {
+              "type": "string"
+            },
+            "type": {
+              "type": "string"
+            },
+            "vk": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "UpdateUserTaskData": {
+      "type": "object",
+      "properties": {
+        "active_areas": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          }
+        },
+        "email": {
+          "type": "string"
+        },
+        "facebook": {
+          "type": "string"
+        },
+        "instagram": {
+          "type": "string"
+        },
+        "name": {
+          "description": "Name of user.",
+          "type": "string"
+        },
+        "org_name": {
+          "type": "string"
+        },
+        "passport_authority": {
+          "type": "string"
+        },
+        "passport_issue_date": {
+          "type": "string"
+        },
+        "passport_number": {
+          "type": "string"
+        },
+        "passport_series": {
+          "type": "string"
+        },
+        "patronymic": {
+          "description": "Patronymyc data.",
+          "type": "string"
+        },
+        "phone_number": {
+          "description": "Phone number.",
+          "type": "string"
+        },
+        "surname": {
+          "description": "Surname of user.",
+          "type": "string"
+        },
+        "tiktok": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string"
+        },
+        "vk": {
+          "type": "string"
         }
       }
     },
