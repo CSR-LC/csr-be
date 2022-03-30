@@ -110,23 +110,6 @@ func (c User) UpdateUserByIDFunc() users.UserUpdateHandlerFunc {
 			}
 		}
 
-		if data.Type != string(user.Type) {
-			newType := user.Type
-			if data.Name == "person" {
-				newType = "person"
-			} else {
-				newType = "organization"
-			}
-			user, err = c.client.User.UpdateOne(user).SetType(newType).SetName(data.Name).Save(p.HTTPRequest.Context())
-			if err != nil {
-				return users.NewUserUpdateDefault(http.StatusInternalServerError).WithPayload(&models.Error{
-					Data: &models.ErrorData{
-						Message: err.Error(),
-					},
-				})
-			}
-		}
-
 		if data.PassportAuthority != "" {
 			user, err = c.client.User.UpdateOne(user).SetPassportAuthority(data.PassportAuthority).Save(p.HTTPRequest.Context())
 			if err != nil {
@@ -139,8 +122,25 @@ func (c User) UpdateUserByIDFunc() users.UserUpdateHandlerFunc {
 		}
 
 		if data.PassportIssueDate != "" {
-			t, err := time.Parse("2006-01-02T15:04:05.000Z", data.PassportIssueDate)
+			t, err := time.Parse("2006-01-02", data.PassportIssueDate)
 			user, err = c.client.User.UpdateOne(user).SetPassportIssueDate(t).Save(p.HTTPRequest.Context())
+			if err != nil {
+				return users.NewUserUpdateDefault(http.StatusInternalServerError).WithPayload(&models.Error{
+					Data: &models.ErrorData{
+						Message: err.Error(),
+					},
+				})
+			}
+		}
+
+		if data.Type != string(user.Type) {
+			newType := user.Type
+			if data.Name == "person" {
+				newType = "person"
+			} else {
+				newType = "organization"
+			}
+			user, err = c.client.User.UpdateOne(user).SetType(newType).SetName(data.Name).Save(p.HTTPRequest.Context())
 			if err != nil {
 				return users.NewUserUpdateDefault(http.StatusInternalServerError).WithPayload(&models.Error{
 					Data: &models.ErrorData{
@@ -253,8 +253,39 @@ func (c User) UpdateUserByIDFunc() users.UserUpdateHandlerFunc {
 }
 
 func (c User) GetUserFunc() users.GetCurrentUserHandlerFunc {
-	return func(p users.GetCurrentUserParams, _ interface{}) middleware.Responder {
-		return users.NewGetCurrentUserOK()
+	return func(p users.GetCurrentUserParams) middleware.Responder {
+		user, err := c.client.User.Get(p.HTTPRequest.Context(), 1) // using 1 as id before auth implemented(jwt is not avaliable atm)
+		id := int64(user.ID)
+		if err != nil {
+			return users.NewGetCurrentUserDefault(http.StatusInternalServerError).WithPayload(&models.Error{
+				Data: &models.ErrorData{
+					Message: err.Error(),
+				},
+			})
+		}
+
+		return users.NewGetCurrentUserOK().WithPayload(&models.GetUserResponse{
+			Data: &models.User{
+				ID:                &id,
+				Login:             user.Login,
+				Surname:           *user.Surname,
+				Name:              user.Name,
+				Patronymic:        *user.Patronymic,
+				PassportSeries:    *user.PassportSeries,
+				PassportNumber:    *user.PassportNumber,
+				PassportAuthority: *user.PassportAuthority,
+				PassportIssueDate: user.PassportIssueDate.String(),
+				PhoneNumber:       *user.Phone,
+				Email:             user.Email,
+				Type:              string(user.Type),
+				ActiveAreas:       user.ActiveAreas,
+				OrgName:           *user.OrgName,
+				Vk:                *user.Vk,
+				Instagram:         *user.Instagram,
+				Facebook:          *user.Facebook,
+				Tiktok:            *user.Tiktok,
+			},
+		})
 	}
 }
 

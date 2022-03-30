@@ -37,8 +37,6 @@ paths:
   /v1/users/me:
     get:
       summary: Get the current user data.
-      security:
-        - Bearer: []
       tags:
         - Users
       operationId: getCurrentUser
@@ -456,6 +454,47 @@ definitions:
         format: date-time
       roleId:
         type: integer
+      login:
+        type: string
+      name:
+        type: string
+        description: Name of user.
+      surname:
+        type: string
+        description: Surname of user.
+      patronymic:
+        type: string
+        description: Patronymyc data.
+      passport_series:
+        type: string
+      passport_number:
+        type: string
+      passport_authority:
+        type: string
+      passport_issue_date:
+        type: string
+      phone_number:
+        type: string
+        description: Phone number.
+      email:
+        type: string
+      type:
+        type: string
+      active_areas:
+        type: array
+        items:
+          type: integer
+      org_name:
+        type: string
+      vk:
+        type: string
+      instagram:
+        type: string
+      facebook:
+        type: string
+      tiktok:
+        type: string        
+      
   CreateUserResponse:
     type: object
     required:

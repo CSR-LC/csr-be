@@ -81,7 +81,7 @@ func NewBeAPI(spec *loads.Document) *BeAPI {
 		KindsDeleteKindHandler: kinds.DeleteKindHandlerFunc(func(params kinds.DeleteKindParams) middleware.Responder {
 			return middleware.NotImplemented("operation kinds.DeleteKind has not yet been implemented")
 		}),
-		UsersGetCurrentUserHandler: users.GetCurrentUserHandlerFunc(func(params users.GetCurrentUserParams, principal interface{}) middleware.Responder {
+		UsersGetCurrentUserHandler: users.GetCurrentUserHandlerFunc(func(params users.GetCurrentUserParams) middleware.Responder {
 			return middleware.NotImplemented("operation users.GetCurrentUser has not yet been implemented")
 		}),
 		KindsGetKindByIDHandler: kinds.GetKindByIDHandlerFunc(func(params kinds.GetKindByIDParams) middleware.Responder {

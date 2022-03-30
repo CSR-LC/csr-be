@@ -399,11 +399,6 @@ func init() {
     },
     "/v1/users/me": {
       "get": {
-        "security": [
-          {
-            "Bearer": []
-          }
-        ],
         "tags": [
           "Users"
         ],
@@ -890,15 +885,73 @@ func init() {
         "roleId"
       ],
       "properties": {
+        "active_areas": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          }
+        },
         "createTime": {
           "type": "string",
           "format": "date-time"
         },
+        "email": {
+          "type": "string"
+        },
+        "facebook": {
+          "type": "string"
+        },
         "id": {
           "type": "integer"
         },
+        "instagram": {
+          "type": "string"
+        },
+        "login": {
+          "type": "string"
+        },
+        "name": {
+          "description": "Name of user.",
+          "type": "string"
+        },
+        "org_name": {
+          "type": "string"
+        },
+        "passport_authority": {
+          "type": "string"
+        },
+        "passport_issue_date": {
+          "type": "string"
+        },
+        "passport_number": {
+          "type": "string"
+        },
+        "passport_series": {
+          "type": "string"
+        },
+        "patronymic": {
+          "description": "Patronymyc data.",
+          "type": "string"
+        },
+        "phone_number": {
+          "description": "Phone number.",
+          "type": "string"
+        },
         "roleId": {
           "type": "integer"
+        },
+        "surname": {
+          "description": "Surname of user.",
+          "type": "string"
+        },
+        "tiktok": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string"
+        },
+        "vk": {
+          "type": "string"
         }
       }
     }
@@ -1293,11 +1346,6 @@ func init() {
     },
     "/v1/users/me": {
       "get": {
-        "security": [
-          {
-            "Bearer": []
-          }
-        ],
         "tags": [
           "Users"
         ],
@@ -1879,15 +1927,73 @@ func init() {
         "roleId"
       ],
       "properties": {
+        "active_areas": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          }
+        },
         "createTime": {
           "type": "string",
           "format": "date-time"
         },
+        "email": {
+          "type": "string"
+        },
+        "facebook": {
+          "type": "string"
+        },
         "id": {
           "type": "integer"
         },
+        "instagram": {
+          "type": "string"
+        },
+        "login": {
+          "type": "string"
+        },
+        "name": {
+          "description": "Name of user.",
+          "type": "string"
+        },
+        "org_name": {
+          "type": "string"
+        },
+        "passport_authority": {
+          "type": "string"
+        },
+        "passport_issue_date": {
+          "type": "string"
+        },
+        "passport_number": {
+          "type": "string"
+        },
+        "passport_series": {
+          "type": "string"
+        },
+        "patronymic": {
+          "description": "Patronymyc data.",
+          "type": "string"
+        },
+        "phone_number": {
+          "description": "Phone number.",
+          "type": "string"
+        },
         "roleId": {
           "type": "integer"
+        },
+        "surname": {
+          "description": "Surname of user.",
+          "type": "string"
+        },
+        "tiktok": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string"
+        },
+        "vk": {
+          "type": "string"
         }
       }
     }

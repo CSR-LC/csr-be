@@ -19,18 +19,69 @@ import (
 // swagger:model User
 type User struct {
 
+	// active areas
+	ActiveAreas []int64 `json:"active_areas"`
+
 	// create time
 	// Required: true
 	// Format: date-time
 	CreateTime *strfmt.DateTime `json:"createTime"`
 
+	// email
+	Email string `json:"email,omitempty"`
+
+	// facebook
+	Facebook string `json:"facebook,omitempty"`
+
 	// id
 	// Required: true
 	ID *int64 `json:"id"`
 
+	// instagram
+	Instagram string `json:"instagram,omitempty"`
+
+	// login
+	Login string `json:"login,omitempty"`
+
+	// Name of user.
+	Name string `json:"name,omitempty"`
+
+	// org name
+	OrgName string `json:"org_name,omitempty"`
+
+	// passport authority
+	PassportAuthority string `json:"passport_authority,omitempty"`
+
+	// passport issue date
+	PassportIssueDate string `json:"passport_issue_date,omitempty"`
+
+	// passport number
+	PassportNumber string `json:"passport_number,omitempty"`
+
+	// passport series
+	PassportSeries string `json:"passport_series,omitempty"`
+
+	// Patronymyc data.
+	Patronymic string `json:"patronymic,omitempty"`
+
+	// Phone number.
+	PhoneNumber string `json:"phone_number,omitempty"`
+
 	// role Id
 	// Required: true
 	RoleID *int64 `json:"roleId"`
+
+	// Surname of user.
+	Surname string `json:"surname,omitempty"`
+
+	// tiktok
+	Tiktok string `json:"tiktok,omitempty"`
+
+	// type
+	Type string `json:"type,omitempty"`
+
+	// vk
+	Vk string `json:"vk,omitempty"`
 }
 
 // Validate validates this user

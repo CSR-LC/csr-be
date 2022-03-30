@@ -52,7 +52,7 @@ func configureAPI(api *operations.BeAPI) http.Handler {
 	// api.APIAuthorizer = security.Authorized()
 
 	if api.UsersGetCurrentUserHandler == nil {
-		api.UsersGetCurrentUserHandler = users.GetCurrentUserHandlerFunc(func(params users.GetCurrentUserParams, principal interface{}) middleware.Responder {
+		api.UsersGetCurrentUserHandler = users.GetCurrentUserHandlerFunc(func(params users.GetCurrentUserParams) middleware.Responder {
 			return middleware.NotImplemented("operation users.GetCurrentUser has not yet been implemented")
 		})
 	}
