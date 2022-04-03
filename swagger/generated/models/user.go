@@ -41,7 +41,8 @@ type User struct {
 	Instagram string `json:"instagram,omitempty"`
 
 	// login
-	Login string `json:"login,omitempty"`
+	// Required: true
+	Login *string `json:"login"`
 
 	// Name of user.
 	Name string `json:"name,omitempty"`
@@ -96,6 +97,10 @@ func (m *User) Validate(formats strfmt.Registry) error {
 		res = append(res, err)
 	}
 
+	if err := m.validateLogin(formats); err != nil {
+		res = append(res, err)
+	}
+
 	if err := m.validateRoleID(formats); err != nil {
 		res = append(res, err)
 	}
@@ -122,6 +127,15 @@ func (m *User) validateCreateTime(formats strfmt.Registry) error {
 func (m *User) validateID(formats strfmt.Registry) error {
 
 	if err := validate.Required("id", "body", m.ID); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (m *User) validateLogin(formats strfmt.Registry) error {
+
+	if err := validate.Required("login", "body", m.Login); err != nil {
 		return err
 	}
 

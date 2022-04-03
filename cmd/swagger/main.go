@@ -67,6 +67,11 @@ func main() {
 		return
 	}
 
+	equipmentHandler := handlers.NewEquipment(
+		client,
+		logger,
+	)
+
 	userHandler := handlers.NewUser(
 		client,
 		logger,
@@ -92,8 +97,13 @@ func main() {
 
 	api := operations.NewBeAPI(swaggerSpec)
 	api.UseSwaggerUI()
-	api.BearerAuth = middlewares.BearerAuthenticateFunc("key", logger)
+	jwtSecretKey := os.Getenv("JWT_SECRET_KEY")
+	if jwtSecretKey == "" {
+		log.Fatalln("JWT_SECRET_KEY not specified")
+	}
+	api.BearerAuth = middlewares.BearerAuthenticateFunc(jwtSecretKey, logger)
 
+	api.UsersLoginHandler = userHandler.LoginUserFunc(jwtSecretKey)
 	api.UsersPostUserHandler = userHandler.PostUserFunc()
 	api.UsersGetCurrentUserHandler = userHandler.GetUserFunc()
 	api.UsersPatchUserHandler = userHandler.PatchUserFunc()
@@ -112,6 +122,13 @@ func main() {
 	api.StatusGetStatusesHandler = statusHandler.GetStatusesFunc()
 	api.StatusGetStatusHandler = statusHandler.GetStatusFunc()
 	api.StatusDeleteStatusHandler = statusHandler.DeleteStatusFunc()
+
+	api.EquipmentCreateNewEquipmentHandler = equipmentHandler.PostEquipmentFunc()
+	api.EquipmentGetEquipmentHandler = equipmentHandler.GetEquipmentFunc()
+	api.EquipmentDeleteEquipmentHandler = equipmentHandler.DeleteEquipmentFunc()
+	api.EquipmentGetAllEquipmentHandler = equipmentHandler.ListEquipmentFunc()
+	api.EquipmentEditEquipmentHandler = equipmentHandler.EditEquipmentFunc()
+	api.EquipmentFindEquipmentHandler = equipmentHandler.FindEquipmentFunc()
 
 	api.ActiveAreasGetAllActiveAreasHandler = activeAreasHandler.GetActiveAreasFunc()
 
