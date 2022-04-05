@@ -95,7 +95,6 @@ func (c User) LoginUserFunc(jwtSecretKey string) users.LoginHandlerFunc {
 
 func (c User) PostUserFunc() users.PostUserHandlerFunc {
 	return func(p users.PostUserParams) middleware.Responder {
-		// e, err := c.client.User.Create().SetLogin("test").SetEmail("example@example.com").SetPassword("123456").Save(p.HTTPRequest.Context())
 		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(*p.Data.Password), bcrypt.DefaultCost)
 		if err != nil {
 			return users.NewPostUserDefault(http.StatusInternalServerError).WithPayload(buildErrorPayload(err))
@@ -138,6 +137,7 @@ func (c User) UpdateUserByIDFunc() users.UserUpdateHandlerFunc {
 				},
 			})
 		}
+
 		data := p.UpdateUserTask.Data
 
 		if data.Name != "" {
@@ -217,12 +217,12 @@ func (c User) UpdateUserByIDFunc() users.UserUpdateHandlerFunc {
 			}
 		}
 
-		if data.Type != string(user.Type) {
+		if data.Type != string(user.Type) && data.Type != "" {
 			newType := user.Type
-			if data.Name == "person" {
-				newType = "person"
-			} else {
+			if newType == "person" {
 				newType = "organization"
+			} else {
+				newType = "person"
 			}
 			user, err = c.client.User.UpdateOne(user).SetType(newType).SetName(data.Name).Save(p.HTTPRequest.Context())
 			if err != nil {
@@ -336,10 +336,9 @@ func (c User) UpdateUserByIDFunc() users.UserUpdateHandlerFunc {
 	}
 }
 
-func (c User) GetUserFunc() users.GetCurrentUserHandlerFunc {
+func (c User) GetCurrentUserFunc(jwtSecretKey string) users.GetCurrentUserHandlerFunc {
 	return func(p users.GetCurrentUserParams) middleware.Responder {
-		user, err := c.client.User.Get(p.HTTPRequest.Context(), 1) // using 1 as id before auth implemented(jwt is not avaliable atm)
-		id := int64(user.ID)
+		user, err := c.client.User.Get(p.HTTPRequest.Context(), 1) // using 1 as id before auth implemented
 		if err != nil {
 			return users.NewGetCurrentUserDefault(http.StatusInternalServerError).WithPayload(&models.Error{
 				Data: &models.ErrorData{
@@ -348,26 +347,48 @@ func (c User) GetUserFunc() users.GetCurrentUserHandlerFunc {
 			})
 		}
 
+		//generation of mock jwt
+		mockJWTToken, err := generateJWT(user, jwtSecretKey, p.HTTPRequest.Context())
+		if err != nil {
+			return users.NewGetCurrentUserDefault(http.StatusInternalServerError).WithPayload(&models.Error{
+				Data: &models.ErrorData{
+					Message: err.Error(),
+				},
+			})
+		}
+
+		claims := jwt.MapClaims{}
+		_, err = jwt.ParseWithClaims(mockJWTToken, claims, func(token *jwt.Token) (interface{}, error) {
+			return []byte(jwtSecretKey), nil
+		})
+		if err != nil {
+			return users.NewGetCurrentUserDefault(http.StatusInternalServerError).WithPayload(&models.Error{
+				Data: &models.ErrorData{
+					Message: err.Error(),
+				},
+			})
+		}
 		return users.NewGetCurrentUserOK().WithPayload(&models.GetUserResponse{
 			Data: &models.User{
-				ID:                &id,
-				Login:             &user.Login,
-				Surname:           *user.Surname,
-				Name:              user.Name,
-				Patronymic:        *user.Patronymic,
-				PassportSeries:    *user.PassportSeries,
-				PassportNumber:    *user.PassportNumber,
-				PassportAuthority: *user.PassportAuthority,
-				PassportIssueDate: user.PassportIssueDate.String(),
-				PhoneNumber:       *user.Phone,
-				Email:             user.Email,
-				Type:              string(user.Type),
-				ActiveAreas:       user.ActiveAreas,
-				OrgName:           *user.OrgName,
-				Vk:                *user.Vk,
-				Instagram:         *user.Instagram,
-				Facebook:          *user.Facebook,
-				Tiktok:            *user.Tiktok,
+				ID:    claims["id"].(*int64),
+				Login: claims["login"].(*string),
+				//these fields not implemented yet, made a template
+				Surname:           claims["surname"].(string),
+				Name:              claims["name"].(string),
+				Patronymic:        claims["patronymic"].(string),
+				PassportSeries:    claims["passportSeries"].(string),
+				PassportNumber:    claims["passportNumber"].(string),
+				PassportAuthority: claims["passportAuthority"].(string),
+				PassportIssueDate: claims["passportIssueDate"].(string),
+				PhoneNumber:       claims["phoneNumber"].(string),
+				Email:             claims["login"].(string),
+				Type:              claims["type"].(string),
+				ActiveAreas:       claims["activeAreas"].([]int64),
+				OrgName:           claims["orgName"].(string),
+				Vk:                claims["vk"].(string),
+				Instagram:         claims["instagram"].(string),
+				Facebook:          claims["facebook"].(string),
+				Tiktok:            claims["tiktok"].(string),
 			},
 		})
 	}

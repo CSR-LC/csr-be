@@ -105,7 +105,7 @@ func main() {
 
 	api.UsersLoginHandler = userHandler.LoginUserFunc(jwtSecretKey)
 	api.UsersPostUserHandler = userHandler.PostUserFunc()
-	api.UsersGetCurrentUserHandler = userHandler.GetUserFunc()
+	api.UsersGetCurrentUserHandler = userHandler.GetCurrentUserFunc(jwtSecretKey)
 	api.UsersPatchUserHandler = userHandler.PatchUserFunc()
 	api.UsersAssignRoleToUserHandler = userHandler.AssignRoleToUserFunc()
 	api.UsersUserUpdateHandler = userHandler.UpdateUserByIDFunc()
