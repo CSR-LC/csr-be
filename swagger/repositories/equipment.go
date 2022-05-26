@@ -80,6 +80,7 @@ func (e *equipmentRepository) EquipmentsByFilter(ctx context.Context, filter mod
 			OptionalStringEquipment(filter.Supplier, equipment.FieldSupplier),
 			OptionalStringEquipment(filter.ReceiptDate, equipment.FieldReceiptDate),
 			OptionalIntEquipment(filter.MaximumAmount, equipment.FieldMaximumAmount),
+			OptionalStringEquipment(filter.Title, equipment.FieldTitle),
 			OptionalIntEquipment(filter.MaximumDays, equipment.FieldMaximumDays),
 		).
 		WithKind().

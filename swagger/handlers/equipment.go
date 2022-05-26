@@ -43,6 +43,7 @@ func (c Equipment) PostEquipmentFunc() equipment.CreateNewEquipmentHandlerFunc {
 			SetMaximumDays(*s.NewEquipment.MaximumDays).
 			SetKind(&ent.Kind{ID: int(*s.NewEquipment.Kind)}).
 			SetStatus(&ent.Statuses{ID: int(*s.NewEquipment.Status)}).
+			SetTitle(*s.NewEquipment.Title).
 			Save(s.HTTPRequest.Context())
 
 		if err != nil {
@@ -88,6 +89,7 @@ func (c Equipment) PostEquipmentFunc() equipment.CreateNewEquipmentHandlerFunc {
 			MaximumDays:      &e.MaximumDays,
 			Kind:             &kindId,
 			Status:           &statusId,
+			Title:            &e.Title,
 		})
 	}
 }
@@ -143,6 +145,7 @@ func (c Equipment) GetEquipmentFunc() equipment.GetEquipmentHandlerFunc {
 			MaximumDays:      &e.MaximumDays,
 			Kind:             &kindId,
 			Status:           &statusId,
+			Title:            &e.Title,
 		})
 	}
 }
@@ -199,6 +202,7 @@ func (c Equipment) DeleteEquipmentFunc() equipment.DeleteEquipmentHandlerFunc {
 			MaximumDays:      &e.MaximumDays,
 			Kind:             &kindId,
 			Status:           &statusId,
+			Title:            &e.Title,
 		}
 		err = c.client.Equipment.DeleteOne(e).Exec(s.HTTPRequest.Context())
 		if err != nil {
@@ -263,6 +267,7 @@ func (c Equipment) ListEquipmentFunc() equipment.GetAllEquipmentHandlerFunc {
 				MaximumDays:      &element.MaximumDays,
 				Kind:             &kindId,
 				Status:           &statusId,
+				Title:            &element.Title,
 			})
 		}
 		return equipment.NewGetAllEquipmentCreated().WithPayload(listEquipment)
@@ -324,6 +329,10 @@ func (c Equipment) EditEquipmentFunc() equipment.EditEquipmentHandlerFunc {
 
 		if *s.EditEquipment.Status != 0 {
 			edit.SetStatus(&ent.Statuses{ID: int(*s.EditEquipment.Status)})
+		}
+
+		if *s.EditEquipment.Title != "" {
+			edit.SetTitle(*s.EditEquipment.Title)
 		}
 		res, err := edit.Save(s.HTTPRequest.Context())
 		//res, err := c.client.Equipment.Get(s.HTTPRequest.Context(), equipmentId)
@@ -438,5 +447,6 @@ func equipmentMap(eq *ent.Equipment) (*models.EquipmentResponse, error) {
 		ReceiptDate:      &eq.ReceiptDate,
 		Status:           &statusID,
 		Supplier:         &eq.Supplier,
+		Title:            &eq.Title,
 	}, nil
 }
