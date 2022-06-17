@@ -141,7 +141,7 @@ func (c Equipment) EditEquipmentFunc(repository repositories.EquipmentRepository
 				},
 			})
 		}
-		returnEq, err := mapEquipment(eq)
+		returnEq, err := mapEquipmentResponse(eq)
 		if err != nil {
 			c.logger.Error("Error while mapping equipment", zap.Error(err))
 			return equipment.NewEditEquipmentDefault(http.StatusInternalServerError).WithPayload(&models.Error{
@@ -207,11 +207,10 @@ func mapEquipmentResponse(eq *ent.Equipment) (*models.EquipmentResponse, error) 
 	}
 	statusID := int64(eq.Edges.Status.ID)
 
-
 	var petKinds []*models.PetKind
 	for _, petKindEdge := range eq.Edges.PetKinds {
 		id := int64(petKindEdge.ID)
-		petKind := models.PetKind{ID: &id, Name: petKindEdge.Name}
+		petKind := models.PetKind{ID: id, Name: &petKindEdge.Name}
 		petKinds = append(petKinds, &petKind)
 	}
 
