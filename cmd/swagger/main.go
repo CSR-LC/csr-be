@@ -123,6 +123,8 @@ func main() {
 
 	equipmentHandler := handlers.NewEquipment(logger)
 
+	petKindHandler := handlers.NewPetKind(logger)
+
 	userHandler := handlers.NewUser(
 		client,
 		logger,
@@ -232,6 +234,13 @@ func main() {
 	api.PetSizeDeletePetSizeHandler = petSizeHandler.DeletePetSizeByID(petSizeRepo)
 	api.PetSizeCreateNewPetSizeHandler = petSizeHandler.CreatePetSizeFunc(petSizeRepo)
 	api.PetSizeGetPetSizeHandler = petSizeHandler.GetPetSizeByID(petSizeRepo)
+
+	petKindRepo := repositories.NewPetKindRepository(client)
+	api.PetKindGetAllPetKindsHandler = petKindHandler.GetAllPetKindFunc(petKindRepo)
+	api.PetKindEditPetKindHandler = petKindHandler.UpdatePetKindByID(petKindRepo)
+	api.PetKindDeletePetKindHandler = petKindHandler.DeletePetKindByID(petKindRepo)
+	api.PetKindCreateNewPetKindHandler = petKindHandler.CreatePetKindFunc(petKindRepo)
+	api.PetKindGetPetKindHandler = petKindHandler.GetPetKindsByID(petKindRepo)
 
 	server := restapi.NewServer(api)
 	listeners := []string{"http"}

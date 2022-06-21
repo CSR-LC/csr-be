@@ -771,7 +771,7 @@ paths:
             $ref: "#/definitions/PetSize"
       responses:
         201:
-          description: Pet size created
+          description: Pet kind created
           schema:
             $ref: "#/definitions/PetSizeResponse"
         default:
