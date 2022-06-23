@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"database/sql"
-	"fmt"
 	"log"
 	"os"
 	"strconv"
@@ -13,9 +12,10 @@ import (
 	entsql "entgo.io/ent/dialect/sql"
 	"github.com/go-openapi/loads"
 	"github.com/golang-migrate/migrate/v4"
-	"github.com/golang-migrate/migrate/v4/database/postgres"
+	"github.com/golang-migrate/migrate/v4/database/sqlite3"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 	_ "github.com/jackc/pgx/v4/stdlib"
+	_ "github.com/mattn/go-sqlite3"
 	"go.uber.org/zap"
 
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/ent"
@@ -38,16 +38,15 @@ func main() {
 		logger.Fatal("load config error", zap.Error(err))
 	}
 
-	dbHost := getEnv("DB_HOST", "localhost")
+	//dbHost := getEnv("DB_HOST", "localhost")
 
-	connectionString := fmt.Sprintf("host=%s user=csr password=csr dbname=csr sslmode=disable", dbHost)
-	db, err := sql.Open("pgx", connectionString)
+	db, err := sql.Open("sqlite3", "file:csr?mode=memory&cache=shared&_fk=1")
 	if err != nil {
 		logger.Fatal("cant open db", zap.Error(err))
 	}
 
 	// Create an ent.Driver from `db`.
-	drv := entsql.OpenDB(dialect.Postgres, db)
+	drv := entsql.OpenDB(dialect.SQLite, db)
 	entClient := ent.NewClient(ent.Driver(drv))
 
 	ctx := context.Background()
@@ -57,10 +56,16 @@ func main() {
 		logger.Fatal("failed creating schema resources", zap.Error(err))
 	}
 
-	driver, err := postgres.WithInstance(db, &postgres.Config{})
+	driver, err := sqlite3.WithInstance(db, &sqlite3.Config{})
+	if err != nil {
+		logger.Fatal("failed to create sqlite3 driver", zap.Error(err))
+	}
 	m, err := migrate.NewWithDatabaseInstance(
 		"file://db/migrations",
 		"csr", driver)
+	if err != nil {
+		logger.Fatal("failed to create migrate", zap.Error(err))
+	}
 	if err := m.Up(); err != nil {
 		if err != migrate.ErrNoChange {
 			logger.Fatal("migration failed", zap.Error(err))
