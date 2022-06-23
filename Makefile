@@ -58,5 +58,5 @@ linux-build-mac-version:
 	CGO_ENABLED=1 GOOS=linux CGO_LDFLAGS="-static" GOARCH=amd64 CC=x86_64-linux-musl-gcc CXX=x86_64-linux-musl-g++ go build ./cmd/swagger/main.go
 
 linux-build:
-	CGO_ENABLED=1 GOOS=linux CGO_LDFLAGS="-static" go build ./cmd/swagger/main.go
+	CGO_ENABLED=1 GOOS=linux GOARCH=amd64 CGO_LDFLAGS="-static" go build ./cmd/swagger/main.go
 
