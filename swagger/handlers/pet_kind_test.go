@@ -247,11 +247,11 @@ func (s *PetKindTestSuite) TestPetKind_DeletePetKindFunc_OK() {
 	t := s.T()
 	request := http.Request{}
 	ctx := request.Context()
-	idToDelete := 1
+	var idToDelete int64 = 1
 	handlerFunc := s.petKind.DeletePetKindByID(s.petKindRepo)
 	data := pet_kind.DeletePetKindParams{
 		HTTPRequest: &request,
-		PetKindID:   int64(idToDelete),
+		PetKindID:   idToDelete,
 	}
 	s.petKindRepo.On("DeletePetKindByID", ctx, idToDelete).Return(nil)
 

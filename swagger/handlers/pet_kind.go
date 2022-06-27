@@ -26,21 +26,13 @@ func (pk PetKind) CreatePetKindFunc(repository repositories.PetKindRepository) p
 		petKind, err := repository.CreatePetKind(ctx, *p.NewPetKind)
 		if err != nil {
 			pk.logger.Error("Error while creating pet kind", zap.Error(err))
-			return pet_kind.NewCreateNewPetKindDefault(http.StatusInternalServerError).WithPayload(
-				&models.Error{
-					Data: &models.ErrorData{
-						Message: "Error while creating pet kind",
-					},
-				})
+			return pet_kind.NewCreateNewPetKindDefault(http.StatusInternalServerError).
+				WithPayload(buildStringPayload("Error while creating pet kind"))
 		}
 		if petKind == nil {
 			pk.logger.Error("Pet kind is nil")
-			return pet_kind.NewCreateNewPetKindDefault(http.StatusInternalServerError).WithPayload(
-				&models.Error{
-					Data: &models.ErrorData{
-						Message: "Error while creating pet kind",
-					},
-				})
+			return pet_kind.NewCreateNewPetKindDefault(http.StatusInternalServerError).
+				WithPayload(buildStringPayload("Error while creating pet kind"))
 		}
 		id := int64(petKind.ID)
 		return pet_kind.NewCreateNewPetKindCreated().WithPayload(&models.PetKindResponse{
@@ -57,20 +49,12 @@ func (pk PetKind) GetAllPetKindFunc(repository repositories.PetKindRepository) p
 		petKinds, err := repository.AllPetKinds(ctx)
 		if err != nil {
 			pk.logger.Error("Error while getting pet kind", zap.Error(err))
-			return pet_kind.NewGetAllPetKindsDefault(http.StatusInternalServerError).WithPayload(
-				&models.Error{
-					Data: &models.ErrorData{
-						Message: "Error while getting pet kind",
-					},
-				})
+			return pet_kind.NewCreateNewPetKindDefault(http.StatusInternalServerError).
+				WithPayload(buildStringPayload("Error while getting pet kind"))
 		}
 		if len(petKinds) == 0 {
-			return pet_kind.NewGetAllPetKindsDefault(http.StatusInternalServerError).WithPayload(
-				&models.Error{
-					Data: &models.ErrorData{
-						Message: "No pet kind found",
-					},
-				})
+			return pet_kind.NewCreateNewPetKindDefault(http.StatusInternalServerError).
+				WithPayload(buildStringPayload("No pet kind found"))
 		}
 		listOfPetKind := models.ListOfPetKinds{}
 		for _, v := range petKinds {
@@ -88,20 +72,12 @@ func (pk PetKind) GetPetKindsByID(repo repositories.PetKindRepository) pet_kind.
 		petKind, err := repo.PetKindByID(ctx, int(p.PetKindID))
 		if err != nil {
 			pk.logger.Error("Error while getting pet kind by id", zap.Error(err))
-			return pet_kind.NewGetPetKindDefault(http.StatusInternalServerError).WithPayload(
-				&models.Error{
-					Data: &models.ErrorData{
-						Message: "Error while getting pet kind",
-					},
-				})
+			return pet_kind.NewCreateNewPetKindDefault(http.StatusInternalServerError).
+				WithPayload(buildStringPayload("Error while getting pet kind"))
 		}
 		if petKind == nil {
-			return pet_kind.NewGetPetKindDefault(http.StatusInternalServerError).WithPayload(
-				&models.Error{
-					Data: &models.ErrorData{
-						Message: "Error while getting pet kind",
-					},
-				})
+			return pet_kind.NewCreateNewPetKindDefault(http.StatusInternalServerError).
+				WithPayload(buildStringPayload("Error while getting pet kind"))
 		}
 		id := int64(petKind.ID)
 		return pet_kind.NewGetPetKindOK().WithPayload(&models.PetKindResponse{ID: &id, Name: &petKind.Name})
@@ -114,12 +90,8 @@ func (pk PetKind) DeletePetKindByID(repo repositories.PetKindRepository) pet_kin
 		err := repo.DeletePetKindByID(ctx, int(p.PetKindID))
 		if err != nil {
 			pk.logger.Error("Error while deleting pet kind by id", zap.Error(err))
-			return pet_kind.NewDeletePetKindDefault(http.StatusInternalServerError).WithPayload(
-				&models.Error{
-					Data: &models.ErrorData{
-						Message: "Error while deleting pet kind",
-					},
-				})
+			return pet_kind.NewCreateNewPetKindDefault(http.StatusInternalServerError).
+				WithPayload(buildStringPayload("Error while deleting pet kind"))
 		}
 		return pet_kind.NewDeletePetKindOK().WithPayload("Pet kind deleted")
 	}
@@ -131,21 +103,13 @@ func (pk PetKind) UpdatePetKindByID(repo repositories.PetKindRepository) pet_kin
 		petSize, err := repo.UpdatePetKindByID(ctx, int(p.PetKindID), p.EditPetKind)
 		if err != nil {
 			pk.logger.Error("Error while updating pet kind by id", zap.Error(err))
-			return pet_kind.NewEditPetKindDefault(http.StatusInternalServerError).WithPayload(
-				&models.Error{
-					Data: &models.ErrorData{
-						Message: "Error while updating pet kind",
-					},
-				})
+			return pet_kind.NewCreateNewPetKindDefault(http.StatusInternalServerError).
+				WithPayload(buildStringPayload("Error while updating pet kind"))
 		}
 		if petSize == nil {
 			pk.logger.Error("Error while updating pet kind by id", zap.Error(err))
-			return pet_kind.NewEditPetKindDefault(http.StatusInternalServerError).WithPayload(
-				&models.Error{
-					Data: &models.ErrorData{
-						Message: "Error while updating pet kind",
-					},
-				})
+			return pet_kind.NewCreateNewPetKindDefault(http.StatusInternalServerError).
+				WithPayload(buildStringPayload("Error while updating pet kind"))
 		}
 
 		id := int64(petSize.ID)
