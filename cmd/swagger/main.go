@@ -48,12 +48,12 @@ func main() {
 
 	// Create an ent.Driver from `db`.
 	drv := entsql.OpenDB(dialect.Postgres, db)
-	client := ent.NewClient(ent.Driver(drv))
+	entClient := ent.NewClient(ent.Driver(drv))
 
 	ctx := context.Background()
 
 	// Run the auto migration tool.
-	if err := client.Schema.Create(ctx, entMigrate.WithDropIndex(true)); err != nil {
+	if err := entClient.Schema.Create(ctx, entMigrate.WithDropIndex(true)); err != nil {
 		logger.Fatal("failed creating schema resources", zap.Error(err))
 	}
 
@@ -104,7 +104,8 @@ func main() {
 		log.Fatalln("PASSWORD_RESET_EXPIRATION_MINUTES not a number")
 	}
 
-	passwordRepo := repositories.NewPasswordResetRepository(client)
+	passwordRepo := repositories.NewPasswordResetRepository(entClient)
+	regConfirmRepo := repositories.NewRegistrationConfirmRepository(entClient)
 
 	emailSenderWebsiteUrl := getEnv("EMAIL_SENDER_WEBSITE_URL", "https://csr.golangforall.com/")
 	if emailSenderWebsiteUrl == "" {
@@ -125,27 +126,20 @@ func main() {
 
 	petKindHandler := handlers.NewPetKind(logger)
 
-	userHandler := handlers.NewUser(
-		client,
-		logger,
-	)
+	userHandler := handlers.NewUser(logger)
 
-	roleHandler := handlers.NewRole(
-		client,
-		logger,
-	)
+	roleHandler := handlers.NewRole(logger)
 
-	kindsHandler := handlers.NewKind(
-		client,
-		logger,
-	)
-	statusHandler := handlers.NewStatus(
-		client,
-		logger,
-	)
+	kindsHandler := handlers.NewKind(logger)
+
+	photosServerURL := getEnv("PHOTOS_SERVER_URL", "http://localhost:8080/")
+	photosFolder := getEnv("PHOTOS_FOLDER", "equipments_photos")
+	photosHandler := handlers.NewPhoto(photosFolder, photosServerURL, logger)
+
+	statusHandler := handlers.NewStatus(logger)
 	activeAreasHandler := handlers.NewActiveArea(logger)
 
-	userRepository := repositories.NewUserRepository(client)
+	userRepository := repositories.NewUserRepository(entClient)
 	ttl := time.Duration(passwordResetExpirationMinutesInt) * time.Minute
 	passwordService := services.NewPasswordResetService(mailSendClient, userRepository, passwordRepo, logger, &ttl)
 	passwordResetHandler := handlers.NewPasswordReset(
@@ -153,12 +147,15 @@ func main() {
 		passwordService,
 	)
 
+	regConfirmService := services.NewRegistrationConfirmService(mailSendClient, userRepository, regConfirmRepo, logger, &ttl)
+	regConfirmHandler := handlers.NewRegistrationConfirmHandler(
+		logger,
+		regConfirmService,
+	)
+
 	blockerHandler := handlers.NewBlocker(logger)
 
-	ordersHandler := handlers.NewOrder(
-		client,
-		logger,
-	)
+	ordersHandler := handlers.NewOrder(logger)
 
 	orderStatus := handlers.NewOrderStatus(logger)
 
@@ -170,35 +167,40 @@ func main() {
 		logger.Error("JWT_SECRET_KEY not specified", zap.Error(err))
 	}
 	api.BearerAuth = middlewares.BearerAuthenticateFunc(jwtSecretKey, logger)
-	api.UsersRefreshHandler = userHandler.Refresh(jwtSecretKey)
 
-	tokenRepository := repositories.NewTokenRepository(client)
-	userService := services.NewUserService(userRepository, tokenRepository, jwtSecretKey, logger)
-	api.UsersLoginHandler = userHandler.LoginUserFunc(userService)
+	tokenRepository := repositories.NewTokenRepository(entClient)
+	tokenManager := services.NewTokenManager(userRepository, tokenRepository, jwtSecretKey, logger)
+	api.UsersLoginHandler = userHandler.LoginUserFunc(tokenManager)
+	api.UsersRefreshHandler = userHandler.Refresh(tokenManager)
 
-	api.UsersPostUserHandler = userHandler.PostUserFunc(userRepository)
-	api.UsersGetCurrentUserHandler = userHandler.GetUserFunc()
-	api.UsersPatchUserHandler = userHandler.PatchUserFunc()
-	api.UsersGetUserHandler = userHandler.GetUserById()
-	api.UsersGetAllUsersHandler = userHandler.GetUsersList()
-	api.UsersBlockUserHandler = blockerHandler.BlockUserFunc(repositories.NewBlockerRepository(client))
-	api.UsersUnblockUserHandler = blockerHandler.UnblockUserFunc(repositories.NewBlockerRepository(client))
+	api.UsersPostUserHandler = userHandler.PostUserFunc(userRepository, regConfirmService)
+	api.UsersGetCurrentUserHandler = userHandler.GetUserFunc(userRepository)
+	api.UsersPatchUserHandler = userHandler.PatchUserFunc(userRepository)
+	api.UsersGetUserHandler = userHandler.GetUserById(userRepository)
+	api.UsersGetAllUsersHandler = userHandler.GetUsersList(userRepository)
 	api.UsersAssignRoleToUserHandler = userHandler.AssignRoleToUserFunc(userRepository)
 
-	api.RolesGetRolesHandler = roleHandler.GetRolesFunc()
+	blockerRepository := repositories.NewBlockerRepository(entClient)
+	api.UsersBlockUserHandler = blockerHandler.BlockUserFunc(blockerRepository)
+	api.UsersUnblockUserHandler = blockerHandler.UnblockUserFunc(blockerRepository)
 
-	api.KindsCreateNewKindHandler = kindsHandler.CreateNewKindFunc()
-	api.KindsGetKindByIDHandler = kindsHandler.GetKindByIDFunc()
-	api.KindsDeleteKindHandler = kindsHandler.DeleteKindFunc()
-	api.KindsGetAllKindsHandler = kindsHandler.GetAllKindsFunc()
-	api.KindsPatchKindHandler = kindsHandler.PatchKindFunc()
+	roleRepository := repositories.NewRoleRepository(entClient)
+	api.RolesGetRolesHandler = roleHandler.GetRolesFunc(roleRepository)
 
-	api.StatusPostStatusHandler = statusHandler.PostStatusFunc()
-	api.StatusGetStatusesHandler = statusHandler.GetStatusesFunc()
-	api.StatusGetStatusHandler = statusHandler.GetStatusFunc()
-	api.StatusDeleteStatusHandler = statusHandler.DeleteStatusFunc()
+	kindRepository := repositories.NewKindRepository(entClient)
+	api.KindsCreateNewKindHandler = kindsHandler.CreateNewKindFunc(kindRepository)
+	api.KindsGetKindByIDHandler = kindsHandler.GetKindByIDFunc(kindRepository)
+	api.KindsDeleteKindHandler = kindsHandler.DeleteKindFunc(kindRepository)
+	api.KindsGetAllKindsHandler = kindsHandler.GetAllKindsFunc(kindRepository)
+	api.KindsPatchKindHandler = kindsHandler.PatchKindFunc(kindRepository)
 
-	equipmentRepository := repositories.NewEquipmentRepository(client)
+	equipmentStatusRepository := repositories.NewEquipmentStatusRepository(entClient)
+	api.StatusPostStatusHandler = statusHandler.PostStatusFunc(equipmentStatusRepository)
+	api.StatusGetStatusesHandler = statusHandler.GetStatusesFunc(equipmentStatusRepository)
+	api.StatusGetStatusHandler = statusHandler.GetStatusFunc(equipmentStatusRepository)
+	api.StatusDeleteStatusHandler = statusHandler.DeleteStatusFunc(equipmentStatusRepository)
+
+	equipmentRepository := repositories.NewEquipmentRepository(entClient)
 	api.EquipmentCreateNewEquipmentHandler = equipmentHandler.PostEquipmentFunc(equipmentRepository)
 	api.EquipmentGetEquipmentHandler = equipmentHandler.GetEquipmentFunc(equipmentRepository)
 	api.EquipmentDeleteEquipmentHandler = equipmentHandler.DeleteEquipmentFunc(equipmentRepository)
@@ -206,36 +208,45 @@ func main() {
 	api.EquipmentEditEquipmentHandler = equipmentHandler.EditEquipmentFunc(equipmentRepository)
 	api.EquipmentFindEquipmentHandler = equipmentHandler.FindEquipmentFunc(equipmentRepository)
 
-	activeAreasRepository := repositories.NewActiveAreaRepository(client)
+	photoRepository := repositories.NewPhotoRepository(entClient)
+	api.PhotosCreateNewPhotoHandler = photosHandler.CreateNewPhotoFunc(photoRepository)
+	api.PhotosGetPhotoHandler = photosHandler.GetPhotoFunc(photoRepository)
+	api.PhotosDeletePhotoHandler = photosHandler.DeletePhotoFunc(photoRepository)
+	api.PhotosDownloadPhotoHandler = photosHandler.DownloadPhotoFunc(photoRepository)
+
+	activeAreasRepository := repositories.NewActiveAreaRepository(entClient)
 	api.ActiveAreasGetAllActiveAreasHandler = activeAreasHandler.GetActiveAreasFunc(activeAreasRepository)
 
 	api.PasswordResetSendLinkByLoginHandler = passwordResetHandler.SendLinkByLoginFunc()
 	api.PasswordResetGetPasswordResetLinkHandler = passwordResetHandler.GetPasswordResetLinkFunc()
 
-	orderRepository := repositories.NewOrderRepository(client)
+	api.RegistrationConfirmSendRegistrationConfirmLinkByLoginHandler = regConfirmHandler.SendRegistrationConfirmLinkByLoginFunc()
+	api.RegistrationConfirmVerifyRegistrationConfirmTokenHandler = regConfirmHandler.VerifyRegistrationConfirmTokenFunc()
+
+	orderRepository := repositories.NewOrderRepository(entClient)
 	api.OrdersGetAllOrdersHandler = ordersHandler.ListOrderFunc(orderRepository)
 	api.OrdersCreateOrderHandler = ordersHandler.CreateOrderFunc(orderRepository)
 	api.OrdersUpdateOrderHandler = ordersHandler.UpdateOrderFunc(orderRepository)
 
-	orderStatusRepertory := repositories.NewOrderFilter(client)
+	orderStatusRepertory := repositories.NewOrderFilter(entClient)
 	api.OrdersGetOrdersByStatusHandler = orderStatus.GetOrdersByStatus(orderStatusRepertory)
 	api.OrdersGetOrdersByDateAndStatusHandler = orderStatus.GetOrdersByPeriodAndStatus(orderStatusRepertory)
 
-	statusRepository := repositories.NewOrderStatusRepository(client)
+	statusRepository := repositories.NewOrderStatusRepository(entClient)
 	api.OrdersAddNewOrderStatusHandler = orderStatus.AddNewStatusToOrder(statusRepository)
 	api.OrdersGetFullOrderHistoryHandler = orderStatus.OrderStatusesHistory(statusRepository)
 
-	orderStatusNameRepository := repositories.NewStatusNameRepository(client)
+	orderStatusNameRepository := repositories.NewStatusNameRepository(entClient)
 	api.OrdersGetAllStatusNamesHandler = orderStatus.GetAllStatusNames(orderStatusNameRepository)
 
-	petSizeRepo := repositories.NewPetSizeRepository(client)
+	petSizeRepo := repositories.NewPetSizeRepository(entClient)
 	api.PetSizeGetAllPetSizeHandler = petSizeHandler.GetAllPetSizeFunc(petSizeRepo)
 	api.PetSizeEditPetSizeHandler = petSizeHandler.UpdatePetSizeByID(petSizeRepo)
 	api.PetSizeDeletePetSizeHandler = petSizeHandler.DeletePetSizeByID(petSizeRepo)
 	api.PetSizeCreateNewPetSizeHandler = petSizeHandler.CreatePetSizeFunc(petSizeRepo)
 	api.PetSizeGetPetSizeHandler = petSizeHandler.GetPetSizeByID(petSizeRepo)
 
-	petKindRepo := repositories.NewPetKindRepository(client)
+	petKindRepo := repositories.NewPetKindRepository(entClient)
 	api.PetKindGetAllPetKindsHandler = petKindHandler.GetAllPetKindFunc(petKindRepo)
 	api.PetKindEditPetKindHandler = petKindHandler.UpdatePetKindByID(petKindRepo)
 	api.PetKindDeletePetKindHandler = petKindHandler.DeletePetKindByID(petKindRepo)

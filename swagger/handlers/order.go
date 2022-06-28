@@ -16,26 +16,24 @@ import (
 )
 
 type Order struct {
-	client *ent.Client
 	logger *zap.Logger
 }
 
-func NewOrder(client *ent.Client, logger *zap.Logger) *Order {
+func NewOrder(logger *zap.Logger) *Order {
 	return &Order{
-		client: client,
 		logger: logger,
 	}
 }
 
 func mapOrder(o *ent.Order, log *zap.Logger) (*models.Order, error) {
-	id := int64(o.ID)
-	quantity := int64(o.Quantity)
-	rentEnd := strfmt.DateTime(o.RentEnd)
-	rentStart := strfmt.DateTime(o.RentStart)
 	if o == nil {
 		log.Warn("order is nil")
 		return nil, errors.New("order is nil")
 	}
+	id := int64(o.ID)
+	quantity := int64(o.Quantity)
+	rentEnd := strfmt.DateTime(o.RentEnd)
+	rentStart := strfmt.DateTime(o.RentStart)
 	owners := o.Edges.Users
 	if owners == nil {
 		log.Warn("order has no owners")
@@ -59,6 +57,10 @@ func mapOrder(o *ent.Order, log *zap.Logger) (*models.Order, error) {
 	if equipment.Edges.Status != nil {
 		statusId = int64(equipment.Edges.Status.ID)
 	}
+	var photoURL string
+	if equipment.Edges.Photo != nil {
+		photoURL = equipment.Edges.Photo.URL
+	}
 
 	allStatuses := o.Edges.OrderStatus
 	var statusToOrder *models.OrderStatus
@@ -79,12 +81,12 @@ func mapOrder(o *ent.Order, log *zap.Logger) (*models.Order, error) {
 
 	return &models.Order{
 		Description: &o.Description,
-		Equipment: &models.Equipment{
+		Equipment: &models.EquipmentResponse{
 			Description: &equipment.Description,
 			Kind:        &kindId,
 			Location:    nil,
 			Name:        &equipment.Name,
-			Photo:       nil,
+			Photo:       &photoURL,
 			Status:      &statusId,
 		},
 		ID:        &id,
@@ -182,8 +184,8 @@ func (o Order) UpdateOrderFunc(repository repositories.OrderRepository) orders.U
 			return orders.NewGetAllOrdersDefault(http.StatusInternalServerError).WithPayload(buildErrorPayload(err))
 		}
 
-		id := int(p.OrderID)
-		order, err := repository.Update(ctx, id, p.Data, ownerId)
+		orderID := int(p.OrderID)
+		order, err := repository.Update(ctx, orderID, p.Data, ownerId)
 		if err != nil {
 			o.logger.Error("update order failed", zap.Error(err))
 			return orders.NewUpdateOrderDefault(http.StatusInternalServerError).WithPayload(buildErrorPayload(err))

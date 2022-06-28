@@ -41,6 +41,7 @@ func ValidEquipment(t *testing.T) *ent.Equipment {
 		Edges: ent.EquipmentEdges{
 			Kind:   &ent.Kind{},
 			Status: &ent.Statuses{},
+			Photo:  &ent.Photo{},
 		},
 	}
 }
@@ -228,6 +229,8 @@ func (s *EquipmentTestSuite) TestEquipment_DeleteEquipmentFunc_RepoErr() {
 	}
 	err := errors.New("test error")
 
+	equipmentToReturn := ValidEquipment(t)
+	s.equipmentRepo.On("EquipmentByID", ctx, int(equipmentId)).Return(equipmentToReturn, nil)
 	s.equipmentRepo.On("DeleteEquipmentByID", ctx, int(equipmentId)).Return(err)
 
 	resp := handlerFunc(data)
@@ -250,7 +253,10 @@ func (s *EquipmentTestSuite) TestEquipment_DeleteEquipmentFunc_OK() {
 		EquipmentID: equipmentId,
 	}
 
+	equipmentToReturn := ValidEquipment(t)
+	s.equipmentRepo.On("EquipmentByID", ctx, int(equipmentId)).Return(equipmentToReturn, nil)
 	s.equipmentRepo.On("DeleteEquipmentByID", ctx, int(equipmentId)).Return(nil)
+	s.equipmentRepo.On("DeleteEquipmentPhoto", ctx, equipmentToReturn.Edges.Photo.ID).Return(nil)
 
 	resp := handlerFunc(data)
 	responseRecorder := httptest.NewRecorder()
@@ -481,4 +487,99 @@ func (s *EquipmentTestSuite) TestEquipment_FindEquipmentFunc_OK() {
 		t.Errorf("unable to unmarshal response body: %v", err)
 	}
 	assert.Equal(t, equipmentToReturn[0].Name, *actualEquipment[0].Name)
+}
+
+func (s *EquipmentTestSuite) TestEquipment_EditEquipmentFunc_RepoErr() {
+	t := s.T()
+	request := http.Request{}
+	ctx := request.Context()
+
+	handlerFunc := s.equipment.EditEquipmentFunc(s.equipmentRepo)
+	equipmentId := int64(1)
+	equipmentKindUpdate := int64(10)
+	equipmentUpdate := &models.Equipment{
+		Kind: &equipmentKindUpdate,
+	}
+	data := equipment.EditEquipmentParams{
+		HTTPRequest:   &request,
+		EquipmentID:   equipmentId,
+		EditEquipment: equipmentUpdate,
+	}
+	err := errors.New("test error")
+
+	s.equipmentRepo.On("UpdateEquipmentByID", ctx, int(equipmentId), equipmentUpdate).
+		Return(nil, err)
+
+	resp := handlerFunc(data)
+	responseRecorder := httptest.NewRecorder()
+	producer := runtime.JSONProducer()
+	resp.WriteResponse(responseRecorder, producer)
+	assert.Equal(t, http.StatusInternalServerError, responseRecorder.Code)
+	s.equipmentRepo.AssertExpectations(t)
+}
+
+func (s *EquipmentTestSuite) TestEquipment_EditEquipmentFunc_MapErr() {
+	t := s.T()
+	request := http.Request{}
+	ctx := request.Context()
+
+	handlerFunc := s.equipment.EditEquipmentFunc(s.equipmentRepo)
+	equipmentId := int64(1)
+	equipmentKindUpdate := int64(10)
+	equipmentUpdate := &models.Equipment{
+		Kind: &equipmentKindUpdate,
+	}
+	data := equipment.EditEquipmentParams{
+		HTTPRequest:   &request,
+		EquipmentID:   equipmentId,
+		EditEquipment: equipmentUpdate,
+	}
+	equipmentToReturn := InvalidEquipment(t)
+
+	s.equipmentRepo.On("UpdateEquipmentByID", ctx, int(equipmentId), equipmentUpdate).
+		Return(equipmentToReturn, nil)
+
+	resp := handlerFunc(data)
+	responseRecorder := httptest.NewRecorder()
+	producer := runtime.JSONProducer()
+	resp.WriteResponse(responseRecorder, producer)
+	assert.Equal(t, http.StatusInternalServerError, responseRecorder.Code)
+	s.equipmentRepo.AssertExpectations(t)
+}
+
+func (s *EquipmentTestSuite) TestEquipment_EditEquipmentFunc_OK() {
+	t := s.T()
+	request := http.Request{}
+	ctx := request.Context()
+
+	handlerFunc := s.equipment.EditEquipmentFunc(s.equipmentRepo)
+	equipmentId := int64(1)
+	equipmentKindUpdate := int64(10)
+	equipmentUpdate := &models.Equipment{
+		Kind: &equipmentKindUpdate,
+	}
+	data := equipment.EditEquipmentParams{
+		HTTPRequest:   &request,
+		EquipmentID:   equipmentId,
+		EditEquipment: equipmentUpdate,
+	}
+	equipmentToReturn := ValidEquipment(t)
+
+	s.equipmentRepo.On("UpdateEquipmentByID", ctx, int(equipmentId), equipmentUpdate).
+		Return(equipmentToReturn, nil)
+
+	resp := handlerFunc(data)
+	responseRecorder := httptest.NewRecorder()
+	producer := runtime.JSONProducer()
+	resp.WriteResponse(responseRecorder, producer)
+	assert.Equal(t, http.StatusOK, responseRecorder.Code)
+
+	var responseEquipment models.Equipment
+	err := json.Unmarshal(responseRecorder.Body.Bytes(), &responseEquipment)
+	if err != nil {
+		t.Errorf("unable to unmarshal response body: %v", err)
+	}
+	assert.Equal(t, equipmentToReturn.Name, *responseEquipment.Name)
+
+	s.equipmentRepo.AssertExpectations(t)
 }

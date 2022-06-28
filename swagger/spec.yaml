@@ -111,7 +111,7 @@ paths:
         200:
           description: Success
           schema:
-            $ref: "#/definitions/GetUserResponse"
+            $ref: "#/definitions/UserInfo"
         default:
           description: Unexpected error.
           schema:
@@ -131,7 +131,7 @@ paths:
           description: The patch to apply to the user.
           required: true
           schema:
-            $ref: "#/definitions/PatchRequest"
+            $ref: "#/definitions/PatchUserRequest"
       responses:
         204:
           description: Success
@@ -152,10 +152,10 @@ paths:
         - Users
       operationId: GetUser
       responses:
-        201:
+        200:
           description: Success
           schema:
-            $ref: "#/definitions/GetUserById"
+            $ref: "#/definitions/UserInfo"
         default:
           description: Unexpected error.
           schema:
@@ -167,7 +167,7 @@ paths:
         - Users
       operationId: GetAllUsers
       responses:
-        201:
+        200:
           description: Success
           schema:
             $ref: "#/definitions/GetListUsers"
@@ -217,7 +217,7 @@ paths:
         200:
           description: Role has been assigned to user
           schema:
-            $ref: "#/definitions/GetUserResponse"
+            type: string
         default:
           description: Unexpected error.
           schema:
@@ -283,7 +283,7 @@ paths:
         - Status
       operationId: GetStatuses
       responses:
-        201:
+        200:
           description: Success
           schema:
             $ref: "#/definitions/ListStatuses"
@@ -297,14 +297,14 @@ paths:
         in: path
         required: true
         description: status id
-        type: string
+        type: integer
     get:
       summary: Get status by id
       tags:
         - Status
       operationId: GetStatus
       responses:
-        201:
+        200:
           description: Status has been created
           schema:
             $ref: "#/definitions/SuccessStatusOperationResponse"
@@ -318,7 +318,7 @@ paths:
         - Status
       operationId: DeleteStatus
       responses:
-        201:
+        200:
           description: Status has been created
           schema:
             $ref: "#/definitions/SuccessStatusOperationResponse"
@@ -347,7 +347,7 @@ paths:
         - Kinds
       operationId: CreateNewKind
       parameters:
-        - name: name
+        - name: NewKind
           in: body
           description: Name of a kind
           required: true
@@ -368,7 +368,7 @@ paths:
         in: path
         required: true
         description: kind id
-        type: string
+        type: integer
     get:
       summary: Get information about the kind of equipment by id.
       tags:
@@ -389,10 +389,10 @@ paths:
         - Kinds
       operationId: deleteKind
       responses:
-        201:
+        200:
           description: kind of equipment successfully deleted from db
           schema:
-            $ref: "#/definitions/DeleteKindResponse"
+            type: string
         default:
           description: Unexpected error.
           schema:
@@ -403,18 +403,103 @@ paths:
         - Kinds
       operationId: PatchKind
       parameters:
-        - name: patchTask
+        - name: patchKind
           in: body
           required: true
           schema:
-            $ref: '#/definitions/PatchTask'
+            $ref: '#/definitions/PatchKind'
       responses:
-        201:
+        200:
           description: Success
           schema:
             $ref: "#/definitions/PatchKindResponse"
         default:
           description: Unexpected error
+          schema:
+            $ref: "#/definitions/Error"
+  /equipment/photos:
+    post:
+      summary: Upload a new equipment photo
+      tags:
+        - Photos
+      operationId: CreateNewPhoto
+      consumes:
+        - multipart/form-data
+      parameters:
+        - name: file
+          in: formData
+          type: file
+          description: Upload a new equipment photo
+          required: true
+      responses:
+        201:
+          description: Equipment photo uploaded
+          schema:
+            $ref: "#/definitions/CreateNewPhotoResponse"
+        default:
+          description: Unexpected error.
+          schema:
+            $ref: "#/definitions/Error"
+  /equipment/photos/{photoId}:
+    parameters:
+      - name: photoId
+        in: path
+        required: true
+        description: photo id
+        type: string
+    get:
+      summary: Get photo by id
+      tags:
+        - Photos
+      operationId: GetPhoto
+      produces:
+        - image/jpg
+        - application/json
+      responses:
+        200:
+          description: Photo has been found
+          schema:
+            type: file
+        default:
+          description: Unexpected error.
+          schema:
+            $ref: "#/definitions/Error"
+    delete:
+      summary: Delete photo by id
+      tags:
+        - Photos
+      operationId: DeletePhoto
+      responses:
+        200:
+          description: Equipment photo has been deleted
+          schema:
+            $ref: "#/definitions/DeletePhotoResponse"
+        default:
+          description: Unexpected error.
+          schema:
+            $ref: "#/definitions/Error"
+  /equipment/photos/{photoId}/download:
+    parameters:
+      - name: photoId
+        in: path
+        required: true
+        description: photo id
+        type: string
+    get:
+      summary: Download photo by id
+      tags:
+        - Photos
+      operationId: DownloadPhoto
+      produces:
+        - application/octet-stream
+        - application/json
+      responses:
+        200:
+          description: Photo has been found
+          schema:
+            type: file
+        default:
+          description: Unexpected error.
           schema:
             $ref: "#/definitions/Error"
   /v1/orders:
@@ -1025,6 +1110,49 @@ paths:
           schema:
             $ref: "#/definitions/Error"
 
+  /registration_confirm/:
+    post:
+      summary: Create registration confirm link by login.
+      tags:
+        - Registration_Confirm
+      operationId: SendRegistrationConfirmLinkByLogin
+      parameters:
+        - name: login
+          in: body
+          required: true
+          schema:
+            $ref: "#/definitions/SendRegistrationConfirmLinkRequest"
+      responses:
+        200:
+          description: Success
+          schema:
+            $ref: "#/definitions/RegistrationConfirmResponse"
+        default:
+          description: Unexpected error.
+          schema:
+            $ref: "#/definitions/Error"
+
+  /registration_confirm/{token}:
+    get:
+      summary: Verify registration confirmation token.
+      tags:
+        - Registration_Confirm
+      operationId: VerifyRegistrationConfirmToken
+      parameters:
+        - name: token
+          in: path
+          required: true
+          type: string
+      responses:
+        200:
+          description: Success
+          schema:
+            $ref: "#/definitions/RegistrationConfirmResponse"
+        default:
+          description: Unexpected error.
+          schema:
+            $ref: "#/definitions/Error"
+
 definitions:
   PetKind:
     type: object
@@ -1047,6 +1175,7 @@ definitions:
             type: string
           message:
             type: string
+
   ListOfPetKinds:
     type: array
     items:
@@ -1062,21 +1191,16 @@ definitions:
       name:
         type: string
 
-  PatchTask:
+  PatchKind:
     type: object
-    required:
-      - data
-    description: Patch task object (adding max reservation time and max reservation units)
+    description: Patch task object (changing kind properties)
     properties:
-      data:
-        type: object
-        properties:
-          max_reservation_time:
+        name:
+          type: string
+        maxReservationTime:
             type: integer
-            description: max reservation time field
-          max_reservation_units:
+        maxReservationUnits:
             type: integer
-            description: max reservation units field
 
   UpdateUserTask:
     type: object
@@ -1120,38 +1244,31 @@ definitions:
           vk:
             type: string
 
-  PatchRequest:
-    type: array
-    items:
-      $ref: "#/definitions/PatchItem"
-  PatchItem:
+  PatchUserRequest:
     type: object
-    description: A JSONPatch document as defined by RFC 6902
-    required:
-      - op
-      - path
     properties:
-      from:
-        description: A string containing a JSON Pointer value
+      name:
         type: string
-      op:
-        description: The operation to be performed
-        enum:
-          - add
-          - remove
-          - replace
-          - move
-          - copy
-          - test
+      surname:
+        type : string
+      passport_series:
+        type : string
+      passport_number:
+        type : string
+      passport_authority:
+        type : string
+      passport_issue_date:
+        type : string
+        format : date
+      phone:
         type: string
-      path:
-        description: A JSON-Pointer
+      org_name:
         type: string
-      value:
-        description: The value to be used within the operations
-        type: object
-
-  # User
+      website:
+        type: string
+      vk:
+        type: string
+      # User
   LoginInfo:
     type: object
     required:
@@ -1311,7 +1428,7 @@ definitions:
     properties:
       roleId:
         type: integer
-  GetUserById:
+  UserInfo:
     type: object
     required:
       - id
@@ -1370,7 +1487,7 @@ definitions:
   GetListUsers:
     type: array
     items:
-      $ref: "#/definitions/GetUserById"
+      $ref: "#/definitions/UserInfo"
 
   SuccessUserUpdateResponse:
    type: object
@@ -1406,7 +1523,7 @@ definitions:
       - name
     properties:
       id:
-        type: string
+        type: integer
       name:
         type: string
   ListStatuses:
@@ -1427,6 +1544,37 @@ definitions:
     properties:
       name:
         type: string
+  # Photo
+  Photo:
+    type: object
+    required:
+      - url
+    properties:
+      id:
+        type: string
+      url:
+        type: string
+  DeletePhotoResponse:
+    type: object
+    required:
+      - data
+    properties:
+      data:
+        $ref: "#/definitions/Photo"
+  CreateNewPhoto:
+    type: object
+    required:
+      - data
+    properties:
+      data:
+        $ref: "#/definitions/Photo"
+  CreateNewPhotoResponse:
+    type: object
+    required:
+      - data
+    properties:
+      data:
+        $ref: "#/definitions/Photo"
   # Kind
   Kind:
     type: object
@@ -1462,10 +1610,16 @@ definitions:
   CreateNewKind:
     type: object
     required:
-      - data
+      - name
+      - max_reservation_time
+      - max_reservation_units
     properties:
-      data:
-        $ref: "#/definitions/Kind"
+        name:
+            type: string
+        max_reservation_time:
+            type: integer
+        max_reservation_units:
+            type: integer
   CreateNewKindResponse:
     type: object
     required:
@@ -1550,7 +1704,7 @@ definitions:
       - order
       - location
       - description
-      - photo
+      - photoID
     properties:
       category:
         type: string
@@ -1604,9 +1758,9 @@ definitions:
       description:
         type: string
         example: "This is a dog harness.\nWARNING: do not put on cats!"
-      photo:
+      photoID:
         type: string
-        example: "https://..."
+        example: ""
       petKinds:
         type: array
         items:
@@ -1788,6 +1942,33 @@ definitions:
   PasswordResetResponse:
     type: string
 
+  #RegistrationConfirm
+  RegistrationConfirm:
+    type: object
+    required:
+      - id
+      - created_at
+      - user_id
+      - hash
+    properties:
+      id:
+        type: integer
+      created_at:
+        type: string
+      user_id:
+        type: integer
+      hash:
+        type: string
+  SendRegistrationConfirmLinkRequest:
+    type: object
+    required:
+      - data
+    properties:
+      data:
+        $ref: "#/definitions/Login"
+  RegistrationConfirmResponse:
+    type: string
+
   Login:
     type: object
     required:
@@ -1871,7 +2052,7 @@ definitions:
         $ref: '#/definitions/UserEmbeddable'
       equipment:
         type: object
-        $ref: '#/definitions/Equipment'
+        $ref: '#/definitions/EquipmentResponse'
       last_status:
         type: object
         $ref: '#/definitions/OrderStatus'
