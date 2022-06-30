@@ -1,5 +1,4 @@
-variables:
-  START_DEPLOY_STAGE: true
+
 
 stages:
   - test
@@ -48,6 +47,8 @@ build:
       
 deploy_stage:
   image: kroniak/ssh-client
+  variables:
+    START_DEPLOY_STAGE: "true"
   stage: deploy
   rules:
     - if: $START_DEPLOY_STAGE == true
