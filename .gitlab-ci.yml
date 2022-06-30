@@ -1,4 +1,4 @@
-image: alpine:latest
+
 variables:
   START_DEPLOY_STAGE: "true"
   
@@ -52,7 +52,7 @@ deploy_stage:
   
   stage: deploy
   rules:
-    - if: $START_DEPLOY_STAGE == true
+    - if: $START_DEPLOY_STAGE == "true"
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
       when: always
   script:
@@ -70,7 +70,7 @@ deploy_to_prod:
   image: kroniak/ssh-client
   stage: deploy_prod
   rules:
-    - if: $START_DEPLOY_TO_PROD == true
+    - if: $START_DEPLOY_TO_PROD == "true"
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
       when: always
   script:
