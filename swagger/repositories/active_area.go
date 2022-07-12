@@ -7,7 +7,7 @@ import (
 )
 
 type ActiveAreaRepository interface {
-	AllActiveAreas(ctx context.Context) ([]*ent.ActiveArea, error)
+	AllActiveAreas(ctx context.Context, limit, offset int) ([]*ent.ActiveArea, error)
 }
 
 type activeAreaRepository struct {
@@ -18,6 +18,6 @@ func NewActiveAreaRepository(client *ent.Client) ActiveAreaRepository {
 	return &activeAreaRepository{client: client}
 }
 
-func (r *activeAreaRepository) AllActiveAreas(ctx context.Context) ([]*ent.ActiveArea, error) {
-	return r.client.ActiveArea.Query().All(ctx)
+func (r *activeAreaRepository) AllActiveAreas(ctx context.Context, limit, offset int) ([]*ent.ActiveArea, error) {
+	return r.client.ActiveArea.Query().Limit(limit).Offset(offset).All(ctx)
 }

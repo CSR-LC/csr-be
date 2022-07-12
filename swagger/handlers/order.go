@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"errors"
+	"math"
 	"net/http"
 
 	"github.com/go-openapi/runtime/middleware"
@@ -128,7 +129,14 @@ func mapOrdersToResponse(entOrders []*ent.Order, log *zap.Logger) ([]*models.Ord
 func (o Order) ListOrderFunc(repository repositories.OrderRepository) orders.GetAllOrdersHandlerFunc {
 	return func(p orders.GetAllOrdersParams, access interface{}) middleware.Responder {
 		ctx := p.HTTPRequest.Context()
-
+		limit := math.MaxInt
+		if p.Limit != nil {
+			limit = int(*p.Limit)
+		}
+		offset := 0
+		if p.Offset != nil {
+			offset = int(*p.Offset)
+		}
 		ownerId, err := authentication.GetUserId(access)
 		if err != nil {
 			o.logger.Error("get user id failed", zap.Error(err))
@@ -139,7 +147,7 @@ func (o Order) ListOrderFunc(repository repositories.OrderRepository) orders.Get
 			return orders.NewGetAllOrdersDefault(status).WithPayload(buildErrorPayload(err))
 		}
 
-		items, total, err := repository.List(ctx, ownerId)
+		items, total, err := repository.List(ctx, ownerId, limit, offset)
 		if err != nil {
 			o.logger.Error("list items failed", zap.Error(err))
 			return orders.NewGetAllOrdersDefault(http.StatusInternalServerError).WithPayload(buildErrorPayload(err))

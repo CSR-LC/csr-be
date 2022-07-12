@@ -15,12 +15,12 @@ import (
 )
 
 type EquipmentRepository interface {
-	EquipmentsByFilter(ctx context.Context, filter models.EquipmentFilter) ([]*ent.Equipment, error)
+	EquipmentsByFilter(ctx context.Context, filter models.EquipmentFilter, limit, offset int) ([]*ent.Equipment, error)
 	CreateEquipment(ctx context.Context, eq models.Equipment) (*ent.Equipment, error)
 	EquipmentByID(ctx context.Context, id int) (*ent.Equipment, error)
 	DeleteEquipmentByID(ctx context.Context, id int) error
 	DeleteEquipmentPhoto(ctx context.Context, id string) error
-	AllEquipments(ctx context.Context) ([]*ent.Equipment, error)
+	AllEquipments(ctx context.Context, limit, offset int) ([]*ent.Equipment, error)
 	UpdateEquipmentByID(ctx context.Context, id int, eq *models.Equipment) (*ent.Equipment, error)
 }
 
@@ -34,7 +34,8 @@ func NewEquipmentRepository(client *ent.Client) EquipmentRepository {
 	}
 }
 
-func (r *equipmentRepository) EquipmentsByFilter(ctx context.Context, filter models.EquipmentFilter) ([]*ent.Equipment, error) {
+func (r *equipmentRepository) EquipmentsByFilter(ctx context.Context, filter models.EquipmentFilter,
+	limit, offset int) ([]*ent.Equipment, error) {
 	result, err := r.client.Equipment.Query().
 		QueryStatus().
 		Where(OptionalIntStatus(filter.Status, statuses.FieldID)).
@@ -62,6 +63,7 @@ func (r *equipmentRepository) EquipmentsByFilter(ctx context.Context, filter mod
 		WithStatus().
 		WithPhoto().
 		WithPetKinds().
+		Limit(limit).Offset(offset).
 		All(ctx)
 	if err != nil {
 		return nil, err
@@ -130,8 +132,9 @@ func (r *equipmentRepository) DeleteEquipmentPhoto(ctx context.Context, id strin
 	return nil
 }
 
-func (r *equipmentRepository) AllEquipments(ctx context.Context) ([]*ent.Equipment, error) {
-	result, err := r.client.Equipment.Query().WithKind().WithStatus().WithPetKinds().WithPetSize().WithPhoto().All(ctx)
+func (r *equipmentRepository) AllEquipments(ctx context.Context, limit, offset int) ([]*ent.Equipment, error) {
+	result, err := r.client.Equipment.Query().WithKind().WithStatus().WithPetKinds().WithPetSize().WithPhoto().
+		Limit(limit).Offset(offset).All(ctx)
 	if err != nil {
 		return nil, err
 	}

@@ -23,7 +23,7 @@ func (r OrderAccessDenied) Error() string {
 }
 
 type OrderRepository interface {
-	List(ctx context.Context, ownerId int) ([]*ent.Order, int, error)
+	List(ctx context.Context, ownerId, limit, offset int) ([]*ent.Order, int, error)
 	Create(ctx context.Context, data *models.OrderCreateRequest, ownerId int) (*ent.Order, error)
 	Update(ctx context.Context, id int, data *models.OrderUpdateRequest, ownerId int) (*ent.Order, error)
 }
@@ -65,9 +65,9 @@ func getQuantity(quantity int, maxQuantity int) (*int, error) {
 	return &quantity, nil
 }
 
-func (r *orderRepository) List(ctx context.Context, ownerId int) (items []*ent.Order, total int, err error) {
+func (r *orderRepository) List(ctx context.Context, ownerId, limit, offset int) (items []*ent.Order, total int, err error) {
 	items, err = r.client.Order.Query().Where(order.HasUsersWith(user.ID(ownerId))).Order(ent.Desc("id")).
-		WithUsers().WithOrderStatus().WithEquipments().All(ctx)
+		WithUsers().WithOrderStatus().WithEquipments().Limit(limit).Offset(offset).All(ctx)
 	if err != nil {
 		return nil, 0, err
 	}

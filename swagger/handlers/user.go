@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"errors"
+	"math"
 	"net/http"
 
 	"github.com/go-openapi/runtime/middleware"
@@ -202,13 +203,21 @@ func (c User) GetUserById(repository repositories.UserRepository) users.GetUserH
 func (c User) GetUsersList(repository repositories.UserRepository) users.GetAllUsersHandlerFunc {
 	return func(p users.GetAllUsersParams, access interface{}) middleware.Responder {
 		ctx := p.HTTPRequest.Context()
-		all, err := repository.UserList(ctx)
+		limit := math.MaxInt
+		if p.Limit != nil {
+			limit = int(*p.Limit)
+		}
+		offset := 0
+		if p.Offset != nil {
+			offset = int(*p.Offset)
+		}
+		all, err := repository.UserList(ctx, limit, offset)
 		if err != nil {
 			c.logger.Error("failed get user list", zap.Error(err))
 			return users.NewGetAllUsersDefault(http.StatusInternalServerError).
 				WithPayload(buildStringPayload("failed to get user list"))
 		}
-		listUsers := models.GetListUsers{}
+		listUsers := make(models.GetListUsers, len(all))
 		for _, element := range all {
 			userToResponse, errMap := mapUserInfo(element)
 			if errMap != nil {

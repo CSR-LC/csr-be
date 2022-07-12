@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"math"
 	"net/http"
 
 	"github.com/go-openapi/runtime/middleware"
@@ -52,7 +53,15 @@ func (c *Kind) CreateNewKindFunc(repository repositories.KindRepository) kinds.C
 func (c *Kind) GetAllKindsFunc(repository repositories.KindRepository) kinds.GetAllKindsHandlerFunc {
 	return func(s kinds.GetAllKindsParams, access interface{}) middleware.Responder {
 		ctx := s.HTTPRequest.Context()
-		allKinds, err := repository.AllKind(ctx)
+		limit := math.MaxInt
+		if s.Limit != nil {
+			limit = int(*s.Limit)
+		}
+		offset := 0
+		if s.Offset != nil {
+			offset = int(*s.Offset)
+		}
+		allKinds, err := repository.AllKind(ctx, limit, offset)
 		if err != nil {
 			c.logger.Error("query all kind error", zap.Error(err))
 			return kinds.NewGetAllKindsDefault(http.StatusInternalServerError).

@@ -10,7 +10,7 @@ import (
 
 type KindRepository interface {
 	CreateKind(ctx context.Context, newKind models.CreateNewKind) (*ent.Kind, error)
-	AllKind(ctx context.Context) ([]*ent.Kind, error)
+	AllKind(ctx context.Context, limit, offset int) ([]*ent.Kind, error)
 	KindByID(ctx context.Context, id int) (*ent.Kind, error)
 	DeleteKindByID(ctx context.Context, id int) error
 	UpdateKind(ctx context.Context, id int, update models.PatchKind) (*ent.Kind, error)
@@ -34,8 +34,8 @@ func (r *kindRepository) CreateKind(ctx context.Context, newKind models.CreateNe
 		Save(ctx)
 }
 
-func (r *kindRepository) AllKind(ctx context.Context) ([]*ent.Kind, error) {
-	return r.client.Kind.Query().All(ctx)
+func (r *kindRepository) AllKind(ctx context.Context, limit, offset int) ([]*ent.Kind, error) {
+	return r.client.Kind.Query().Limit(limit).Offset(offset).All(ctx)
 }
 
 func (r *kindRepository) KindByID(ctx context.Context, id int) (*ent.Kind, error) {

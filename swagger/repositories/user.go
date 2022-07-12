@@ -23,7 +23,7 @@ type UserRepository interface {
 	GetUserByLogin(ctx context.Context, login string) (*ent.User, error)
 	GetUserByID(ctx context.Context, id int) (*ent.User, error)
 	UpdateUserByID(ctx context.Context, id int, patch *models.PatchUserRequest) error
-	UserList(ctx context.Context) ([]*ent.User, error)
+	UserList(ctx context.Context, limit, offset int) ([]*ent.User, error)
 	ConfirmRegistration(ctx context.Context, login string) error
 }
 
@@ -36,8 +36,8 @@ type userRepository struct {
 	client *ent.Client
 }
 
-func (r *userRepository) UserList(ctx context.Context) ([]*ent.User, error) {
-	return r.client.User.Query().WithRole().All(ctx)
+func (r *userRepository) UserList(ctx context.Context, limit, offset int) ([]*ent.User, error) {
+	return r.client.User.Query().WithRole().Limit(limit).Offset(offset).All(ctx)
 }
 
 func (r *userRepository) UpdateUserByID(ctx context.Context, id int, patch *models.PatchUserRequest) error {

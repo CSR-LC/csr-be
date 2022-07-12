@@ -164,6 +164,19 @@ paths:
             $ref: "#/definitions/Error"
   /management/listUsers:
     get:
+      parameters:
+        - name: limit
+          in: query
+          required: false
+          description: limit of items in page
+          type: integer
+          default: 10
+        - name: offset
+          in: query
+          required: false
+          description: offset of items
+          type: integer
+          default: 0
       summary: Get all users
       security:
         - Bearer: [ ]
@@ -344,6 +357,19 @@ paths:
             $ref: "#/definitions/Error"
   /equipment/kinds:
     get:
+      parameters:
+        - name: limit
+          in: query
+          required: false
+          description: limit of items in page
+          type: integer
+          default: 10
+        - name: offset
+          in: query
+          required: false
+          description: offset of items
+          type: integer
+          default: 0
       summary: Get all kinds.
       security:
         - Bearer: [ ]
@@ -542,6 +568,19 @@ paths:
             $ref: "#/definitions/Error"
   /v1/orders:
     get:
+      parameters:
+        - name: limit
+          in: query
+          required: false
+          description: limit of items in page
+          type: integer
+          default: 10
+        - name: offset
+          in: query
+          required: false
+          description: offset of items
+          type: integer
+          default: 0
       tags:
         - Orders
       operationId: GetAllOrders
@@ -679,6 +718,18 @@ paths:
           required: true
           description: order status
           type: string
+        - name: limit
+          in: query
+          required: false
+          description: limit of items in page
+          type: integer
+          default: 10
+        - name: offset
+          in: query
+          required: false
+          description: offset of items
+          type: integer
+          default: 0
       operationId: GetOrdersByStatus
       responses:
         200:
@@ -715,6 +766,18 @@ paths:
           in: path
           required: true
           type: string
+        - name: limit
+          in: query
+          required: false
+          description: limit of items in page
+          type: integer
+          default: 10
+        - name: offset
+          in: query
+          required: false
+          description: offset of items
+          type: integer
+          default: 0
       operationId: GetOrdersByDateAndStatus
       responses:
         200:
@@ -748,6 +811,19 @@ paths:
             $ref: '#/definitions/Error'
   /v1/active_areas:
     get:
+      parameters:
+        - name: limit
+          in: query
+          required: false
+          description: limit of items in page
+          type: integer
+          default: 10
+        - name: offset
+          in: query
+          required: false
+          description: offset of items
+          type: integer
+          default: 0
       summary: Get all active areas.
       security:
         - Bearer: [ ]
@@ -790,6 +866,19 @@ paths:
           schema:
             $ref: "#/definitions/Error"
     get:
+      parameters:
+        - name: limit
+          in: query
+          required: false
+          description: limit of items in page
+          type: integer
+          default: 10
+        - name: offset
+          in: query
+          required: false
+          description: offset of items
+          type: integer
+          default: 0
       summary: Get all equipment
       security:
         - Bearer: [ ]
@@ -882,6 +971,18 @@ paths:
           required: false
           schema:
             $ref: "#/definitions/EquipmentFilter"
+        - name: limit
+          in: query
+          required: false
+          description: limit of items in page
+          type: integer
+          default: 10
+        - name: offset
+          in: query
+          required: false
+          description: offset of items
+          type: integer
+          default: 0
       responses:
         200:
           description: Equipment has been found

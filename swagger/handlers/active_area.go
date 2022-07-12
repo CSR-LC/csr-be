@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"math"
 	"net/http"
 
 	"github.com/go-openapi/runtime/middleware"
@@ -32,7 +33,15 @@ func NewActiveArea(logger *zap.Logger) *ActiveArea {
 func (area ActiveArea) GetActiveAreasFunc(repository repositories.ActiveAreaRepository) active_areas.GetAllActiveAreasHandlerFunc {
 	return func(a active_areas.GetAllActiveAreasParams, access interface{}) middleware.Responder {
 		ctx := a.HTTPRequest.Context()
-		e, err := repository.AllActiveAreas(ctx)
+		limit := math.MaxInt
+		if a.Limit != nil {
+			limit = int(*a.Limit)
+		}
+		offset := 0
+		if a.Offset != nil {
+			offset = int(*a.Offset)
+		}
+		e, err := repository.AllActiveAreas(ctx, limit, offset)
 		if err != nil {
 			area.logger.Error("failed to query active areas", zap.Error(err))
 			return active_areas.NewGetAllActiveAreasDefault(http.StatusInternalServerError).WithPayload(&models.Error{

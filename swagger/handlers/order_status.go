@@ -3,6 +3,7 @@ package handlers
 import (
 	"errors"
 	"fmt"
+	"math"
 	"net/http"
 	"time"
 
@@ -183,13 +184,21 @@ func (h *OrderStatus) GetOrdersByStatus(repository repositories.OrderRepositoryW
 	return func(params orders.GetOrdersByStatusParams, access interface{}) middleware.Responder {
 		h.logger.Info("GetOrdersByStatus begin")
 		ctx := params.HTTPRequest.Context()
+		limit := math.MaxInt
+		if params.Limit != nil {
+			limit = int(*params.Limit)
+		}
+		offset := 0
+		if params.Offset != nil {
+			offset = int(*params.Offset)
+		}
 		haveRight := hasSearchRight(access)
 		if !haveRight {
 			h.logger.Warn("User have no right to get orders by status", zap.Any("access", access))
 			return orders.NewGetOrdersByStatusDefault(http.StatusForbidden).
 				WithPayload(&models.Error{Data: &models.ErrorData{Message: "You don't have rights to get orders by status"}})
 		}
-		ordersByStatus, err := repository.OrdersByStatus(ctx, params.Status)
+		ordersByStatus, err := repository.OrdersByStatus(ctx, params.Status, limit, offset)
 		if err != nil {
 			h.logger.Error("GetOrdersByStatus error", zap.Error(err))
 			return orders.NewGetOrdersByStatusDefault(http.StatusInternalServerError).
@@ -226,13 +235,22 @@ func (h *OrderStatus) GetOrdersByPeriodAndStatus(repository repositories.OrderRe
 	return func(params orders.GetOrdersByDateAndStatusParams, access interface{}) middleware.Responder {
 		h.logger.Info("GetOrdersByPeriodAndStatus begin")
 		ctx := params.HTTPRequest.Context()
+		limit := math.MaxInt
+		if params.Limit != nil {
+			limit = int(*params.Limit)
+		}
+		offset := 0
+		if params.Offset != nil {
+			offset = int(*params.Offset)
+		}
 		haveRight := hasSearchRight(access)
 		if !haveRight {
 			h.logger.Warn("User have no right to get orders by period and status", zap.Any("access", access))
 			return orders.NewGetOrdersByDateAndStatusDefault(http.StatusForbidden).
 				WithPayload(&models.Error{Data: &models.ErrorData{Message: "You don't have rights to get orders by period and status"}})
 		}
-		ordersByPeriodAndStatus, err := repository.OrdersByPeriodAndStatus(ctx, time.Time(params.FromDate), time.Time(params.ToDate), params.StatusName)
+		ordersByPeriodAndStatus, err := repository.OrdersByPeriodAndStatus(ctx, time.Time(params.FromDate),
+			time.Time(params.ToDate), params.StatusName, limit, offset)
 		if err != nil {
 			h.logger.Error("GetOrdersByPeriodAndStatus error", zap.Error(err))
 			return orders.NewGetOrdersByDateAndStatusDefault(http.StatusInternalServerError).

@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"errors"
+	"math"
 	"net/http"
 
 	"github.com/go-openapi/runtime/middleware"
@@ -111,7 +112,15 @@ func (c Equipment) DeleteEquipmentFunc(repository repositories.EquipmentReposito
 func (c Equipment) ListEquipmentFunc(repository repositories.EquipmentRepository) equipment.GetAllEquipmentHandlerFunc {
 	return func(s equipment.GetAllEquipmentParams, access interface{}) middleware.Responder {
 		ctx := s.HTTPRequest.Context()
-		equipments, err := repository.AllEquipments(ctx)
+		limit := math.MaxInt
+		if s.Limit != nil {
+			limit = int(*s.Limit)
+		}
+		offset := 0
+		if s.Offset != nil {
+			offset = int(*s.Offset)
+		}
+		equipments, err := repository.AllEquipments(ctx, limit, offset)
 		if err != nil {
 			c.logger.Error("Error while getting all equipments", zap.Error(err))
 			return equipment.NewGetAllEquipmentDefault(http.StatusInternalServerError).
@@ -159,8 +168,16 @@ func (c Equipment) EditEquipmentFunc(repository repositories.EquipmentRepository
 func (c Equipment) FindEquipmentFunc(EquipmentRepo repositories.EquipmentRepository) equipment.FindEquipmentHandlerFunc {
 	return func(s equipment.FindEquipmentParams, access interface{}) middleware.Responder {
 		ctx := s.HTTPRequest.Context()
+		limit := math.MaxInt
+		if s.Limit != nil {
+			limit = int(*s.Limit)
+		}
+		offset := 0
+		if s.Offset != nil {
+			offset = int(*s.Offset)
+		}
 		equipmentFilter := *s.FindEquipment
-		foundEquipment, err := EquipmentRepo.EquipmentsByFilter(ctx, equipmentFilter)
+		foundEquipment, err := EquipmentRepo.EquipmentsByFilter(ctx, equipmentFilter, limit, offset)
 		if err != nil {
 			c.logger.Error("Error while finding equipment", zap.Error(err))
 			return equipment.NewFindEquipmentDefault(http.StatusInternalServerError).

@@ -11,8 +11,8 @@ import (
 )
 
 type OrderRepositoryWithFilter interface {
-	OrdersByStatus(ctx context.Context, status string) ([]ent.Order, error)
-	OrdersByPeriodAndStatus(ctx context.Context, from, to time.Time, status string) ([]ent.Order, error)
+	OrdersByStatus(ctx context.Context, status string, limit, offset int) ([]ent.Order, error)
+	OrdersByPeriodAndStatus(ctx context.Context, from, to time.Time, status string, limit, offset int) ([]ent.Order, error)
 }
 type orderFilterRepository struct {
 	client *ent.Client
@@ -22,7 +22,8 @@ func NewOrderFilter(client *ent.Client) *orderFilterRepository {
 	return &orderFilterRepository{client: client}
 }
 
-func (r *orderFilterRepository) OrdersByPeriodAndStatus(ctx context.Context, from, to time.Time, status string) ([]ent.Order, error) {
+func (r *orderFilterRepository) OrdersByPeriodAndStatus(ctx context.Context, from, to time.Time, status string,
+	limit, offset int) ([]ent.Order, error) {
 	statusID, err := r.client.StatusName.Query().Where(statusname.StatusEQ(status)).OnlyID(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get status id: %w", err)
@@ -31,7 +32,7 @@ func (r *orderFilterRepository) OrdersByPeriodAndStatus(ctx context.Context, fro
 	orderStatusByStatus, err := r.client.OrderStatus.Query().
 		Where(orderstatus.CurrentDateGT(from)).
 		Where(orderstatus.CurrentDateLTE(to)).
-		QueryStatusName().Where(statusname.IDEQ(statusID)).QueryOrderStatus().All(ctx)
+		QueryStatusName().Where(statusname.IDEQ(statusID)).QueryOrderStatus().Limit(limit).Offset(offset).All(ctx)
 
 	if err != nil {
 		return nil, fmt.Errorf("failed to get order status by status: %w", err)
@@ -55,7 +56,7 @@ func (r *orderFilterRepository) OrdersByPeriodAndStatus(ctx context.Context, fro
 
 }
 
-func (r *orderFilterRepository) OrdersByStatus(ctx context.Context, status string) ([]ent.Order, error) {
+func (r *orderFilterRepository) OrdersByStatus(ctx context.Context, status string, limit, offset int) ([]ent.Order, error) {
 	statusID, err := r.client.StatusName.Query().Where(statusname.StatusEQ(status)).OnlyID(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get status id: %w", err)
@@ -74,7 +75,7 @@ func (r *orderFilterRepository) OrdersByStatus(ctx context.Context, status strin
 	for _, orderStatus := range orderStatusByStatus {
 		order, errOrder := r.client.Order.Query().WithOrderStatus(func(query *ent.OrderStatusQuery) {
 			query.Where(orderstatus.IDEQ(orderStatus.ID))
-		}).Only(ctx)
+		}).Limit(limit).Offset(offset).Only(ctx)
 		if errOrder != nil {
 			return nil, errOrder
 		}
