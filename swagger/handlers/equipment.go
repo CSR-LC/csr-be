@@ -216,11 +216,11 @@ func mapEquipmentResponse(eq *ent.Equipment) (*models.EquipmentResponse, error) 
 	}
 	statusID := int64(eq.Edges.Status.ID)
 
-	var petKinds []*models.PetKind
-	for _, petKindEdge := range eq.Edges.PetKinds {
+	petKinds := make([]*models.PetKind, len(eq.Edges.PetKinds))
+	for i, petKindEdge := range eq.Edges.PetKinds {
 		petKindID := int64(petKindEdge.ID)
 		petKind := models.PetKind{ID: petKindID, Name: &petKindEdge.Name}
-		petKinds = append(petKinds, &petKind)
+		petKinds[i] = &petKind
 	}
 
 	var petSizeID *int64

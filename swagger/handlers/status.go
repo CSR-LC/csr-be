@@ -59,9 +59,9 @@ func (c Status) GetStatusesFunc(repository repositories.EquipmentStatusRepositor
 			return status.NewGetStatusesDefault(http.StatusInternalServerError).
 				WithPayload(buildStringPayload("can't get statuses"))
 		}
-		listStatuses := models.ListStatuses{}
-		for _, element := range statuses {
-			listStatuses = append(listStatuses, mapStatus(element))
+		listStatuses := make(models.ListStatuses, len(statuses))
+		for i, element := range statuses {
+			listStatuses[i] = mapStatus(element)
 		}
 		return status.NewGetStatusesOK().WithPayload(listStatuses)
 	}

@@ -3,6 +3,7 @@ package handlers
 import (
 	"encoding/json"
 	"errors"
+	"math"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -313,13 +314,15 @@ func (s *EquipmentTestSuite) TestEquipment_ListEquipmentFunc_RepoErr() {
 	t := s.T()
 	request := http.Request{}
 	ctx := request.Context()
+	limit := math.MaxInt
+	offset := 0
 
 	handlerFunc := s.equipment.ListEquipmentFunc(s.equipmentRepo)
 	data := equipment.GetAllEquipmentParams{
 		HTTPRequest: &request,
 	}
 	err := errors.New("test error")
-	s.equipmentRepo.On("AllEquipments", ctx).Return(nil, err)
+	s.equipmentRepo.On("AllEquipments", ctx, limit, offset).Return(nil, err)
 
 	access := "dummy access"
 	resp := handlerFunc(data, access)
@@ -334,13 +337,15 @@ func (s *EquipmentTestSuite) TestEquipment_ListEquipmentFunc_NotFound() {
 	t := s.T()
 	request := http.Request{}
 	ctx := request.Context()
+	limit := math.MaxInt
+	offset := 0
 
 	handlerFunc := s.equipment.ListEquipmentFunc(s.equipmentRepo)
 	data := equipment.GetAllEquipmentParams{
 		HTTPRequest: &request,
 	}
 	var equipmentToReturn []*ent.Equipment
-	s.equipmentRepo.On("AllEquipments", ctx).Return(equipmentToReturn, nil)
+	s.equipmentRepo.On("AllEquipments", ctx, limit, offset).Return(equipmentToReturn, nil)
 
 	access := "dummy access"
 	resp := handlerFunc(data, access)
@@ -355,6 +360,8 @@ func (s *EquipmentTestSuite) TestEquipment_ListEquipmentFunc_MapErr() {
 	t := s.T()
 	request := http.Request{}
 	ctx := request.Context()
+	limit := math.MaxInt
+	offset := 0
 
 	handlerFunc := s.equipment.ListEquipmentFunc(s.equipmentRepo)
 	data := equipment.GetAllEquipmentParams{
@@ -362,7 +369,7 @@ func (s *EquipmentTestSuite) TestEquipment_ListEquipmentFunc_MapErr() {
 	}
 	var equipmentToReturn []*ent.Equipment
 	equipmentToReturn = append(equipmentToReturn, InvalidEquipment(t))
-	s.equipmentRepo.On("AllEquipments", ctx).Return(equipmentToReturn, nil)
+	s.equipmentRepo.On("AllEquipments", ctx, limit, offset).Return(equipmentToReturn, nil)
 
 	access := "dummy access"
 	resp := handlerFunc(data, access)
@@ -377,6 +384,8 @@ func (s *EquipmentTestSuite) TestEquipment_ListEquipmentFunc_OK() {
 	t := s.T()
 	request := http.Request{}
 	ctx := request.Context()
+	limit := math.MaxInt
+	offset := 0
 
 	handlerFunc := s.equipment.ListEquipmentFunc(s.equipmentRepo)
 	data := equipment.GetAllEquipmentParams{
@@ -384,7 +393,7 @@ func (s *EquipmentTestSuite) TestEquipment_ListEquipmentFunc_OK() {
 	}
 	var equipmentToReturn []*ent.Equipment
 	equipmentToReturn = append(equipmentToReturn, ValidEquipment(t))
-	s.equipmentRepo.On("AllEquipments", ctx).Return(equipmentToReturn, nil)
+	s.equipmentRepo.On("AllEquipments", ctx, limit, offset).Return(equipmentToReturn, nil)
 
 	access := "dummy access"
 	resp := handlerFunc(data, access)
@@ -406,6 +415,8 @@ func (s *EquipmentTestSuite) TestEquipment_FindEquipmentFunc_RepoErr() {
 	t := s.T()
 	request := http.Request{}
 	ctx := request.Context()
+	limit := math.MaxInt
+	offset := 0
 
 	handlerFunc := s.equipment.FindEquipmentFunc(s.equipmentRepo)
 	equipmentFilter := models.EquipmentFilter{
@@ -417,7 +428,7 @@ func (s *EquipmentTestSuite) TestEquipment_FindEquipmentFunc_RepoErr() {
 	}
 	err := errors.New("test error")
 
-	s.equipmentRepo.On("EquipmentsByFilter", ctx, equipmentFilter).Return(nil, err)
+	s.equipmentRepo.On("EquipmentsByFilter", ctx, equipmentFilter, limit, offset).Return(nil, err)
 
 	access := "dummy access"
 	resp := handlerFunc(data, access)
@@ -432,6 +443,8 @@ func (s *EquipmentTestSuite) TestEquipment_FindEquipmentFunc_NoResult() {
 	t := s.T()
 	request := http.Request{}
 	ctx := request.Context()
+	limit := math.MaxInt
+	offset := 0
 
 	handlerFunc := s.equipment.FindEquipmentFunc(s.equipmentRepo)
 	equipmentFilter := models.EquipmentFilter{
@@ -443,7 +456,7 @@ func (s *EquipmentTestSuite) TestEquipment_FindEquipmentFunc_NoResult() {
 	}
 	var equipmentToReturn []*ent.Equipment
 
-	s.equipmentRepo.On("EquipmentsByFilter", ctx, equipmentFilter).Return(equipmentToReturn, nil)
+	s.equipmentRepo.On("EquipmentsByFilter", ctx, equipmentFilter, limit, offset).Return(equipmentToReturn, nil)
 
 	access := "dummy access"
 	resp := handlerFunc(data, access)
@@ -458,6 +471,8 @@ func (s *EquipmentTestSuite) TestEquipment_FindEquipmentFunc_MapErr() {
 	t := s.T()
 	request := http.Request{}
 	ctx := request.Context()
+	limit := math.MaxInt
+	offset := 0
 
 	handlerFunc := s.equipment.FindEquipmentFunc(s.equipmentRepo)
 	equipmentFilter := models.EquipmentFilter{
@@ -470,7 +485,7 @@ func (s *EquipmentTestSuite) TestEquipment_FindEquipmentFunc_MapErr() {
 	var equipmentToReturn []*ent.Equipment
 	equipmentToReturn = append(equipmentToReturn, InvalidEquipment(t))
 
-	s.equipmentRepo.On("EquipmentsByFilter", ctx, equipmentFilter).Return(equipmentToReturn, nil)
+	s.equipmentRepo.On("EquipmentsByFilter", ctx, equipmentFilter, limit, offset).Return(equipmentToReturn, nil)
 
 	access := "dummy access"
 	resp := handlerFunc(data, access)
@@ -485,6 +500,8 @@ func (s *EquipmentTestSuite) TestEquipment_FindEquipmentFunc_EmptyList() {
 	t := s.T()
 	request := http.Request{}
 	ctx := request.Context()
+	limit := math.MaxInt
+	offset := 0
 
 	handlerFunc := s.equipment.FindEquipmentFunc(s.equipmentRepo)
 	equipmentFilter := models.EquipmentFilter{
@@ -496,7 +513,7 @@ func (s *EquipmentTestSuite) TestEquipment_FindEquipmentFunc_EmptyList() {
 	}
 	var equipmentToReturn []*ent.Equipment
 
-	s.equipmentRepo.On("EquipmentsByFilter", ctx, equipmentFilter).Return(equipmentToReturn, nil)
+	s.equipmentRepo.On("EquipmentsByFilter", ctx, equipmentFilter, limit, offset).Return(equipmentToReturn, nil)
 
 	access := "dummy access"
 	resp := handlerFunc(data, access)
@@ -511,6 +528,8 @@ func (s *EquipmentTestSuite) TestEquipment_FindEquipmentFunc_OK() {
 	t := s.T()
 	request := http.Request{}
 	ctx := request.Context()
+	limit := math.MaxInt
+	offset := 0
 
 	handlerFunc := s.equipment.FindEquipmentFunc(s.equipmentRepo)
 	equipmentFilter := models.EquipmentFilter{
@@ -523,7 +542,7 @@ func (s *EquipmentTestSuite) TestEquipment_FindEquipmentFunc_OK() {
 	var equipmentToReturn []*ent.Equipment
 	equipmentToReturn = append(equipmentToReturn, ValidEquipment(t))
 
-	s.equipmentRepo.On("EquipmentsByFilter", ctx, equipmentFilter).Return(equipmentToReturn, nil)
+	s.equipmentRepo.On("EquipmentsByFilter", ctx, equipmentFilter, limit, offset).Return(equipmentToReturn, nil)
 
 	access := "dummy access"
 	resp := handlerFunc(data, access)

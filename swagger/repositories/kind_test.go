@@ -2,6 +2,7 @@ package repositories
 
 import (
 	"context"
+	"math"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -63,6 +64,8 @@ func (s *kindRepositorySuite) TestKindRepository_AllKind() {
 	name := "kind"
 	maxReservationTime := int64(10)
 	maxReservationUnits := int64(1)
+	limit := math.MaxInt
+	offset := 0
 	_, err := s.client.Kind.Create().SetName(name).
 		SetMaxReservationTime(maxReservationTime).
 		SetMaxReservationUnits(maxReservationUnits).
@@ -70,7 +73,7 @@ func (s *kindRepositorySuite) TestKindRepository_AllKind() {
 	if err != nil {
 		t.Fatal(err)
 	}
-	kinds, err := s.repository.AllKind(s.ctx)
+	kinds, err := s.repository.AllKind(s.ctx, limit, offset)
 	assert.NoError(t, err)
 	assert.Equal(t, 1, len(kinds))
 	assert.Equal(t, name, kinds[0].Name)

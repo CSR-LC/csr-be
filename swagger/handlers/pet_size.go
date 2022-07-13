@@ -87,9 +87,9 @@ func (ps PetSize) GetAllPetSizeFunc(repository repositories.PetSizeRepository) p
 					},
 				})
 		}
-		listOfPetSize := models.ListOfPetSizes{}
-		for _, v := range petSizes {
-			listOfPetSize = append(listOfPetSize, &models.PetSize{ID: int64(v.ID), Name: &v.Name, Size: &v.Size})
+		listOfPetSize := make(models.ListOfPetSizes, len(petSizes))
+		for i, v := range petSizes {
+			listOfPetSize[i] = &models.PetSize{ID: int64(v.ID), Name: &v.Name, Size: &v.Size}
 		}
 		return pet_size.NewGetAllPetSizeOK().WithPayload(listOfPetSize)
 	}

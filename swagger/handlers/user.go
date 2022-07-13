@@ -218,14 +218,14 @@ func (c User) GetUsersList(repository repositories.UserRepository) users.GetAllU
 				WithPayload(buildStringPayload("failed to get user list"))
 		}
 		listUsers := make(models.GetListUsers, len(all))
-		for _, element := range all {
+		for i, element := range all {
 			userToResponse, errMap := mapUserInfo(element)
 			if errMap != nil {
 				c.logger.Error("map user error", zap.Error(errMap))
 				return users.NewGetAllUsersDefault(http.StatusInternalServerError).
 					WithPayload(buildStringPayload("map user error"))
 			}
-			listUsers = append(listUsers, userToResponse)
+			listUsers[i] = userToResponse
 		}
 
 		return users.NewGetAllUsersOK().WithPayload(listUsers)

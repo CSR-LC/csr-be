@@ -39,13 +39,13 @@ func (_m *OrderRepository) Create(ctx context.Context, data *models.OrderCreateR
 	return r0, r1
 }
 
-// List provides a mock function with given fields: ctx, ownerId
-func (_m *OrderRepository) List(ctx context.Context, ownerId int) ([]*ent.Order, int, error) {
-	ret := _m.Called(ctx, ownerId)
+// List provides a mock function with given fields: ctx, ownerId, limit, offset
+func (_m *OrderRepository) List(ctx context.Context, ownerId int, limit int, offset int) ([]*ent.Order, int, error) {
+	ret := _m.Called(ctx, ownerId, limit, offset)
 
 	var r0 []*ent.Order
-	if rf, ok := ret.Get(0).(func(context.Context, int) []*ent.Order); ok {
-		r0 = rf(ctx, ownerId)
+	if rf, ok := ret.Get(0).(func(context.Context, int, int, int) []*ent.Order); ok {
+		r0 = rf(ctx, ownerId, limit, offset)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]*ent.Order)
@@ -53,15 +53,15 @@ func (_m *OrderRepository) List(ctx context.Context, ownerId int) ([]*ent.Order,
 	}
 
 	var r1 int
-	if rf, ok := ret.Get(1).(func(context.Context, int) int); ok {
-		r1 = rf(ctx, ownerId)
+	if rf, ok := ret.Get(1).(func(context.Context, int, int, int) int); ok {
+		r1 = rf(ctx, ownerId, limit, offset)
 	} else {
 		r1 = ret.Get(1).(int)
 	}
 
 	var r2 error
-	if rf, ok := ret.Get(2).(func(context.Context, int) error); ok {
-		r2 = rf(ctx, ownerId)
+	if rf, ok := ret.Get(2).(func(context.Context, int, int, int) error); ok {
+		r2 = rf(ctx, ownerId, limit, offset)
 	} else {
 		r2 = ret.Error(2)
 	}

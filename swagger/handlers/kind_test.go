@@ -3,6 +3,7 @@ package handlers
 import (
 	"encoding/json"
 	"errors"
+	"math"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -142,13 +143,15 @@ func (s *KindTestSuite) TestKind_GetAllKinds_RepoErr() {
 	t := s.T()
 	request := http.Request{}
 	ctx := request.Context()
+	limit := math.MaxInt
+	offset := 0
 
 	data := kinds.GetAllKindsParams{
 		HTTPRequest: &request,
 	}
 
 	err := errors.New("test")
-	s.repository.On("AllKind", ctx).Return(nil, err)
+	s.repository.On("AllKind", ctx, limit, offset).Return(nil, err)
 
 	handlerFunc := s.handler.GetAllKindsFunc(s.repository)
 	access := "dummy access"
@@ -166,6 +169,8 @@ func (s *KindTestSuite) TestKind_GetAllKinds_OK() {
 	t := s.T()
 	request := http.Request{}
 	ctx := request.Context()
+	limit := math.MaxInt
+	offset := 0
 
 	data := kinds.GetAllKindsParams{
 		HTTPRequest: &request,
@@ -179,7 +184,7 @@ func (s *KindTestSuite) TestKind_GetAllKinds_OK() {
 		MaxReservationUnits: 1,
 	}
 	kindsToReturn = append(kindsToReturn, kindToReturn)
-	s.repository.On("AllKind", ctx).Return(kindsToReturn, nil)
+	s.repository.On("AllKind", ctx, limit, offset).Return(kindsToReturn, nil)
 
 	handlerFunc := s.handler.GetAllKindsFunc(s.repository)
 	access := "dummy access"

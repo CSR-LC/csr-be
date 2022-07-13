@@ -3,6 +3,7 @@ package handlers
 import (
 	"encoding/json"
 	"errors"
+	"math"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -614,13 +615,15 @@ func (s *UserTestSuite) TestUser_GetUsersList_RepositoryErr() {
 	t := s.T()
 	request := http.Request{}
 	ctx := request.Context()
+	limit := math.MaxInt
+	offset := 0
 
 	handlerFunc := s.user.GetUsersList(s.userRepository)
 	data := users.GetAllUsersParams{
 		HTTPRequest: &request,
 	}
 	err := errors.New("some err")
-	s.userRepository.On("UserList", ctx).Return(nil, err)
+	s.userRepository.On("UserList", ctx, limit, offset).Return(nil, err)
 
 	access := "dummy access"
 	resp := handlerFunc(data, access)
@@ -636,6 +639,8 @@ func (s *UserTestSuite) TestUser_GetUsersList_MapErr() {
 	t := s.T()
 	request := http.Request{}
 	ctx := request.Context()
+	limit := math.MaxInt
+	offset := 0
 
 	handlerFunc := s.user.GetUsersList(s.userRepository)
 	data := users.GetAllUsersParams{
@@ -646,7 +651,7 @@ func (s *UserTestSuite) TestUser_GetUsersList_MapErr() {
 		ID: 1,
 	}
 	userList = append(userList, user)
-	s.userRepository.On("UserList", ctx).Return(userList, nil)
+	s.userRepository.On("UserList", ctx, limit, offset).Return(userList, nil)
 
 	access := "dummy access"
 	resp := handlerFunc(data, access)
@@ -662,6 +667,8 @@ func (s *UserTestSuite) TestUser_GetUsersList_OK() {
 	t := s.T()
 	request := http.Request{}
 	ctx := request.Context()
+	limit := math.MaxInt
+	offset := 0
 
 	handlerFunc := s.user.GetUsersList(s.userRepository)
 	data := users.GetAllUsersParams{
@@ -675,7 +682,7 @@ func (s *UserTestSuite) TestUser_GetUsersList_OK() {
 		},
 	}
 	userList = append(userList, user)
-	s.userRepository.On("UserList", ctx).Return(userList, nil)
+	s.userRepository.On("UserList", ctx, limit, offset).Return(userList, nil)
 
 	access := "dummy access"
 	resp := handlerFunc(data, access)

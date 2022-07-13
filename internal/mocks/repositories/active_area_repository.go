@@ -14,13 +14,13 @@ type ActiveAreaRepository struct {
 	mock.Mock
 }
 
-// AllActiveAreas provides a mock function with given fields: ctx
-func (_m *ActiveAreaRepository) AllActiveAreas(ctx context.Context) ([]*ent.ActiveArea, error) {
-	ret := _m.Called(ctx)
+// AllActiveAreas provides a mock function with given fields: ctx, limit, offset
+func (_m *ActiveAreaRepository) AllActiveAreas(ctx context.Context, limit int, offset int) ([]*ent.ActiveArea, error) {
+	ret := _m.Called(ctx, limit, offset)
 
 	var r0 []*ent.ActiveArea
-	if rf, ok := ret.Get(0).(func(context.Context) []*ent.ActiveArea); ok {
-		r0 = rf(ctx)
+	if rf, ok := ret.Get(0).(func(context.Context, int, int) []*ent.ActiveArea); ok {
+		r0 = rf(ctx, limit, offset)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]*ent.ActiveArea)
@@ -28,8 +28,8 @@ func (_m *ActiveAreaRepository) AllActiveAreas(ctx context.Context) ([]*ent.Acti
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(context.Context) error); ok {
-		r1 = rf(ctx)
+	if rf, ok := ret.Get(1).(func(context.Context, int, int) error); ok {
+		r1 = rf(ctx, limit, offset)
 	} else {
 		r1 = ret.Error(1)
 	}

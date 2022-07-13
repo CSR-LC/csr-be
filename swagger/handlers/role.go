@@ -39,14 +39,14 @@ func (r Role) GetRolesFunc(repository repositories.RoleRepository) roles.GetRole
 			return roles.NewGetRolesDefault(http.StatusInternalServerError).
 				WithPayload(buildStringPayload("cant get all roles"))
 		}
-		listRoles := models.ListRoles{}
-		for _, element := range e {
+		listRoles := make(models.ListRoles, len(e))
+		for i, element := range e {
 			id := int64(element.ID)
-			listRoles = append(listRoles, &models.Role{
+			listRoles[i] = &models.Role{
 				ID:   &id,
 				Name: &element.Name,
 				Slug: &element.Slug,
-			})
+			}
 		}
 		return roles.NewGetRolesOK().WithPayload(listRoles)
 	}

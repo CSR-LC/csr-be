@@ -67,9 +67,9 @@ func (c *Kind) GetAllKindsFunc(repository repositories.KindRepository) kinds.Get
 			return kinds.NewGetAllKindsDefault(http.StatusInternalServerError).
 				WithPayload(buildStringPayload("cant get all kinds"))
 		}
-		listOfKinds := models.ListOfKinds{}
-		for _, v := range allKinds {
-			listOfKinds = append(listOfKinds, mapKind(v))
+		listOfKinds := make(models.ListOfKinds, len(allKinds))
+		for i, v := range allKinds {
+			listOfKinds[i] = mapKind(v)
 		}
 		return kinds.NewGetAllKindsOK().WithPayload(listOfKinds)
 	}

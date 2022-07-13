@@ -2,6 +2,7 @@ package repositories
 
 import (
 	"context"
+	"math"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -52,8 +53,10 @@ func (s *ActiveAreasSuite) TearDownSuite() {
 
 func (s *ActiveAreasSuite) TestActiveAreaRepository_AllActiveAreas() {
 	t := s.T()
+	limit := math.MaxInt
+	offset := 0
 	repository := NewActiveAreaRepository(s.client)
-	activeAreas, err := repository.AllActiveAreas(s.ctx)
+	activeAreas, err := repository.AllActiveAreas(s.ctx, limit, offset)
 	if err != nil {
 		t.Fatal(err)
 	}

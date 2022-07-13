@@ -72,11 +72,11 @@ func (pk PetKind) GetAllPetKindFunc(repository repositories.PetKindRepository) p
 			return pet_kind.NewCreateNewPetKindDefault(http.StatusInternalServerError).
 				WithPayload(buildStringPayload("No pet kind found"))
 		}
-		listOfPetKind := models.ListOfPetKinds{}
-		for _, v := range petKinds {
+		listOfPetKind := make(models.ListOfPetKinds, len(petKinds))
+		for i, v := range petKinds {
 			id64 := int64(v.ID)
 			pk := models.PetKindResponse{ID: &id64, Name: &v.Name}
-			listOfPetKind = append(listOfPetKind, &pk)
+			listOfPetKind[i] = &pk
 		}
 		return pet_kind.NewGetAllPetKindsOK().WithPayload(listOfPetKind)
 	}

@@ -3,6 +3,7 @@ package handlers
 import (
 	"encoding/json"
 	"errors"
+	"math"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -118,10 +119,12 @@ func (s *orderTestSuite) TestOrder_ListOrder_RepoErr() {
 	t := s.T()
 	request := http.Request{}
 	ctx := request.Context()
+	limit := math.MaxInt
+	offset := 0
 
 	userID := 1
 	err := errors.New("error")
-	s.orderRepository.On("List", ctx, userID).Return(nil, 0, err)
+	s.orderRepository.On("List", ctx, userID, limit, offset).Return(nil, 0, err)
 
 	handlerFunc := s.orderHandler.ListOrderFunc(s.orderRepository)
 	data := orders.GetAllOrdersParams{HTTPRequest: &request}
@@ -139,11 +142,13 @@ func (s *orderTestSuite) TestOrder_ListOrder_MapErr() {
 	t := s.T()
 	request := http.Request{}
 	ctx := request.Context()
+	limit := math.MaxInt
+	offset := 0
 
 	userID := 1
 	var orderList []*ent.Order
 	orderList = append(orderList, orderWithNoEdges())
-	s.orderRepository.On("List", ctx, userID).Return(orderList, 1, nil)
+	s.orderRepository.On("List", ctx, userID, limit, offset).Return(orderList, 1, nil)
 
 	handlerFunc := s.orderHandler.ListOrderFunc(s.orderRepository)
 	data := orders.GetAllOrdersParams{HTTPRequest: &request}
@@ -161,11 +166,13 @@ func (s *orderTestSuite) TestOrder_ListOrder_OK() {
 	t := s.T()
 	request := http.Request{}
 	ctx := request.Context()
+	limit := math.MaxInt
+	offset := 0
 
 	userID := 1
 	var orderList []*ent.Order
 	orderList = append(orderList, orderWithAllEdges())
-	s.orderRepository.On("List", ctx, userID).Return(orderList, 1, nil)
+	s.orderRepository.On("List", ctx, userID, limit, offset).Return(orderList, 1, nil)
 
 	handlerFunc := s.orderHandler.ListOrderFunc(s.orderRepository)
 	data := orders.GetAllOrdersParams{HTTPRequest: &request}

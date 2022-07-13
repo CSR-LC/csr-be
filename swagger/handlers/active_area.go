@@ -50,10 +50,10 @@ func (area ActiveArea) GetActiveAreasFunc(repository repositories.ActiveAreaRepo
 				},
 			})
 		}
-		listActiveAreas := models.ListOfActiveAreas{}
-		for _, element := range e {
+		listActiveAreas := make(models.ListOfActiveAreas, len(e))
+		for i, element := range e {
 			id := int64(element.ID)
-			listActiveAreas = append(listActiveAreas, &models.ActiveArea{ID: &id, Name: &element.Name})
+			listActiveAreas[i] = &models.ActiveArea{ID: &id, Name: &element.Name}
 		}
 		return active_areas.NewGetAllActiveAreasOK().WithPayload(listActiveAreas)
 	}

@@ -3,6 +3,7 @@ package handlers
 import (
 	"encoding/json"
 	"errors"
+	"math"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -500,6 +501,8 @@ func (s *OrderStatusTestSuite) TestOrderStatus_GetOrdersByStatus_RepoErr() {
 	ctx := request.Context()
 	userID := 1
 	login := "login"
+	limit := math.MaxInt
+	offset := 0
 	role := &authentication.Role{
 		Id:   userID,
 		Slug: authentication.AdminSlug,
@@ -517,7 +520,7 @@ func (s *OrderStatusTestSuite) TestOrderStatus_GetOrdersByStatus_RepoErr() {
 	}
 
 	err := errors.New("error")
-	s.orderFilterRepository.On("OrdersByStatus", ctx, statusName).Return(nil, err)
+	s.orderFilterRepository.On("OrdersByStatus", ctx, statusName, limit, offset).Return(nil, err)
 
 	resp := handlerFunc(params, access)
 	responseRecorder := httptest.NewRecorder()
@@ -532,6 +535,8 @@ func (s *OrderStatusTestSuite) TestOrderStatus_GetOrdersByStatus_EmptyResult() {
 	ctx := request.Context()
 	userID := 1
 	login := "login"
+	limit := math.MaxInt
+	offset := 0
 	role := &authentication.Role{
 		Id:   userID,
 		Slug: authentication.AdminSlug,
@@ -548,7 +553,7 @@ func (s *OrderStatusTestSuite) TestOrderStatus_GetOrdersByStatus_EmptyResult() {
 		Status:      statusName,
 	}
 
-	s.orderFilterRepository.On("OrdersByStatus", ctx, statusName).Return(nil, nil)
+	s.orderFilterRepository.On("OrdersByStatus", ctx, statusName, limit, offset).Return(nil, nil)
 
 	resp := handlerFunc(params, access)
 	responseRecorder := httptest.NewRecorder()
@@ -564,6 +569,8 @@ func (s *OrderStatusTestSuite) TestOrderStatus_GetOrdersByStatus_MapErr() {
 	ctx := request.Context()
 	userID := 1
 	login := "login"
+	limit := math.MaxInt
+	offset := 0
 	role := &authentication.Role{
 		Id:   userID,
 		Slug: authentication.AdminSlug,
@@ -583,7 +590,7 @@ func (s *OrderStatusTestSuite) TestOrderStatus_GetOrdersByStatus_MapErr() {
 	count := 1
 	ordersToReturn := make([]ent.Order, count)
 	ordersToReturn[0] = ent.Order{}
-	s.orderFilterRepository.On("OrdersByStatus", ctx, statusName).Return(ordersToReturn, nil)
+	s.orderFilterRepository.On("OrdersByStatus", ctx, statusName, limit, offset).Return(ordersToReturn, nil)
 
 	resp := handlerFunc(params, access)
 	responseRecorder := httptest.NewRecorder()
@@ -599,6 +606,8 @@ func (s *OrderStatusTestSuite) TestOrderStatus_GetOrdersByStatus_OK() {
 	ctx := request.Context()
 	userID := 1
 	login := "login"
+	limit := math.MaxInt
+	offset := 0
 	role := &authentication.Role{
 		Id:   userID,
 		Slug: authentication.AdminSlug,
@@ -618,7 +627,7 @@ func (s *OrderStatusTestSuite) TestOrderStatus_GetOrdersByStatus_OK() {
 	count := 1
 	ordersToReturn := make([]ent.Order, count)
 	ordersToReturn[0] = orderWithEdges(t)
-	s.orderFilterRepository.On("OrdersByStatus", ctx, statusName).Return(ordersToReturn, nil)
+	s.orderFilterRepository.On("OrdersByStatus", ctx, statusName, limit, offset).Return(ordersToReturn, nil)
 
 	resp := handlerFunc(params, access)
 	responseRecorder := httptest.NewRecorder()
@@ -676,6 +685,8 @@ func (s *OrderStatusTestSuite) TestOrderStatus_GetOrdersByPeriodAndStatus_RepoEr
 	ctx := request.Context()
 	userID := 1
 	login := "login"
+	limit := math.MaxInt
+	offset := 0
 	role := &authentication.Role{
 		Id:   userID,
 		Slug: authentication.AdminSlug,
@@ -696,7 +707,8 @@ func (s *OrderStatusTestSuite) TestOrderStatus_GetOrdersByPeriodAndStatus_RepoEr
 		ToDate:      strfmt.Date(toTime),
 	}
 
-	s.orderFilterRepository.On("OrdersByPeriodAndStatus", ctx, fromTime, toTime, status).Return(nil, errors.New("repo error"))
+	s.orderFilterRepository.On("OrdersByPeriodAndStatus", ctx, fromTime, toTime, status, limit, offset).
+		Return(nil, errors.New("repo error"))
 
 	resp := handlerFunc(params, access)
 	responseRecorder := httptest.NewRecorder()
@@ -712,6 +724,8 @@ func (s *OrderStatusTestSuite) TestOrderStatus_GetOrdersByPeriodAndStatus_MapErr
 	ctx := request.Context()
 	userID := 1
 	login := "login"
+	limit := math.MaxInt
+	offset := 0
 	role := &authentication.Role{
 		Id:   userID,
 		Slug: authentication.AdminSlug,
@@ -735,7 +749,8 @@ func (s *OrderStatusTestSuite) TestOrderStatus_GetOrdersByPeriodAndStatus_MapErr
 	ordersToReturn := make([]ent.Order, count)
 	ordersToReturn[0] = ent.Order{}
 
-	s.orderFilterRepository.On("OrdersByPeriodAndStatus", ctx, fromTime, toTime, status).Return(ordersToReturn, nil)
+	s.orderFilterRepository.On("OrdersByPeriodAndStatus", ctx, fromTime, toTime, status, limit, offset).
+		Return(ordersToReturn, nil)
 
 	resp := handlerFunc(params, access)
 	responseRecorder := httptest.NewRecorder()
@@ -751,6 +766,8 @@ func (s *OrderStatusTestSuite) TestOrderStatus_GetOrdersByPeriodAndStatus_OK() {
 	ctx := request.Context()
 	userID := 1
 	login := "login"
+	limit := math.MaxInt
+	offset := 0
 	role := &authentication.Role{
 		Id:   userID,
 		Slug: authentication.AdminSlug,
@@ -774,7 +791,8 @@ func (s *OrderStatusTestSuite) TestOrderStatus_GetOrdersByPeriodAndStatus_OK() {
 	ordersToReturn := make([]ent.Order, count)
 	ordersToReturn[0] = orderWithEdges(t)
 
-	s.orderFilterRepository.On("OrdersByPeriodAndStatus", ctx, fromTime, toTime, status).Return(ordersToReturn, nil)
+	s.orderFilterRepository.On("OrdersByPeriodAndStatus", ctx, fromTime, toTime, status, limit, offset).
+		Return(ordersToReturn, nil)
 
 	resp := handlerFunc(params, access)
 	responseRecorder := httptest.NewRecorder()

@@ -16,13 +16,13 @@ type OrderRepositoryWithFilter struct {
 	mock.Mock
 }
 
-// OrdersByPeriodAndStatus provides a mock function with given fields: ctx, from, to, status
-func (_m *OrderRepositoryWithFilter) OrdersByPeriodAndStatus(ctx context.Context, from time.Time, to time.Time, status string) ([]ent.Order, error) {
-	ret := _m.Called(ctx, from, to, status)
+// OrdersByPeriodAndStatus provides a mock function with given fields: ctx, from, to, status, limit, offset
+func (_m *OrderRepositoryWithFilter) OrdersByPeriodAndStatus(ctx context.Context, from time.Time, to time.Time, status string, limit int, offset int) ([]ent.Order, error) {
+	ret := _m.Called(ctx, from, to, status, limit, offset)
 
 	var r0 []ent.Order
-	if rf, ok := ret.Get(0).(func(context.Context, time.Time, time.Time, string) []ent.Order); ok {
-		r0 = rf(ctx, from, to, status)
+	if rf, ok := ret.Get(0).(func(context.Context, time.Time, time.Time, string, int, int) []ent.Order); ok {
+		r0 = rf(ctx, from, to, status, limit, offset)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]ent.Order)
@@ -30,8 +30,8 @@ func (_m *OrderRepositoryWithFilter) OrdersByPeriodAndStatus(ctx context.Context
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(context.Context, time.Time, time.Time, string) error); ok {
-		r1 = rf(ctx, from, to, status)
+	if rf, ok := ret.Get(1).(func(context.Context, time.Time, time.Time, string, int, int) error); ok {
+		r1 = rf(ctx, from, to, status, limit, offset)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -39,13 +39,13 @@ func (_m *OrderRepositoryWithFilter) OrdersByPeriodAndStatus(ctx context.Context
 	return r0, r1
 }
 
-// OrdersByStatus provides a mock function with given fields: ctx, status
-func (_m *OrderRepositoryWithFilter) OrdersByStatus(ctx context.Context, status string) ([]ent.Order, error) {
-	ret := _m.Called(ctx, status)
+// OrdersByStatus provides a mock function with given fields: ctx, status, limit, offset
+func (_m *OrderRepositoryWithFilter) OrdersByStatus(ctx context.Context, status string, limit int, offset int) ([]ent.Order, error) {
+	ret := _m.Called(ctx, status, limit, offset)
 
 	var r0 []ent.Order
-	if rf, ok := ret.Get(0).(func(context.Context, string) []ent.Order); ok {
-		r0 = rf(ctx, status)
+	if rf, ok := ret.Get(0).(func(context.Context, string, int, int) []ent.Order); ok {
+		r0 = rf(ctx, status, limit, offset)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]ent.Order)
@@ -53,8 +53,8 @@ func (_m *OrderRepositoryWithFilter) OrdersByStatus(ctx context.Context, status 
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
-		r1 = rf(ctx, status)
+	if rf, ok := ret.Get(1).(func(context.Context, string, int, int) error); ok {
+		r1 = rf(ctx, status, limit, offset)
 	} else {
 		r1 = ret.Error(1)
 	}

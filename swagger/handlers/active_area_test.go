@@ -3,6 +3,7 @@ package handlers
 import (
 	"encoding/json"
 	"errors"
+	"math"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -59,6 +60,8 @@ func (s *ActiveAreaTestSuite) TestActiveArea_GetActiveAreasFunc_RepoErr() {
 	t := s.T()
 	request := http.Request{}
 	ctx := request.Context()
+	limit := math.MaxInt
+	offset := 0
 
 	handlerFunc := s.handler.GetActiveAreasFunc(s.repository)
 	data := active_areas.GetAllActiveAreasParams{
@@ -66,7 +69,7 @@ func (s *ActiveAreaTestSuite) TestActiveArea_GetActiveAreasFunc_RepoErr() {
 	}
 
 	err := errors.New("some error")
-	s.repository.On("AllActiveAreas", ctx).Return(nil, err)
+	s.repository.On("AllActiveAreas", ctx, limit, offset).Return(nil, err)
 
 	access := "dummy access"
 	resp := handlerFunc(data, access)
@@ -81,6 +84,8 @@ func (s *ActiveAreaTestSuite) TestActiveArea_GetActiveAreasFunc_OK() {
 	t := s.T()
 	request := http.Request{}
 	ctx := request.Context()
+	limit := math.MaxInt
+	offset := 0
 
 	handlerFunc := s.handler.GetActiveAreasFunc(s.repository)
 	data := active_areas.GetAllActiveAreasParams{
@@ -93,7 +98,7 @@ func (s *ActiveAreaTestSuite) TestActiveArea_GetActiveAreasFunc_OK() {
 		Name: "test",
 	},
 	)
-	s.repository.On("AllActiveAreas", ctx).Return(areas, nil)
+	s.repository.On("AllActiveAreas", ctx, limit, offset).Return(areas, nil)
 
 	access := "dummy access"
 	resp := handlerFunc(data, access)

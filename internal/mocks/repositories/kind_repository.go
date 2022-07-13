@@ -16,13 +16,13 @@ type KindRepository struct {
 	mock.Mock
 }
 
-// AllKind provides a mock function with given fields: ctx
-func (_m *KindRepository) AllKind(ctx context.Context) ([]*ent.Kind, error) {
-	ret := _m.Called(ctx)
+// AllKind provides a mock function with given fields: ctx, limit, offset
+func (_m *KindRepository) AllKind(ctx context.Context, limit int, offset int) ([]*ent.Kind, error) {
+	ret := _m.Called(ctx, limit, offset)
 
 	var r0 []*ent.Kind
-	if rf, ok := ret.Get(0).(func(context.Context) []*ent.Kind); ok {
-		r0 = rf(ctx)
+	if rf, ok := ret.Get(0).(func(context.Context, int, int) []*ent.Kind); ok {
+		r0 = rf(ctx, limit, offset)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]*ent.Kind)
@@ -30,8 +30,8 @@ func (_m *KindRepository) AllKind(ctx context.Context) ([]*ent.Kind, error) {
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(context.Context) error); ok {
-		r1 = rf(ctx)
+	if rf, ok := ret.Get(1).(func(context.Context, int, int) error); ok {
+		r1 = rf(ctx, limit, offset)
 	} else {
 		r1 = ret.Error(1)
 	}
