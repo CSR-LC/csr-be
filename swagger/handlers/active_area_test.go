@@ -60,8 +60,6 @@ func (s *ActiveAreaTestSuite) TestActiveArea_GetActiveAreasFunc_RepoErr() {
 	t := s.T()
 	request := http.Request{}
 	ctx := request.Context()
-	limit := math.MaxInt
-	offset := 0
 
 	handlerFunc := s.handler.GetActiveAreasFunc(s.repository)
 	data := active_areas.GetAllActiveAreasParams{
@@ -69,7 +67,7 @@ func (s *ActiveAreaTestSuite) TestActiveArea_GetActiveAreasFunc_RepoErr() {
 	}
 
 	err := errors.New("some error")
-	s.repository.On("AllActiveAreas", ctx, limit, offset).Return(nil, err)
+	s.repository.On("TotalActiveAreas", ctx).Return(0, err)
 
 	access := "dummy access"
 	resp := handlerFunc(data, access)
@@ -80,7 +78,7 @@ func (s *ActiveAreaTestSuite) TestActiveArea_GetActiveAreasFunc_RepoErr() {
 	s.repository.AssertExpectations(t)
 }
 
-func (s *ActiveAreaTestSuite) TestActiveArea_GetActiveAreasFunc_OK() {
+func (s *ActiveAreaTestSuite) TestActiveArea_GetActiveAreasFunc_LimitGreaterThanTotal() {
 	t := s.T()
 	request := http.Request{}
 	ctx := request.Context()
@@ -98,6 +96,7 @@ func (s *ActiveAreaTestSuite) TestActiveArea_GetActiveAreasFunc_OK() {
 		Name: "test",
 	},
 	)
+	s.repository.On("TotalActiveAreas", ctx).Return(1, nil)
 	s.repository.On("AllActiveAreas", ctx, limit, offset).Return(areas, nil)
 
 	access := "dummy access"
@@ -107,13 +106,83 @@ func (s *ActiveAreaTestSuite) TestActiveArea_GetActiveAreasFunc_OK() {
 	resp.WriteResponse(responseRecorder, producer)
 	assert.Equal(t, http.StatusOK, responseRecorder.Code)
 
-	var responseAreas []models.ActiveArea
+	var responseAreas models.ListOfActiveAreas
 	err := json.Unmarshal(responseRecorder.Body.Bytes(), &responseAreas)
 	if err != nil {
 		t.Fatal(err)
 	}
-	assert.Equal(t, len(areas), len(responseAreas))
-	assert.Equal(t, areas[0].ID, int(*responseAreas[0].ID))
-	assert.Equal(t, areas[0].Name, *responseAreas[0].Name)
+	assert.Equal(t, len(areas), len(responseAreas.Items))
+	assert.Equal(t, len(areas), int(*responseAreas.Total))
+	assert.Equal(t, areas[0].ID, int(*responseAreas.Items[0].ID))
+	assert.Equal(t, areas[0].Name, *responseAreas.Items[0].Name)
 	s.repository.AssertExpectations(t)
+}
+
+func (s *ActiveAreaTestSuite) TestActiveArea_GetActiveAreasFunc_LimitLessThanTotal() {
+	t := s.T()
+	request := http.Request{}
+	ctx := request.Context()
+	var limit int64 = 3
+	var offset int64 = 0
+
+	handlerFunc := s.handler.GetActiveAreasFunc(s.repository)
+	data := active_areas.GetAllActiveAreasParams{
+		HTTPRequest: &request,
+		Limit:       &limit,
+		Offset:      &offset,
+	}
+
+	areas := []*ent.ActiveArea{
+		{
+			ID:   1,
+			Name: "test",
+		},
+		{
+			ID:   2,
+			Name: "test2",
+		},
+		{
+			ID:   3,
+			Name: "test3",
+		},
+		{
+			ID:   4,
+			Name: "test4",
+		},
+		{
+			ID:   5,
+			Name: "test5",
+		},
+	}
+
+	s.repository.On("TotalActiveAreas", ctx).Return(5, nil)
+	s.repository.On("AllActiveAreas", ctx, int(limit), int(offset)).Return(areas[:limit], nil)
+
+	access := "dummy access"
+	resp := handlerFunc(data, access)
+	responseRecorder := httptest.NewRecorder()
+	producer := runtime.JSONProducer()
+	resp.WriteResponse(responseRecorder, producer)
+	assert.Equal(t, http.StatusOK, responseRecorder.Code)
+
+	var responseAreas models.ListOfActiveAreas
+	err := json.Unmarshal(responseRecorder.Body.Bytes(), &responseAreas)
+	if err != nil {
+		t.Fatal(err)
+	}
+	assert.Greater(t, len(areas), len(responseAreas.Items))
+	assert.Equal(t, len(areas), int(*responseAreas.Total))
+	for _, item := range responseAreas.Items {
+		assert.True(t, containsArea(areas, item))
+	}
+	s.repository.AssertExpectations(t)
+}
+
+func containsArea(array []*ent.ActiveArea, item *models.ActiveArea) bool {
+	for _, v := range array {
+		if *item.Name == v.Name && int(*item.ID) == v.ID {
+			return true
+		}
+	}
+	return false
 }

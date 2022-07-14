@@ -8,6 +8,7 @@ import (
 
 type ActiveAreaRepository interface {
 	AllActiveAreas(ctx context.Context, limit, offset int) ([]*ent.ActiveArea, error)
+	TotalActiveAreas(ctx context.Context) (int, error)
 }
 
 type activeAreaRepository struct {
@@ -20,4 +21,8 @@ func NewActiveAreaRepository(client *ent.Client) ActiveAreaRepository {
 
 func (r *activeAreaRepository) AllActiveAreas(ctx context.Context, limit, offset int) ([]*ent.ActiveArea, error) {
 	return r.client.ActiveArea.Query().Limit(limit).Offset(offset).All(ctx)
+}
+
+func (r *activeAreaRepository) TotalActiveAreas(ctx context.Context) (int, error) {
+	return r.client.ActiveArea.Query().Count(ctx)
 }

@@ -37,6 +37,27 @@ func (_m *ActiveAreaRepository) AllActiveAreas(ctx context.Context, limit int, o
 	return r0, r1
 }
 
+// TotalActiveAreas provides a mock function with given fields: ctx
+func (_m *ActiveAreaRepository) TotalActiveAreas(ctx context.Context) (int, error) {
+	ret := _m.Called(ctx)
+
+	var r0 int
+	if rf, ok := ret.Get(0).(func(context.Context) int); ok {
+		r0 = rf(ctx)
+	} else {
+		r0 = ret.Get(0).(int)
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context) error); ok {
+		r1 = rf(ctx)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 type mockConstructorTestingTNewActiveAreaRepository interface {
 	mock.TestingT
 	Cleanup(func())

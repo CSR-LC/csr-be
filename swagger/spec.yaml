@@ -1862,9 +1862,17 @@ definitions:
       name:
         type: string
   ListOfActiveAreas:
-    type: array
-    items:
-      $ref: "#/definitions/ActiveArea"
+    type: object
+    required:
+      - total
+      - items
+    properties:
+      total:
+        type: integer
+      items:
+        type: array
+        items:
+          $ref: "#/definitions/ActiveArea"
 
   # Equipment
   Equipment:

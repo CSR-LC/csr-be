@@ -65,3 +65,13 @@ func (s *ActiveAreasSuite) TestActiveAreaRepository_AllActiveAreas() {
 		assert.Contains(t, s.activeAreas, value.ID)
 	}
 }
+
+func (s *ActiveAreasSuite) TestActiveAreaRepository_TotalActiveAreas() {
+	t := s.T()
+	repository := NewActiveAreaRepository(s.client)
+	totalAreas, err := repository.TotalActiveAreas(s.ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	assert.Equal(t, len(s.activeAreas), totalAreas)
+}

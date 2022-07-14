@@ -41,7 +41,7 @@ func (area ActiveArea) GetActiveAreasFunc(repository repositories.ActiveAreaRepo
 		if a.Offset != nil {
 			offset = int(*a.Offset)
 		}
-		e, err := repository.AllActiveAreas(ctx, limit, offset)
+		total, err := repository.TotalActiveAreas(ctx)
 		if err != nil {
 			area.logger.Error("failed to query active areas", zap.Error(err))
 			return active_areas.NewGetAllActiveAreasDefault(http.StatusInternalServerError).WithPayload(&models.Error{
@@ -50,10 +50,26 @@ func (area ActiveArea) GetActiveAreasFunc(repository repositories.ActiveAreaRepo
 				},
 			})
 		}
-		listActiveAreas := make(models.ListOfActiveAreas, len(e))
+		var e []*ent.ActiveArea
+		if total > 0 {
+			e, err = repository.AllActiveAreas(ctx, limit, offset)
+			if err != nil {
+				area.logger.Error("failed to query active areas", zap.Error(err))
+				return active_areas.NewGetAllActiveAreasDefault(http.StatusInternalServerError).WithPayload(&models.Error{
+					Data: &models.ErrorData{
+						Message: err.Error(),
+					},
+				})
+			}
+		}
+		totalAreas := int64(total)
+		listActiveAreas := &models.ListOfActiveAreas{
+			Items: make([]*models.ActiveArea, len(e)),
+			Total: &totalAreas,
+		}
 		for i, element := range e {
 			id := int64(element.ID)
-			listActiveAreas[i] = &models.ActiveArea{ID: &id, Name: &element.Name}
+			listActiveAreas.Items[i] = &models.ActiveArea{ID: &id, Name: &element.Name}
 		}
 		return active_areas.NewGetAllActiveAreasOK().WithPayload(listActiveAreas)
 	}
