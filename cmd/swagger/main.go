@@ -39,6 +39,13 @@ func main() {
 		logger.Fatal("load config error", zap.Error(err))
 	}
 
+	defer func() {
+		_ = recover()
+		if err := clearPID(); err != nil {
+			logger.Fatal("failed to clear pid file", zap.Error(err))
+		}
+	}()
+
 	//dbHost := getEnv("DB_HOST", "localhost")
 
 	db, err := sql.Open("sqlite3", "file:csr?mode=memory&cache=shared&_fk=1")
@@ -260,12 +267,6 @@ func main() {
 	if err := writePID(); err != nil {
 		logger.Fatal("failed to write pid file", zap.Error(err))
 	}
-	defer func() {
-		_ = recover()
-		if err := clearPID(); err != nil {
-			logger.Fatal("failed to clear pid file", zap.Error(err))
-		}
-	}()
 
 	if err := server.Serve(); err != nil {
 		logger.Error("server fatal error", zap.Error(err))
