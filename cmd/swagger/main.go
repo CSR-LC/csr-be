@@ -261,6 +261,7 @@ func main() {
 		logger.Fatal("failed to write pid file", zap.Error(err))
 	}
 	defer func() {
+		_ = recover()
 		if err := clearPID(); err != nil {
 			logger.Fatal("failed to clear pid file", zap.Error(err))
 		}
