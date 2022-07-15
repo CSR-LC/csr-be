@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -38,6 +39,8 @@ func main() {
 	if err != nil {
 		logger.Fatal("load config error", zap.Error(err))
 	}
+
+	go periodicalStopCheck(time.Millisecond*500, logger)
 
 	defer func() {
 		_ = recover()
@@ -294,4 +297,23 @@ func writePID() error {
 
 func clearPID() error {
 	return os.Remove(pidFileName)
+}
+
+func periodicalStopCheck(duration time.Duration, logger *zap.Logger) {
+	ticker := time.NewTicker(duration)
+	for {
+		<-ticker.C
+
+		_, err := os.Stat("stop")
+		if err != nil {
+			if !errors.Is(err, os.ErrNotExist) {
+				logger.Info("failed to check stop file existence, unexpected error", zap.Error(err))
+			}
+			continue
+		}
+		// file exists
+		logger.Info("stop file exists, exiting")
+		// TODO graceful shutdown
+		os.Exit(0)
+	}
 }
