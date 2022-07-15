@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"log"
 	"os"
 	"strconv"
@@ -256,6 +257,15 @@ func main() {
 	server.Host = getEnv("SERVER_HOST", "0.0.0.0")
 	server.Port = 8080
 
+	if err := writePID(); err != nil {
+		logger.Fatal("failed to write pid file", zap.Error(err))
+	}
+	defer func() {
+		if err := clearPID(); err != nil {
+			logger.Fatal("failed to clear pid file", zap.Error(err))
+		}
+	}()
+
 	if err := server.Serve(); err != nil {
 		logger.Error("server fatal error", zap.Error(err))
 		return
@@ -272,4 +282,14 @@ func getEnv(key string, defaultValue string) string {
 		return value
 	}
 	return defaultValue
+}
+
+const pidFileName = "pid"
+
+func writePID() error {
+	return os.WriteFile(pidFileName, []byte(fmt.Sprintf("%d", os.Getpid())), 0644)
+}
+
+func clearPID() error {
+	return os.Remove(pidFileName)
 }
