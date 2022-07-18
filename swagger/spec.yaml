@@ -824,6 +824,24 @@ paths:
           description: offset of items
           type: integer
           default: 0
+        - name: order_by
+          in: query
+          required: false
+          description: how to order list
+          type: string
+          enum:
+            - asc
+            - desc
+          default: asc
+        - name: order_column
+          in: query
+          required: false
+          description: column to order by
+          type: string
+          enum:
+            - id
+            - name
+          default: id
       summary: Get all active areas.
       security:
         - Bearer: [ ]

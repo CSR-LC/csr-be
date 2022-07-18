@@ -41,6 +41,14 @@ func (area ActiveArea) GetActiveAreasFunc(repository repositories.ActiveAreaRepo
 		if a.Offset != nil {
 			offset = int(*a.Offset)
 		}
+		orderBy := "asc"
+		if a.OrderBy != nil {
+			orderBy = *a.OrderBy
+		}
+		orderColumn := "id"
+		if a.OrderColumn != nil {
+			orderColumn = *a.OrderColumn
+		}
 		total, err := repository.TotalActiveAreas(ctx)
 		if err != nil {
 			area.logger.Error("failed to query active areas", zap.Error(err))
@@ -52,7 +60,7 @@ func (area ActiveArea) GetActiveAreasFunc(repository repositories.ActiveAreaRepo
 		}
 		var e []*ent.ActiveArea
 		if total > 0 {
-			e, err = repository.AllActiveAreas(ctx, limit, offset)
+			e, err = repository.AllActiveAreas(ctx, limit, offset, orderBy, orderColumn)
 			if err != nil {
 				area.logger.Error("failed to query active areas", zap.Error(err))
 				return active_areas.NewGetAllActiveAreasDefault(http.StatusInternalServerError).WithPayload(&models.Error{
