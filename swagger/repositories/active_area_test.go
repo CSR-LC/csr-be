@@ -2,11 +2,10 @@ package repositories
 
 import (
 	"context"
-	"math"
-	"testing"
-
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
+	"math"
+	"testing"
 
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/ent"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/ent/enttest"
@@ -58,18 +57,103 @@ func (s *ActiveAreasSuite) TearDownSuite() {
 	s.client.Close()
 }
 
-func (s *ActiveAreasSuite) TestActiveAreaRepository_AllActiveAreas() {
+func (s *ActiveAreasSuite) TestActiveAreaRepository_AllActiveAreasEmptyOrderBy() {
 	t := s.T()
 	limit := math.MaxInt
 	offset := 0
+	orderBy := ""
+	orderColumn := "name"
 	repository := NewActiveAreaRepository(s.client)
-	activeAreas, err := repository.AllActiveAreas(s.ctx, limit, offset)
+	activeAreas, err := repository.AllActiveAreas(s.ctx, limit, offset, orderBy, orderColumn)
+	assert.Error(t, err)
+	assert.Nil(t, activeAreas)
+}
+
+func (s *ActiveAreasSuite) TestActiveAreaRepository_AllActiveAreasEmptyOrderColumn() {
+	t := s.T()
+	limit := math.MaxInt
+	offset := 0
+	orderBy := "asc"
+	orderColumn := ""
+	repository := NewActiveAreaRepository(s.client)
+	activeAreas, err := repository.AllActiveAreas(s.ctx, limit, offset, orderBy, orderColumn)
+	assert.Error(t, err)
+	assert.Nil(t, activeAreas)
+}
+
+func (s *ActiveAreasSuite) TestActiveAreaRepository_AllActiveAreasOrderByNameDesc() {
+	t := s.T()
+	limit := math.MaxInt
+	offset := 0
+	orderBy := "desc"
+	orderColumn := "name"
+	repository := NewActiveAreaRepository(s.client)
+	activeAreas, err := repository.AllActiveAreas(s.ctx, limit, offset, orderBy, orderColumn)
 	if err != nil {
 		t.Fatal(err)
 	}
 	assert.Equal(t, len(s.activeAreas), len(activeAreas))
+	for i, value := range activeAreas {
+		assert.True(t, mapContainsValue(value.Name, s.activeAreas))
+		assert.Equal(t, s.activeAreas[len(s.activeAreas)-i], value.Name)
+	}
+}
+
+func (s *ActiveAreasSuite) TestActiveAreaRepository_AllActiveAreasOrderByIDDesc() {
+	t := s.T()
+	limit := math.MaxInt
+	offset := 0
+	orderBy := "desc"
+	orderColumn := "id"
+	repository := NewActiveAreaRepository(s.client)
+	activeAreas, err := repository.AllActiveAreas(s.ctx, limit, offset, orderBy, orderColumn)
+	if err != nil {
+		t.Fatal(err)
+	}
+	assert.Equal(t, len(s.activeAreas), len(activeAreas))
+	prevAreaID := math.MaxInt
 	for _, value := range activeAreas {
-		assert.Contains(t, s.activeAreas, value.ID)
+		assert.True(t, mapContainsValue(value.Name, s.activeAreas))
+		assert.Less(t, value.ID, prevAreaID)
+		prevAreaID = value.ID
+	}
+}
+
+func (s *ActiveAreasSuite) TestActiveAreaRepository_AllActiveAreasOrderByNameAsc() {
+	t := s.T()
+	limit := math.MaxInt
+	offset := 0
+	orderBy := "asc"
+	orderColumn := "name"
+	repository := NewActiveAreaRepository(s.client)
+	activeAreas, err := repository.AllActiveAreas(s.ctx, limit, offset, orderBy, orderColumn)
+	if err != nil {
+		t.Fatal(err)
+	}
+	assert.Equal(t, len(s.activeAreas), len(activeAreas))
+	for i, value := range activeAreas {
+		assert.True(t, mapContainsValue(value.Name, s.activeAreas))
+		assert.Equal(t, s.activeAreas[i+1], value.Name)
+	}
+}
+
+func (s *ActiveAreasSuite) TestActiveAreaRepository_AllActiveAreasOrderByIDAsc() {
+	t := s.T()
+	limit := math.MaxInt
+	offset := 0
+	orderBy := "asc"
+	orderColumn := "id"
+	repository := NewActiveAreaRepository(s.client)
+	activeAreas, err := repository.AllActiveAreas(s.ctx, limit, offset, orderBy, orderColumn)
+	if err != nil {
+		t.Fatal(err)
+	}
+	assert.Equal(t, len(s.activeAreas), len(activeAreas))
+	prevAreaID := -1
+	for _, value := range activeAreas {
+		assert.True(t, mapContainsValue(value.Name, s.activeAreas))
+		assert.Greater(t, value.ID, prevAreaID)
+		prevAreaID = value.ID
 	}
 }
 
@@ -77,14 +161,16 @@ func (s *ActiveAreasSuite) TestActiveAreaRepository_LimitActiveAreas() {
 	t := s.T()
 	limit := 3
 	offset := 0
+	orderBy := "asc"
+	orderColumn := "name"
 	repository := NewActiveAreaRepository(s.client)
-	activeAreas, err := repository.AllActiveAreas(s.ctx, limit, offset)
+	activeAreas, err := repository.AllActiveAreas(s.ctx, limit, offset, orderBy, orderColumn)
 	if err != nil {
 		t.Fatal(err)
 	}
 	assert.Equal(t, 3, len(activeAreas))
 	for i, value := range activeAreas {
-		assert.Contains(t, s.activeAreas, value.ID)
+		assert.True(t, mapContainsValue(value.Name, s.activeAreas))
 		assert.Equal(t, s.activeAreas[i+1], value.Name)
 	}
 }
@@ -93,14 +179,16 @@ func (s *ActiveAreasSuite) TestActiveAreaRepository_OffsetActiveAreas() {
 	t := s.T()
 	limit := 6
 	offset := 6
+	orderBy := "asc"
+	orderColumn := "name"
 	repository := NewActiveAreaRepository(s.client)
-	activeAreas, err := repository.AllActiveAreas(s.ctx, limit, offset)
+	activeAreas, err := repository.AllActiveAreas(s.ctx, limit, offset, orderBy, orderColumn)
 	if err != nil {
 		t.Fatal(err)
 	}
 	assert.Equal(t, 3, len(activeAreas))
 	for i, value := range activeAreas {
-		assert.Contains(t, s.activeAreas, value.ID)
+		assert.True(t, mapContainsValue(value.Name, s.activeAreas))
 		assert.Equal(t, s.activeAreas[i+1+offset], value.Name)
 	}
 }
@@ -113,4 +201,13 @@ func (s *ActiveAreasSuite) TestActiveAreaRepository_TotalActiveAreas() {
 		t.Fatal(err)
 	}
 	assert.Equal(t, len(s.activeAreas), totalAreas)
+}
+
+func mapContainsValue(value string, m map[int]string) bool {
+	for _, v := range m {
+		if value == v {
+			return true
+		}
+	}
+	return false
 }

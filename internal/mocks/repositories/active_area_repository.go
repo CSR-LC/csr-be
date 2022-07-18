@@ -14,13 +14,13 @@ type ActiveAreaRepository struct {
 	mock.Mock
 }
 
-// AllActiveAreas provides a mock function with given fields: ctx, limit, offset
-func (_m *ActiveAreaRepository) AllActiveAreas(ctx context.Context, limit int, offset int) ([]*ent.ActiveArea, error) {
-	ret := _m.Called(ctx, limit, offset)
+// AllActiveAreas provides a mock function with given fields: ctx, limit, offset, orderBy, orderColumn
+func (_m *ActiveAreaRepository) AllActiveAreas(ctx context.Context, limit int, offset int, orderBy string, orderColumn string) ([]*ent.ActiveArea, error) {
+	ret := _m.Called(ctx, limit, offset, orderBy, orderColumn)
 
 	var r0 []*ent.ActiveArea
-	if rf, ok := ret.Get(0).(func(context.Context, int, int) []*ent.ActiveArea); ok {
-		r0 = rf(ctx, limit, offset)
+	if rf, ok := ret.Get(0).(func(context.Context, int, int, string, string) []*ent.ActiveArea); ok {
+		r0 = rf(ctx, limit, offset, orderBy, orderColumn)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]*ent.ActiveArea)
@@ -28,8 +28,8 @@ func (_m *ActiveAreaRepository) AllActiveAreas(ctx context.Context, limit int, o
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(context.Context, int, int) error); ok {
-		r1 = rf(ctx, limit, offset)
+	if rf, ok := ret.Get(1).(func(context.Context, int, int, string, string) error); ok {
+		r1 = rf(ctx, limit, offset, orderBy, orderColumn)
 	} else {
 		r1 = ret.Error(1)
 	}
