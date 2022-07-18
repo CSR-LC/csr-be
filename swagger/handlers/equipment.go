@@ -120,7 +120,15 @@ func (c Equipment) ListEquipmentFunc(repository repositories.EquipmentRepository
 		if s.Offset != nil {
 			offset = int(*s.Offset)
 		}
-		equipments, err := repository.AllEquipments(ctx, limit, offset)
+		orderBy := "asc"
+		if s.OrderBy != nil {
+			orderBy = *s.OrderBy
+		}
+		orderColumn := "id"
+		if s.OrderColumn != nil {
+			orderColumn = *s.OrderColumn
+		}
+		equipments, err := repository.AllEquipments(ctx, limit, offset, orderBy, orderColumn)
 		if err != nil {
 			c.logger.Error("Error while getting all equipments", zap.Error(err))
 			return equipment.NewGetAllEquipmentDefault(http.StatusInternalServerError).
@@ -176,8 +184,16 @@ func (c Equipment) FindEquipmentFunc(EquipmentRepo repositories.EquipmentReposit
 		if s.Offset != nil {
 			offset = int(*s.Offset)
 		}
+		orderBy := "asc"
+		if s.OrderBy != nil {
+			orderBy = *s.OrderBy
+		}
+		orderColumn := "id"
+		if s.OrderColumn != nil {
+			orderColumn = *s.OrderColumn
+		}
 		equipmentFilter := *s.FindEquipment
-		foundEquipment, err := EquipmentRepo.EquipmentsByFilter(ctx, equipmentFilter, limit, offset)
+		foundEquipment, err := EquipmentRepo.EquipmentsByFilter(ctx, equipmentFilter, limit, offset, orderBy, orderColumn)
 		if err != nil {
 			c.logger.Error("Error while finding equipment", zap.Error(err))
 			return equipment.NewFindEquipmentDefault(http.StatusInternalServerError).

@@ -12,7 +12,7 @@ type ActiveAreaRepository interface {
 	TotalActiveAreas(ctx context.Context) (int, error)
 }
 
-var fieldsToOrder = []string{
+var fieldsToOrderAreas = []string{
 	activearea.FieldID,
 	activearea.FieldName,
 }
@@ -27,7 +27,7 @@ func NewActiveAreaRepository(client *ent.Client) ActiveAreaRepository {
 
 func (r *activeAreaRepository) AllActiveAreas(ctx context.Context, limit, offset int,
 	orderBy, orderColumn string) ([]*ent.ActiveArea, error) {
-	if !checkOrderColumn(orderColumn, fieldsToOrder) {
+	if !checkOrderColumn(orderColumn, fieldsToOrderAreas) {
 		return nil, errors.New("wrong column to order by")
 	}
 	orderFunc, err := getOrderFunc(orderBy, orderColumn)

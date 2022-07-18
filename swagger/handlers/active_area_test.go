@@ -385,7 +385,7 @@ func (s *ActiveAreaTestSuite) TestActiveArea_GetActiveAreasFunc_SeveralPages() {
 	}
 
 	assert.Equal(t, len(areas), len(responseAreasFirstPage.Items)+len(responseAreasSecondPage.Items))
-	assert.False(t, hasDuplicates(responseAreasFirstPage.Items, responseAreasSecondPage.Items))
+	assert.False(t, areasDuplicated(responseAreasFirstPage.Items, responseAreasSecondPage.Items))
 	s.repository.AssertExpectations(t)
 }
 
@@ -398,7 +398,7 @@ func containsArea(array []*ent.ActiveArea, item *models.ActiveArea) bool {
 	return false
 }
 
-func hasDuplicates(array1, array2 []*models.ActiveArea) bool {
+func areasDuplicated(array1, array2 []*models.ActiveArea) bool {
 	diff := make(map[string]int, len(array1))
 	for _, v := range array1 {
 		diff[*v.Name] = 1
