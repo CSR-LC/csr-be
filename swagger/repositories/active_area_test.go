@@ -94,7 +94,7 @@ func (s *ActiveAreasSuite) TestActiveAreaRepository_AllActiveAreasOrderByNameDes
 	}
 	assert.Equal(t, len(s.activeAreas), len(activeAreas))
 	for i, value := range activeAreas {
-		assert.True(t, mapContainsValue(value.Name, s.activeAreas))
+		assert.True(t, mapContainsArea(value.Name, s.activeAreas))
 		assert.Equal(t, s.activeAreas[len(s.activeAreas)-i], value.Name)
 	}
 }
@@ -113,7 +113,7 @@ func (s *ActiveAreasSuite) TestActiveAreaRepository_AllActiveAreasOrderByIDDesc(
 	assert.Equal(t, len(s.activeAreas), len(activeAreas))
 	prevAreaID := math.MaxInt
 	for _, value := range activeAreas {
-		assert.True(t, mapContainsValue(value.Name, s.activeAreas))
+		assert.True(t, mapContainsArea(value.Name, s.activeAreas))
 		assert.Less(t, value.ID, prevAreaID)
 		prevAreaID = value.ID
 	}
@@ -132,7 +132,7 @@ func (s *ActiveAreasSuite) TestActiveAreaRepository_AllActiveAreasOrderByNameAsc
 	}
 	assert.Equal(t, len(s.activeAreas), len(activeAreas))
 	for i, value := range activeAreas {
-		assert.True(t, mapContainsValue(value.Name, s.activeAreas))
+		assert.True(t, mapContainsArea(value.Name, s.activeAreas))
 		assert.Equal(t, s.activeAreas[i+1], value.Name)
 	}
 }
@@ -151,7 +151,7 @@ func (s *ActiveAreasSuite) TestActiveAreaRepository_AllActiveAreasOrderByIDAsc()
 	assert.Equal(t, len(s.activeAreas), len(activeAreas))
 	prevAreaID := -1
 	for _, value := range activeAreas {
-		assert.True(t, mapContainsValue(value.Name, s.activeAreas))
+		assert.True(t, mapContainsArea(value.Name, s.activeAreas))
 		assert.Greater(t, value.ID, prevAreaID)
 		prevAreaID = value.ID
 	}
@@ -170,7 +170,7 @@ func (s *ActiveAreasSuite) TestActiveAreaRepository_LimitActiveAreas() {
 	}
 	assert.Equal(t, 3, len(activeAreas))
 	for i, value := range activeAreas {
-		assert.True(t, mapContainsValue(value.Name, s.activeAreas))
+		assert.True(t, mapContainsArea(value.Name, s.activeAreas))
 		assert.Equal(t, s.activeAreas[i+1], value.Name)
 	}
 }
@@ -188,7 +188,7 @@ func (s *ActiveAreasSuite) TestActiveAreaRepository_OffsetActiveAreas() {
 	}
 	assert.Equal(t, 3, len(activeAreas))
 	for i, value := range activeAreas {
-		assert.True(t, mapContainsValue(value.Name, s.activeAreas))
+		assert.True(t, mapContainsArea(value.Name, s.activeAreas))
 		assert.Equal(t, s.activeAreas[i+1+offset], value.Name)
 	}
 }
@@ -203,7 +203,7 @@ func (s *ActiveAreasSuite) TestActiveAreaRepository_TotalActiveAreas() {
 	assert.Equal(t, len(s.activeAreas), totalAreas)
 }
 
-func mapContainsValue(value string, m map[int]string) bool {
+func mapContainsArea(value string, m map[int]string) bool {
 	for _, v := range m {
 		if value == v {
 			return true

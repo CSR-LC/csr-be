@@ -23,6 +23,8 @@ type EquipmentRepository interface {
 	DeleteEquipmentPhoto(ctx context.Context, id string) error
 	AllEquipments(ctx context.Context, limit, offset int, orderBy, orderColumn string) ([]*ent.Equipment, error)
 	UpdateEquipmentByID(ctx context.Context, id int, eq *models.Equipment) (*ent.Equipment, error)
+	AllEquipmentsTotal(ctx context.Context) (int, error)
+	EquipmentsByFilterTotal(ctx context.Context, filter models.EquipmentFilter) (int, error)
 }
 
 var fieldsToOrderEquipments = []string{
@@ -162,6 +164,50 @@ func (r *equipmentRepository) AllEquipments(ctx context.Context, limit, offset i
 		return nil, err
 	}
 	return result, nil
+}
+
+func (r *equipmentRepository) AllEquipmentsTotal(ctx context.Context) (int, error) {
+	total, err := r.client.Equipment.Query().
+		Count(ctx)
+	if err != nil {
+		return 0, err
+	}
+	return total, nil
+}
+
+func (r *equipmentRepository) EquipmentsByFilterTotal(ctx context.Context, filter models.EquipmentFilter) (int, error) {
+	total, err := r.client.Equipment.Query().
+		QueryStatus().
+		Where(OptionalIntStatus(filter.Status, statuses.FieldID)).
+		QueryEquipments().
+		QueryKind().
+		Where(OptionalIntKind(filter.Kind, kind.FieldID)).
+		QueryEquipments().
+		Where(
+			equipment.NameContains(filter.NameSubstring),
+			OptionalStringEquipment(filter.Name, equipment.FieldName),
+			OptionalStringEquipment(filter.Description, equipment.FieldDescription),
+			OptionalStringEquipment(filter.Category, equipment.FieldCategory),
+			OptionalIntEquipment(filter.CompensationСost, equipment.FieldCompensationCost),
+			OptionalIntEquipment(filter.InventoryNumber, equipment.FieldInventoryNumber),
+			OptionalStringEquipment(filter.Supplier, equipment.FieldSupplier),
+			OptionalStringEquipment(filter.ReceiptDate, equipment.FieldReceiptDate),
+			OptionalIntEquipment(filter.MaximumAmount, equipment.FieldMaximumAmount),
+			OptionalIntEquipment(filter.MaximumDays, equipment.FieldMaximumDays),
+			OptionalStringEquipment(filter.Title, equipment.FieldTitle),
+			OptionalStringEquipment(filter.TechnicalIssues, equipment.FieldTechIssue),
+			OptionalStringEquipment(filter.Condition, equipment.FieldCondition),
+		).
+		WithPetSize().
+		WithKind().
+		WithStatus().
+		WithPhoto().
+		WithPetKinds().
+		Count(ctx)
+	if err != nil {
+		return 0, err
+	}
+	return total, nil
 }
 
 func (r *equipmentRepository) UpdateEquipmentByID(ctx context.Context, id int, eq *models.Equipment) (*ent.Equipment, error) {
