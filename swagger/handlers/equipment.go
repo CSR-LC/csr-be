@@ -128,18 +128,26 @@ func (c Equipment) ListEquipmentFunc(repository repositories.EquipmentRepository
 		if s.OrderColumn != nil {
 			orderColumn = *s.OrderColumn
 		}
-		equipments, err := repository.AllEquipments(ctx, limit, offset, orderBy, orderColumn)
+		total, err := repository.AllEquipmentsTotal(ctx)
 		if err != nil {
-			c.logger.Error("Error while getting all equipments", zap.Error(err))
+			c.logger.Error("Error while getting total of all equipments", zap.Error(err))
 			return equipment.NewGetAllEquipmentDefault(http.StatusInternalServerError).
-				WithPayload(buildStringPayload("Error while getting all equipments"))
+				WithPayload(buildStringPayload("Error while getting total of all equipments"))
 		}
-		if len(equipments) == 0 {
-			c.logger.Error("No equipments found")
-			return equipment.NewGetAllEquipmentDefault(http.StatusNotFound).
-				WithPayload(buildStringPayload("No equipments found"))
+		var equipments []*ent.Equipment
+		if total > 0 {
+			equipments, err = repository.AllEquipments(ctx, limit, offset, orderBy, orderColumn)
+			if err != nil {
+				c.logger.Error("Error while getting all equipments", zap.Error(err))
+				return equipment.NewGetAllEquipmentDefault(http.StatusInternalServerError).
+					WithPayload(buildStringPayload("Error while getting all equipments"))
+			}
 		}
-		listEquipment := make([]*models.EquipmentResponse, len(equipments))
+		totalEquipments := int64(total)
+		listEquipment := &models.ListEquipment{
+			Items: make([]*models.EquipmentResponse, len(equipments)),
+			Total: &totalEquipments,
+		}
 		for i, eq := range equipments {
 			tmpEq, errMap := mapEquipmentResponse(eq)
 			if errMap != nil {
@@ -147,7 +155,7 @@ func (c Equipment) ListEquipmentFunc(repository repositories.EquipmentRepository
 				return equipment.NewGetAllEquipmentDefault(http.StatusInternalServerError).
 					WithPayload(buildStringPayload("Error while mapping equipment"))
 			}
-			listEquipment[i] = tmpEq
+			listEquipment.Items[i] = tmpEq
 		}
 		return equipment.NewGetAllEquipmentOK().WithPayload(listEquipment)
 	}
@@ -173,7 +181,7 @@ func (c Equipment) EditEquipmentFunc(repository repositories.EquipmentRepository
 	}
 }
 
-func (c Equipment) FindEquipmentFunc(EquipmentRepo repositories.EquipmentRepository) equipment.FindEquipmentHandlerFunc {
+func (c Equipment) FindEquipmentFunc(repository repositories.EquipmentRepository) equipment.FindEquipmentHandlerFunc {
 	return func(s equipment.FindEquipmentParams, access interface{}) middleware.Responder {
 		ctx := s.HTTPRequest.Context()
 		limit := math.MaxInt
@@ -193,18 +201,26 @@ func (c Equipment) FindEquipmentFunc(EquipmentRepo repositories.EquipmentReposit
 			orderColumn = *s.OrderColumn
 		}
 		equipmentFilter := *s.FindEquipment
-		foundEquipment, err := EquipmentRepo.EquipmentsByFilter(ctx, equipmentFilter, limit, offset, orderBy, orderColumn)
+		total, err := repository.EquipmentsByFilterTotal(ctx, equipmentFilter)
 		if err != nil {
-			c.logger.Error("Error while finding equipment", zap.Error(err))
-			return equipment.NewFindEquipmentDefault(http.StatusInternalServerError).
-				WithPayload(buildStringPayload("Error while finding equipment"))
+			c.logger.Error("Error while getting total of all equipments", zap.Error(err))
+			return equipment.NewGetAllEquipmentDefault(http.StatusInternalServerError).
+				WithPayload(buildStringPayload("Error while getting total of all equipments"))
 		}
-		if len(foundEquipment) == 0 {
-			c.logger.Info("Equipments not found")
-			return equipment.NewFindEquipmentDefault(http.StatusNotFound).
-				WithPayload(buildStringPayload("Equipments not found"))
+		var foundEquipment []*ent.Equipment
+		if total > 0 {
+			foundEquipment, err = repository.EquipmentsByFilter(ctx, equipmentFilter, limit, offset, orderBy, orderColumn)
+			if err != nil {
+				c.logger.Error("Error while finding equipment", zap.Error(err))
+				return equipment.NewFindEquipmentDefault(http.StatusInternalServerError).
+					WithPayload(buildStringPayload("Error while finding equipment"))
+			}
 		}
-		returnEquipment := make([]*models.EquipmentResponse, len(foundEquipment))
+		totalEquipments := int64(total)
+		returnEquipment := &models.ListEquipment{
+			Items: make([]*models.EquipmentResponse, len(foundEquipment)),
+			Total: &totalEquipments,
+		}
 		for i, eq := range foundEquipment {
 			tmpEq, errMap := mapEquipmentResponse(eq)
 			if errMap != nil {
@@ -212,7 +228,7 @@ func (c Equipment) FindEquipmentFunc(EquipmentRepo repositories.EquipmentReposit
 				return equipment.NewFindEquipmentDefault(http.StatusInternalServerError).
 					WithPayload(buildStringPayload("Error while mapping equipment"))
 			}
-			returnEquipment[i] = tmpEq
+			returnEquipment.Items[i] = tmpEq
 		}
 		return equipment.NewFindEquipmentOK().WithPayload(returnEquipment)
 	}

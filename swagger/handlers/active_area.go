@@ -51,23 +51,17 @@ func (area ActiveArea) GetActiveAreasFunc(repository repositories.ActiveAreaRepo
 		}
 		total, err := repository.TotalActiveAreas(ctx)
 		if err != nil {
-			area.logger.Error("failed to query active areas", zap.Error(err))
-			return active_areas.NewGetAllActiveAreasDefault(http.StatusInternalServerError).WithPayload(&models.Error{
-				Data: &models.ErrorData{
-					Message: err.Error(),
-				},
-			})
+			area.logger.Error("failed to query total active areas", zap.Error(err))
+			return active_areas.NewGetAllActiveAreasDefault(http.StatusInternalServerError).
+				WithPayload(buildErrorPayload(err))
 		}
 		var e []*ent.ActiveArea
 		if total > 0 {
 			e, err = repository.AllActiveAreas(ctx, limit, offset, orderBy, orderColumn)
 			if err != nil {
 				area.logger.Error("failed to query active areas", zap.Error(err))
-				return active_areas.NewGetAllActiveAreasDefault(http.StatusInternalServerError).WithPayload(&models.Error{
-					Data: &models.ErrorData{
-						Message: err.Error(),
-					},
-				})
+				return active_areas.NewGetAllActiveAreasDefault(http.StatusInternalServerError).
+					WithPayload(buildErrorPayload(err))
 			}
 		}
 		totalAreas := int64(total)
