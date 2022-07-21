@@ -16,13 +16,13 @@ type EquipmentRepository struct {
 	mock.Mock
 }
 
-// AllEquipments provides a mock function with given fields: ctx, limit, offset
-func (_m *EquipmentRepository) AllEquipments(ctx context.Context, limit int, offset int) ([]*ent.Equipment, error) {
-	ret := _m.Called(ctx, limit, offset)
+// AllEquipments provides a mock function with given fields: ctx, limit, offset, orderBy, orderColumn
+func (_m *EquipmentRepository) AllEquipments(ctx context.Context, limit int, offset int, orderBy string, orderColumn string) ([]*ent.Equipment, error) {
+	ret := _m.Called(ctx, limit, offset, orderBy, orderColumn)
 
 	var r0 []*ent.Equipment
-	if rf, ok := ret.Get(0).(func(context.Context, int, int) []*ent.Equipment); ok {
-		r0 = rf(ctx, limit, offset)
+	if rf, ok := ret.Get(0).(func(context.Context, int, int, string, string) []*ent.Equipment); ok {
+		r0 = rf(ctx, limit, offset, orderBy, orderColumn)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]*ent.Equipment)
@@ -30,8 +30,29 @@ func (_m *EquipmentRepository) AllEquipments(ctx context.Context, limit int, off
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(context.Context, int, int) error); ok {
-		r1 = rf(ctx, limit, offset)
+	if rf, ok := ret.Get(1).(func(context.Context, int, int, string, string) error); ok {
+		r1 = rf(ctx, limit, offset, orderBy, orderColumn)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// AllEquipmentsTotal provides a mock function with given fields: ctx
+func (_m *EquipmentRepository) AllEquipmentsTotal(ctx context.Context) (int, error) {
+	ret := _m.Called(ctx)
+
+	var r0 int
+	if rf, ok := ret.Get(0).(func(context.Context) int); ok {
+		r0 = rf(ctx)
+	} else {
+		r0 = ret.Get(0).(int)
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context) error); ok {
+		r1 = rf(ctx)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -113,13 +134,13 @@ func (_m *EquipmentRepository) EquipmentByID(ctx context.Context, id int) (*ent.
 	return r0, r1
 }
 
-// EquipmentsByFilter provides a mock function with given fields: ctx, filter, limit, offset
-func (_m *EquipmentRepository) EquipmentsByFilter(ctx context.Context, filter models.EquipmentFilter, limit int, offset int) ([]*ent.Equipment, error) {
-	ret := _m.Called(ctx, filter, limit, offset)
+// EquipmentsByFilter provides a mock function with given fields: ctx, filter, limit, offset, orderBy, orderColumn
+func (_m *EquipmentRepository) EquipmentsByFilter(ctx context.Context, filter models.EquipmentFilter, limit int, offset int, orderBy string, orderColumn string) ([]*ent.Equipment, error) {
+	ret := _m.Called(ctx, filter, limit, offset, orderBy, orderColumn)
 
 	var r0 []*ent.Equipment
-	if rf, ok := ret.Get(0).(func(context.Context, models.EquipmentFilter, int, int) []*ent.Equipment); ok {
-		r0 = rf(ctx, filter, limit, offset)
+	if rf, ok := ret.Get(0).(func(context.Context, models.EquipmentFilter, int, int, string, string) []*ent.Equipment); ok {
+		r0 = rf(ctx, filter, limit, offset, orderBy, orderColumn)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]*ent.Equipment)
@@ -127,8 +148,29 @@ func (_m *EquipmentRepository) EquipmentsByFilter(ctx context.Context, filter mo
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(context.Context, models.EquipmentFilter, int, int) error); ok {
-		r1 = rf(ctx, filter, limit, offset)
+	if rf, ok := ret.Get(1).(func(context.Context, models.EquipmentFilter, int, int, string, string) error); ok {
+		r1 = rf(ctx, filter, limit, offset, orderBy, orderColumn)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// EquipmentsByFilterTotal provides a mock function with given fields: ctx, filter
+func (_m *EquipmentRepository) EquipmentsByFilterTotal(ctx context.Context, filter models.EquipmentFilter) (int, error) {
+	ret := _m.Called(ctx, filter)
+
+	var r0 int
+	if rf, ok := ret.Get(0).(func(context.Context, models.EquipmentFilter) int); ok {
+		r0 = rf(ctx, filter)
+	} else {
+		r0 = ret.Get(0).(int)
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, models.EquipmentFilter) error); ok {
+		r1 = rf(ctx, filter)
 	} else {
 		r1 = ret.Error(1)
 	}

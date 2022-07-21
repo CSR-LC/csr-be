@@ -1905,7 +1905,6 @@ definitions:
       size:
         type: string
 
-
   #Active Areas
   ActiveArea:
     type: object
@@ -2175,10 +2174,17 @@ definitions:
         items:
           $ref: "#/definitions/PetKind"
   ListEquipment:
-    type: array
-    items:
-      $ref: "#/definitions/EquipmentResponse"
-
+    type: object
+    required:
+      - total
+      - items
+    properties:
+      total:
+        type: integer
+      items:
+        type: array
+        items:
+          $ref: "#/definitions/EquipmentResponse"
 
 #PasswordReset
   PasswordReset:
@@ -2241,9 +2247,6 @@ definitions:
     properties:
       login:
         type: string
-
-
-
 
   # Order
   OrderCreateRequest:
