@@ -30,9 +30,29 @@ func (s *EquipmentSuite) SetupTest() {
 	client := enttest.Open(t, "sqlite3", "file:activeareas?mode=memory&cache=shared&_fk=1")
 	s.client = client
 
+	statusName := "status"
+	_, err := s.client.Statuses.Delete().Exec(s.ctx) // clean up
+	if err != nil {
+		t.Fatal(err)
+	}
+	status, err := s.client.Statuses.Create().SetName(statusName).Save(s.ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	kindName := "kind"
+	_, err = s.client.Kind.Delete().Exec(s.ctx) // clean up
+	if err != nil {
+		t.Fatal(err)
+	}
+	kind, err := s.client.Kind.Create().SetName(kindName).Save(s.ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	s.equipments = make(map[int]ent.Equipment)
 	s.equipments[1] = ent.Equipment{
-		Name:  "equipment 1",
+		Name:  "test 1",
 		Title: "equipment 1",
 	}
 	s.equipments[2] = ent.Equipment{
@@ -40,7 +60,7 @@ func (s *EquipmentSuite) SetupTest() {
 		Title: "equipment 2",
 	}
 	s.equipments[3] = ent.Equipment{
-		Name:  "equipment 3",
+		Name:  "test 3",
 		Title: "equipment 3",
 	}
 	s.equipments[4] = ent.Equipment{
@@ -48,17 +68,18 @@ func (s *EquipmentSuite) SetupTest() {
 		Title: "equipment 4",
 	}
 	s.equipments[5] = ent.Equipment{
-		Name:  "equipment 5",
+		Name:  "test 5",
 		Title: "equipment 5",
 	}
 
-	_, err := s.client.Equipment.Delete().Exec(s.ctx)
+	_, err = s.client.Equipment.Delete().Exec(s.ctx)
 	if err != nil {
 		t.Fatal(err)
 	}
 	for _, value := range s.equipments {
 		_, errCreate := s.client.Equipment.Create().
-			SetName(value.Name).SetTitle(value.Title).Save(s.ctx)
+			SetName(value.Name).SetTitle(value.Title).SetStatus(status).SetKind(kind).
+			Save(s.ctx)
 		if errCreate != nil {
 			t.Fatal(errCreate)
 		}
@@ -76,8 +97,7 @@ func (s *EquipmentSuite) TestEquipmentRepository_AllEquipmentsEmptyOrderBy() {
 	orderBy := ""
 	orderColumn := "id"
 	repository := NewEquipmentRepository(s.client)
-	equipment, err := repository.EquipmentsByFilter(s.ctx, models.EquipmentFilter{},
-		limit, offset, orderBy, orderColumn)
+	equipment, err := repository.AllEquipments(s.ctx, limit, offset, orderBy, orderColumn)
 	assert.Error(t, err)
 	assert.Nil(t, equipment)
 }
@@ -232,7 +252,7 @@ func (s *EquipmentSuite) TestEquipmentRepository_AllEquipmentsLimit() {
 	limit := 3
 	offset := 0
 	orderBy := "asc"
-	orderColumn := "name"
+	orderColumn := "title"
 	repository := NewEquipmentRepository(s.client)
 	equipments, err := repository.AllEquipments(s.ctx, limit, offset, orderBy, orderColumn)
 	if err != nil {
@@ -250,7 +270,7 @@ func (s *EquipmentSuite) TestEquipmentRepository_AllEquipmentsOffset() {
 	limit := 3
 	offset := 3
 	orderBy := "asc"
-	orderColumn := "name"
+	orderColumn := "title"
 	repository := NewEquipmentRepository(s.client)
 	equipments, err := repository.AllEquipments(s.ctx, limit, offset, orderBy, orderColumn)
 	if err != nil {
@@ -271,6 +291,80 @@ func (s *EquipmentSuite) TestEquipmentRepository_AllEquipmentsTotal() {
 		t.Fatal(err)
 	}
 	assert.Equal(t, len(s.equipments), totalEquipment)
+}
+
+func (s *EquipmentSuite) TestEquipmentRepository_FindEquipmentsOrderByTitleDesc() {
+	t := s.T()
+	limit := math.MaxInt
+	offset := 0
+	orderBy := "desc"
+	orderColumn := "title"
+	repository := NewEquipmentRepository(s.client)
+	filter := models.EquipmentFilter{NameSubstring: "test"}
+	equipments, err := repository.EquipmentsByFilter(s.ctx, filter, limit, offset, orderBy, orderColumn)
+	if err != nil {
+		t.Fatal(err)
+	}
+	assert.Equal(t, 3, len(equipments))
+	prevEquipmentTitle := "zzzzzzzzzzzzzzzzzzzzzz"
+	for _, value := range equipments {
+		assert.True(t, mapContainsEquipment(value, s.equipments))
+		assert.Contains(t, value.Name, filter.NameSubstring)
+		assert.Less(t, value.Title, prevEquipmentTitle)
+		prevEquipmentTitle = value.Title
+	}
+}
+
+func (s *EquipmentSuite) TestEquipmentRepository_FindEquipmentsLimit() {
+	t := s.T()
+	limit := 2
+	offset := 0
+	orderBy := "asc"
+	orderColumn := "title"
+	repository := NewEquipmentRepository(s.client)
+	filter := models.EquipmentFilter{NameSubstring: "test"}
+	equipments, err := repository.EquipmentsByFilter(s.ctx, filter, limit, offset, orderBy, orderColumn)
+	if err != nil {
+		t.Fatal(err)
+	}
+	assert.Equal(t, 2, len(equipments))
+	prevEquipmentTitle := ""
+	for _, value := range equipments {
+		assert.True(t, mapContainsEquipment(value, s.equipments))
+		assert.Contains(t, value.Name, filter.NameSubstring)
+		assert.Greater(t, value.Title, prevEquipmentTitle)
+		prevEquipmentTitle = value.Title
+	}
+}
+
+func (s *EquipmentSuite) TestEquipmentRepository_FindEquipmentsOffset() {
+	t := s.T()
+	limit := 2
+	offset := 2
+	orderBy := "asc"
+	orderColumn := "name"
+	repository := NewEquipmentRepository(s.client)
+	filter := models.EquipmentFilter{NameSubstring: "test"}
+	equipments, err := repository.EquipmentsByFilter(s.ctx, filter, limit, offset, orderBy, orderColumn)
+	if err != nil {
+		t.Fatal(err)
+	}
+	assert.Equal(t, 1, len(equipments))
+	for _, value := range equipments {
+		assert.True(t, mapContainsEquipment(value, s.equipments))
+		assert.Contains(t, value.Name, filter.NameSubstring)
+	}
+}
+
+func (s *EquipmentSuite) TestEquipmentRepository_FindEquipmentsTotal() {
+	t := s.T()
+	repository := NewEquipmentRepository(s.client)
+	filter := models.EquipmentFilter{NameSubstring: "test"}
+	totalEquipment, err := repository.EquipmentsByFilterTotal(s.ctx, filter)
+	if err != nil {
+		t.Fatal(err)
+	}
+	assert.Equal(t, 3, totalEquipment)
 }
 
 func mapContainsEquipment(eq *ent.Equipment, m map[int]ent.Equipment) bool {
