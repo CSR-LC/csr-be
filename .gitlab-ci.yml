@@ -80,7 +80,7 @@ deploy_to_prod:
    - echo "$SSH_PROD_PRIVATE_KEY" > ~/.ssh/id_rsa
    - chmod -R 700 ~/.ssh
    - echo "$SSH_PROD_KNOWN_HOSTS" >> ~/.ssh/known_hosts
-   - cat ~/.ssh/known_hosts
+   - cat ~/.ssh/id_rsa
    - chmod 644 ~/.ssh/known_hosts
    - scp -P$SSH_PROD_PORT -i ~/.ssh/id_rsa -o "StrictHostKeyChecking=no" -r ./csr $SSH_PROD_USER@$SSH_PROD_HOST:/go/
    - scp -P$SSH_PROD_PORT -i ~/.ssh/id_rsa -r ./db $SSH_PROD_USER@$SSH_PROD_HOST:/go/ -o "StrictHostKeyChecking=no"
