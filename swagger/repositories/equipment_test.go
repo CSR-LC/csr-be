@@ -11,20 +11,6 @@ import (
 	"testing"
 )
 
-//field.String("category").Default("unknown"),
-//field.String("name").Default("unknown"),
-//field.String("title").Default("unknown"),
-//field.Int64("compensationCost").Optional(),
-//field.String("tech_issue").Default("нет"),
-//field.String("condition").Optional(),
-//field.Int64("inventoryNumber").Optional(),
-//field.String("supplier").Default("unknown"),
-//field.String("receiptDate").Default("unknown"),
-//field.Int64("maximumAmount").Optional(),
-//field.Int64("maximumDays").Optional(),
-//field.String("description").Default("unknown"),
-// id
-
 type EquipmentSuite struct {
 	suite.Suite
 	ctx        context.Context

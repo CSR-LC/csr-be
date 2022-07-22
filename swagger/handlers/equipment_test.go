@@ -3,6 +3,7 @@ package handlers
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"math"
 	"net/http"
 	"net/http/httptest"
@@ -63,11 +64,11 @@ func InvalidEquipment(t *testing.T) *ent.Equipment {
 	}
 }
 
-func ValidEquipment(t *testing.T) *ent.Equipment {
+func ValidEquipment(t *testing.T, id int) *ent.Equipment {
 	t.Helper()
 	return &ent.Equipment{
-		ID:   1,
-		Name: "test equipment",
+		ID:   id,
+		Name: fmt.Sprintf("test equipment %d", id),
 		Edges: ent.EquipmentEdges{
 			Kind:   &ent.Kind{},
 			Status: &ent.Statuses{},
@@ -158,7 +159,7 @@ func (s *EquipmentTestSuite) TestEquipment_PostEquipmentFunc_OK() {
 		NewEquipment: &equipmentToAdd,
 	}
 
-	equipmentToReturn := ValidEquipment(t)
+	equipmentToReturn := ValidEquipment(t, 1)
 
 	s.equipmentRepo.On("CreateEquipment", ctx, equipmentToAdd).Return(equipmentToReturn, nil)
 
@@ -237,7 +238,7 @@ func (s *EquipmentTestSuite) TestEquipment_GetEquipmentFunc_OK() {
 		HTTPRequest: &request,
 		EquipmentID: equipmentId,
 	}
-	equipmentToReturn := ValidEquipment(t)
+	equipmentToReturn := ValidEquipment(t, 1)
 
 	s.equipmentRepo.On("EquipmentByID", ctx, int(equipmentId)).Return(equipmentToReturn, nil)
 
@@ -270,7 +271,7 @@ func (s *EquipmentTestSuite) TestEquipment_DeleteEquipmentFunc_RepoErr() {
 	}
 	err := errors.New("test error")
 
-	equipmentToReturn := ValidEquipment(t)
+	equipmentToReturn := ValidEquipment(t, 1)
 	s.equipmentRepo.On("EquipmentByID", ctx, int(equipmentId)).Return(equipmentToReturn, nil)
 	s.equipmentRepo.On("DeleteEquipmentByID", ctx, int(equipmentId)).Return(err)
 
@@ -295,7 +296,7 @@ func (s *EquipmentTestSuite) TestEquipment_DeleteEquipmentFunc_OK() {
 		EquipmentID: equipmentId,
 	}
 
-	equipmentToReturn := ValidEquipment(t)
+	equipmentToReturn := ValidEquipment(t, 1)
 	s.equipmentRepo.On("EquipmentByID", ctx, int(equipmentId)).Return(equipmentToReturn, nil)
 	s.equipmentRepo.On("DeleteEquipmentByID", ctx, int(equipmentId)).Return(nil)
 	s.equipmentRepo.On("DeleteEquipmentPhoto", ctx, equipmentToReturn.Edges.Photo.ID).Return(nil)
@@ -314,15 +315,13 @@ func (s *EquipmentTestSuite) TestEquipment_ListEquipmentFunc_RepoErr() {
 	t := s.T()
 	request := http.Request{}
 	ctx := request.Context()
-	limit := math.MaxInt
-	offset := 0
 
 	handlerFunc := s.equipment.ListEquipmentFunc(s.equipmentRepo)
 	data := equipment.GetAllEquipmentParams{
 		HTTPRequest: &request,
 	}
 	err := errors.New("test error")
-	s.equipmentRepo.On("AllEquipments", ctx, limit, offset).Return(nil, err)
+	s.equipmentRepo.On("AllEquipmentsTotal", ctx).Return(0, err)
 
 	access := "dummy access"
 	resp := handlerFunc(data, access)
@@ -337,22 +336,27 @@ func (s *EquipmentTestSuite) TestEquipment_ListEquipmentFunc_NotFound() {
 	t := s.T()
 	request := http.Request{}
 	ctx := request.Context()
-	limit := math.MaxInt
-	offset := 0
 
 	handlerFunc := s.equipment.ListEquipmentFunc(s.equipmentRepo)
 	data := equipment.GetAllEquipmentParams{
 		HTTPRequest: &request,
 	}
-	var equipmentToReturn []*ent.Equipment
-	s.equipmentRepo.On("AllEquipments", ctx, limit, offset).Return(equipmentToReturn, nil)
+	s.equipmentRepo.On("AllEquipmentsTotal", ctx).Return(0, nil)
 
 	access := "dummy access"
 	resp := handlerFunc(data, access)
 	responseRecorder := httptest.NewRecorder()
 	producer := runtime.JSONProducer()
 	resp.WriteResponse(responseRecorder, producer)
-	assert.Equal(t, http.StatusNotFound, responseRecorder.Code)
+
+	var responseEquipments models.ListEquipment
+	err := json.Unmarshal(responseRecorder.Body.Bytes(), &responseEquipments)
+	if err != nil {
+		t.Errorf("unable to unmarshal response body: %v", err)
+	}
+	assert.Equal(t, http.StatusOK, responseRecorder.Code)
+	assert.Equal(t, 0, int(*responseEquipments.Total))
+	assert.Equal(t, 0, len(responseEquipments.Items))
 	s.equipmentRepo.AssertExpectations(t)
 }
 
@@ -362,6 +366,8 @@ func (s *EquipmentTestSuite) TestEquipment_ListEquipmentFunc_MapErr() {
 	ctx := request.Context()
 	limit := math.MaxInt
 	offset := 0
+	orderBy := "asc"
+	orderColumn := "id"
 
 	handlerFunc := s.equipment.ListEquipmentFunc(s.equipmentRepo)
 	data := equipment.GetAllEquipmentParams{
@@ -369,7 +375,8 @@ func (s *EquipmentTestSuite) TestEquipment_ListEquipmentFunc_MapErr() {
 	}
 	var equipmentToReturn []*ent.Equipment
 	equipmentToReturn = append(equipmentToReturn, InvalidEquipment(t))
-	s.equipmentRepo.On("AllEquipments", ctx, limit, offset).Return(equipmentToReturn, nil)
+	s.equipmentRepo.On("AllEquipmentsTotal", ctx).Return(1, nil)
+	s.equipmentRepo.On("AllEquipments", ctx, limit, offset, orderBy, orderColumn).Return(equipmentToReturn, nil)
 
 	access := "dummy access"
 	resp := handlerFunc(data, access)
@@ -380,20 +387,23 @@ func (s *EquipmentTestSuite) TestEquipment_ListEquipmentFunc_MapErr() {
 	s.equipmentRepo.AssertExpectations(t)
 }
 
-func (s *EquipmentTestSuite) TestEquipment_ListEquipmentFunc_OK() {
+func (s *EquipmentTestSuite) TestEquipment_ListEquipmentFunc_EmptyPaginationParams() {
 	t := s.T()
 	request := http.Request{}
 	ctx := request.Context()
 	limit := math.MaxInt
 	offset := 0
+	orderBy := "asc"
+	orderColumn := "id"
 
 	handlerFunc := s.equipment.ListEquipmentFunc(s.equipmentRepo)
 	data := equipment.GetAllEquipmentParams{
 		HTTPRequest: &request,
 	}
 	var equipmentToReturn []*ent.Equipment
-	equipmentToReturn = append(equipmentToReturn, ValidEquipment(t))
-	s.equipmentRepo.On("AllEquipments", ctx, limit, offset).Return(equipmentToReturn, nil)
+	equipmentToReturn = append(equipmentToReturn, ValidEquipment(t, 1))
+	s.equipmentRepo.On("AllEquipmentsTotal", ctx).Return(1, nil)
+	s.equipmentRepo.On("AllEquipments", ctx, limit, offset, orderBy, orderColumn).Return(equipmentToReturn, nil)
 
 	access := "dummy access"
 	resp := handlerFunc(data, access)
@@ -403,12 +413,225 @@ func (s *EquipmentTestSuite) TestEquipment_ListEquipmentFunc_OK() {
 	assert.Equal(t, http.StatusOK, responseRecorder.Code)
 	s.equipmentRepo.AssertExpectations(t)
 
-	actualEquipment := make([]models.Equipment, len(equipmentToReturn))
-	err := json.Unmarshal(responseRecorder.Body.Bytes(), &actualEquipment)
+	var responseEquipments models.ListEquipment
+	err := json.Unmarshal(responseRecorder.Body.Bytes(), &responseEquipments)
 	if err != nil {
 		t.Errorf("unable to unmarshal response body: %v", err)
 	}
-	assert.Equal(t, equipmentToReturn[0].Name, *actualEquipment[0].Name)
+	assert.Equal(t, 1, int(*responseEquipments.Total))
+	assert.Equal(t, equipmentToReturn[0].Name, *responseEquipments.Items[0].Name)
+}
+
+func (s *EquipmentTestSuite) TestEquipment_ListEquipmentFunc_LimitGreaterThanTotal() {
+	t := s.T()
+	request := http.Request{}
+	ctx := request.Context()
+	var limit int64 = 10
+	var offset int64 = 0
+	var orderBy = "asc"
+	var orderColumn = "id"
+
+	handlerFunc := s.equipment.ListEquipmentFunc(s.equipmentRepo)
+	data := equipment.GetAllEquipmentParams{
+		HTTPRequest: &request,
+		Limit:       &limit,
+		Offset:      &offset,
+		OrderBy:     &orderBy,
+		OrderColumn: &orderColumn,
+	}
+	var equipmentToReturn []*ent.Equipment
+	equipmentToReturn = append(equipmentToReturn, ValidEquipment(t, 1))
+	s.equipmentRepo.On("AllEquipmentsTotal", ctx).Return(1, nil)
+	s.equipmentRepo.On("AllEquipments", ctx, int(limit), int(offset), orderBy, orderColumn).Return(equipmentToReturn, nil)
+
+	access := "dummy access"
+	resp := handlerFunc(data, access)
+	responseRecorder := httptest.NewRecorder()
+	producer := runtime.JSONProducer()
+	resp.WriteResponse(responseRecorder, producer)
+	assert.Equal(t, http.StatusOK, responseRecorder.Code)
+	s.equipmentRepo.AssertExpectations(t)
+
+	var responseEquipments models.ListEquipment
+	err := json.Unmarshal(responseRecorder.Body.Bytes(), &responseEquipments)
+	if err != nil {
+		t.Errorf("unable to unmarshal response body: %v", err)
+	}
+	assert.Equal(t, 1, int(*responseEquipments.Total))
+	assert.Equal(t, equipmentToReturn[0].Name, *responseEquipments.Items[0].Name)
+}
+
+func (s *EquipmentTestSuite) TestEquipment_ListEquipmentFunc_LimitLessThanTotal() {
+	t := s.T()
+	request := http.Request{}
+	ctx := request.Context()
+	var limit int64 = 3
+	var offset int64 = 0
+	var orderBy = "asc"
+	var orderColumn = "id"
+
+	handlerFunc := s.equipment.ListEquipmentFunc(s.equipmentRepo)
+	data := equipment.GetAllEquipmentParams{
+		HTTPRequest: &request,
+		Limit:       &limit,
+		Offset:      &offset,
+		OrderBy:     &orderBy,
+		OrderColumn: &orderColumn,
+	}
+	equipmentToReturn := []*ent.Equipment{
+		ValidEquipment(t, 1),
+		ValidEquipment(t, 2),
+		ValidEquipment(t, 3),
+		ValidEquipment(t, 4),
+		ValidEquipment(t, 5),
+	}
+	s.equipmentRepo.On("AllEquipmentsTotal", ctx).Return(5, nil)
+	s.equipmentRepo.On("AllEquipments", ctx, int(limit), int(offset), orderBy, orderColumn).
+		Return(equipmentToReturn[:limit], nil)
+
+	access := "dummy access"
+	resp := handlerFunc(data, access)
+	responseRecorder := httptest.NewRecorder()
+	producer := runtime.JSONProducer()
+	resp.WriteResponse(responseRecorder, producer)
+	assert.Equal(t, http.StatusOK, responseRecorder.Code)
+	s.equipmentRepo.AssertExpectations(t)
+
+	var responseEquipments models.ListEquipment
+	err := json.Unmarshal(responseRecorder.Body.Bytes(), &responseEquipments)
+	if err != nil {
+		t.Errorf("unable to unmarshal response body: %v", err)
+	}
+	assert.Greater(t, len(equipmentToReturn), len(responseEquipments.Items))
+	assert.Equal(t, len(equipmentToReturn), int(*responseEquipments.Total))
+	assert.Equal(t, int(limit), len(responseEquipments.Items))
+	for _, item := range responseEquipments.Items {
+		assert.True(t, containsEquipment(t, equipmentToReturn, item))
+	}
+}
+
+func (s *EquipmentTestSuite) TestEquipment_ListEquipmentFunc_SecondPage() {
+	t := s.T()
+	request := http.Request{}
+	ctx := request.Context()
+	var limit int64 = 3
+	var offset int64 = 3
+	var orderBy = "asc"
+	var orderColumn = "id"
+
+	handlerFunc := s.equipment.ListEquipmentFunc(s.equipmentRepo)
+	data := equipment.GetAllEquipmentParams{
+		HTTPRequest: &request,
+		Limit:       &limit,
+		Offset:      &offset,
+		OrderBy:     &orderBy,
+		OrderColumn: &orderColumn,
+	}
+	equipmentToReturn := []*ent.Equipment{
+		ValidEquipment(t, 1),
+		ValidEquipment(t, 2),
+		ValidEquipment(t, 3),
+		ValidEquipment(t, 4),
+		ValidEquipment(t, 5),
+	}
+	s.equipmentRepo.On("AllEquipmentsTotal", ctx).Return(5, nil)
+	s.equipmentRepo.On("AllEquipments", ctx, int(limit), int(offset), orderBy, orderColumn).
+		Return(equipmentToReturn[offset:], nil)
+
+	access := "dummy access"
+	resp := handlerFunc(data, access)
+	responseRecorder := httptest.NewRecorder()
+	producer := runtime.JSONProducer()
+	resp.WriteResponse(responseRecorder, producer)
+	assert.Equal(t, http.StatusOK, responseRecorder.Code)
+	s.equipmentRepo.AssertExpectations(t)
+
+	var responseEquipments models.ListEquipment
+	err := json.Unmarshal(responseRecorder.Body.Bytes(), &responseEquipments)
+	if err != nil {
+		t.Errorf("unable to unmarshal response body: %v", err)
+	}
+	assert.Greater(t, len(equipmentToReturn), len(responseEquipments.Items))
+	assert.Equal(t, len(equipmentToReturn), int(*responseEquipments.Total))
+	assert.Equal(t, 2, len(responseEquipments.Items))
+	for _, item := range responseEquipments.Items {
+		assert.True(t, containsEquipment(t, equipmentToReturn, item))
+	}
+}
+
+func (s *EquipmentTestSuite) TestEquipment_ListEquipmentFunc_SeveralPages() {
+	t := s.T()
+	request := http.Request{}
+	ctx := request.Context()
+	var limit int64 = 3
+	var offset int64 = 0
+	var orderBy = "asc"
+	var orderColumn = "id"
+
+	handlerFunc := s.equipment.ListEquipmentFunc(s.equipmentRepo)
+	data := equipment.GetAllEquipmentParams{
+		HTTPRequest: &request,
+		Limit:       &limit,
+		Offset:      &offset,
+		OrderBy:     &orderBy,
+		OrderColumn: &orderColumn,
+	}
+	equipmentToReturn := []*ent.Equipment{
+		ValidEquipment(t, 1),
+		ValidEquipment(t, 2),
+		ValidEquipment(t, 3),
+		ValidEquipment(t, 4),
+		ValidEquipment(t, 5),
+	}
+	s.equipmentRepo.On("AllEquipmentsTotal", ctx).Return(5, nil)
+	s.equipmentRepo.On("AllEquipments", ctx, int(limit), int(offset), orderBy, orderColumn).
+		Return(equipmentToReturn[:limit], nil)
+
+	access := "dummy access"
+	resp := handlerFunc(data, access)
+	responseRecorder := httptest.NewRecorder()
+	producer := runtime.JSONProducer()
+	resp.WriteResponse(responseRecorder, producer)
+	assert.Equal(t, http.StatusOK, responseRecorder.Code)
+	s.equipmentRepo.AssertExpectations(t)
+
+	var responseFirstPage models.ListEquipment
+	err := json.Unmarshal(responseRecorder.Body.Bytes(), &responseFirstPage)
+	if err != nil {
+		t.Errorf("unable to unmarshal response body: %v", err)
+	}
+	assert.Greater(t, len(equipmentToReturn), len(responseFirstPage.Items))
+	assert.Equal(t, len(equipmentToReturn), int(*responseFirstPage.Total))
+	assert.Equal(t, 3, len(responseFirstPage.Items))
+	for _, item := range responseFirstPage.Items {
+		assert.True(t, containsEquipment(t, equipmentToReturn, item))
+	}
+
+	offset = limit
+	s.equipmentRepo.On("AllEquipmentsTotal", ctx).Return(5, nil)
+	s.equipmentRepo.On("AllEquipments", ctx, int(limit), int(offset), orderBy, orderColumn).
+		Return(equipmentToReturn[offset:], nil)
+	resp = handlerFunc(data, access)
+	responseRecorder = httptest.NewRecorder()
+	producer = runtime.JSONProducer()
+	resp.WriteResponse(responseRecorder, producer)
+	assert.Equal(t, http.StatusOK, responseRecorder.Code)
+	s.equipmentRepo.AssertExpectations(t)
+
+	var responseSecondPage models.ListEquipment
+	err = json.Unmarshal(responseRecorder.Body.Bytes(), &responseSecondPage)
+	if err != nil {
+		t.Errorf("unable to unmarshal response body: %v", err)
+	}
+	assert.Greater(t, len(equipmentToReturn), len(responseSecondPage.Items))
+	assert.Equal(t, len(equipmentToReturn), int(*responseSecondPage.Total))
+	assert.Equal(t, 2, len(responseSecondPage.Items))
+	for _, item := range responseSecondPage.Items {
+		assert.True(t, containsEquipment(t, equipmentToReturn, item))
+	}
+
+	assert.Equal(t, len(equipmentToReturn), len(responseFirstPage.Items)+len(responseSecondPage.Items))
+	assert.False(t, equipmentsDuplicated(t, responseFirstPage.Items, responseSecondPage.Items))
 }
 
 func (s *EquipmentTestSuite) TestEquipment_FindEquipmentFunc_RepoErr() {
@@ -540,7 +763,7 @@ func (s *EquipmentTestSuite) TestEquipment_FindEquipmentFunc_OK() {
 		FindEquipment: &equipmentFilter,
 	}
 	var equipmentToReturn []*ent.Equipment
-	equipmentToReturn = append(equipmentToReturn, ValidEquipment(t))
+	equipmentToReturn = append(equipmentToReturn, ValidEquipment(t, 1))
 
 	s.equipmentRepo.On("EquipmentsByFilter", ctx, equipmentFilter, limit, offset).Return(equipmentToReturn, nil)
 
@@ -636,7 +859,7 @@ func (s *EquipmentTestSuite) TestEquipment_EditEquipmentFunc_OK() {
 		EquipmentID:   equipmentId,
 		EditEquipment: equipmentUpdate,
 	}
-	equipmentToReturn := ValidEquipment(t)
+	equipmentToReturn := ValidEquipment(t, 1)
 
 	s.equipmentRepo.On("UpdateEquipmentByID", ctx, int(equipmentId), equipmentUpdate).
 		Return(equipmentToReturn, nil)
@@ -656,4 +879,28 @@ func (s *EquipmentTestSuite) TestEquipment_EditEquipmentFunc_OK() {
 	assert.Equal(t, equipmentToReturn.Name, *responseEquipment.Name)
 
 	s.equipmentRepo.AssertExpectations(t)
+}
+
+func containsEquipment(t *testing.T, array []*ent.Equipment, item *models.EquipmentResponse) bool {
+	t.Helper()
+	for _, v := range array {
+		if *item.Name == v.Name && int(*item.ID) == v.ID {
+			return true
+		}
+	}
+	return false
+}
+
+func equipmentsDuplicated(t *testing.T, array1, array2 []*models.EquipmentResponse) bool {
+	t.Helper()
+	diff := make(map[int64]int, len(array1))
+	for _, v := range array1 {
+		diff[*v.ID] = 1
+	}
+	for _, v := range array2 {
+		if _, ok := diff[*v.ID]; ok {
+			return true
+		}
+	}
+	return false
 }

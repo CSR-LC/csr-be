@@ -184,7 +184,7 @@ func (s *ActiveAreaTestSuite) TestActiveArea_GetActiveAreasFunc_LimitLessThanTot
 	assert.Equal(t, len(areas), int(*responseAreas.Total))
 	assert.Equal(t, 3, len(responseAreas.Items))
 	for _, item := range responseAreas.Items {
-		assert.True(t, containsArea(areas, item))
+		assert.True(t, containsArea(t, areas, item))
 	}
 	s.repository.AssertExpectations(t)
 }
@@ -250,7 +250,7 @@ func (s *ActiveAreaTestSuite) TestActiveArea_GetActiveAreasFunc_SecondPage() {
 	assert.Equal(t, len(areas), int(*responseAreas.Total))
 	assert.Equal(t, 2, len(responseAreas.Items))
 	for _, item := range responseAreas.Items {
-		assert.True(t, containsArea(areas, item))
+		assert.True(t, containsArea(t, areas, item))
 	}
 	s.repository.AssertExpectations(t)
 }
@@ -358,7 +358,7 @@ func (s *ActiveAreaTestSuite) TestActiveArea_GetActiveAreasFunc_SeveralPages() {
 	assert.Equal(t, len(areas), int(*responseAreasFirstPage.Total))
 	assert.Equal(t, 3, len(responseAreasFirstPage.Items))
 	for _, item := range responseAreasFirstPage.Items {
-		assert.True(t, containsArea(areas, item))
+		assert.True(t, containsArea(t, areas, item))
 	}
 
 	offset = limit
@@ -381,15 +381,16 @@ func (s *ActiveAreaTestSuite) TestActiveArea_GetActiveAreasFunc_SeveralPages() {
 	assert.Equal(t, len(areas), int(*responseAreasSecondPage.Total))
 	assert.Equal(t, 2, len(responseAreasSecondPage.Items))
 	for _, item := range responseAreasSecondPage.Items {
-		assert.True(t, containsArea(areas, item))
+		assert.True(t, containsArea(t, areas, item))
 	}
 
 	assert.Equal(t, len(areas), len(responseAreasFirstPage.Items)+len(responseAreasSecondPage.Items))
-	assert.False(t, areasDuplicated(responseAreasFirstPage.Items, responseAreasSecondPage.Items))
+	assert.False(t, areasDuplicated(t, responseAreasFirstPage.Items, responseAreasSecondPage.Items))
 	s.repository.AssertExpectations(t)
 }
 
-func containsArea(array []*ent.ActiveArea, item *models.ActiveArea) bool {
+func containsArea(t *testing.T, array []*ent.ActiveArea, item *models.ActiveArea) bool {
+	t.Helper()
 	for _, v := range array {
 		if *item.Name == v.Name && int(*item.ID) == v.ID {
 			return true
@@ -398,7 +399,8 @@ func containsArea(array []*ent.ActiveArea, item *models.ActiveArea) bool {
 	return false
 }
 
-func areasDuplicated(array1, array2 []*models.ActiveArea) bool {
+func areasDuplicated(t *testing.T, array1, array2 []*models.ActiveArea) bool {
+	t.Helper()
 	diff := make(map[string]int, len(array1))
 	for _, v := range array1 {
 		diff[*v.Name] = 1
