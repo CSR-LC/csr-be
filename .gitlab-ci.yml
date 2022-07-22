@@ -1,7 +1,7 @@
 
 variables:
-#  START_DEPLOY_STAGE: "true"
-  START_DEPLOY_PROD: "true"
+#  START_DEPLOY_TO_STAGE: "true"
+  START_DEPLOY_TO_PROD: "true"
 
 stages:
   - test
@@ -53,7 +53,7 @@ deploy_stage:
   
   stage: deploy
   rules:
-    - if: $START_DEPLOY_STAGE == "true"
+    - if: $START_DEPLOY_TO_STAGE == "true"
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
       when: always
   script:
