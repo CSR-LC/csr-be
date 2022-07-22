@@ -1,7 +1,8 @@
 
 variables:
-  START_DEPLOY_STAGE: "true"
-  
+#  START_DEPLOY_STAGE: "true"
+  START_DEPLOY_PROD: "true"
+
 stages:
   - test
   - build
