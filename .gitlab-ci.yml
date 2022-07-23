@@ -81,6 +81,6 @@ deploy_to_prod:
    - chmod -R 700 ~/.ssh
    - echo "$SSH_PROD_KNOWN_HOSTS" >> ~/.ssh/known_hosts
    - chmod 644 ~/.ssh/known_hosts
-   - scp -P$SSH_PROD_PORT -i ~/.ssh/id_rsa -o "StrictHostKeyChecking=no" -r ./csr $SSH_PROD_USER@$SSH_PROD_HOST:/go/
-   - scp -P$SSH_PROD_PORT -i ~/.ssh/id_rsa -o "StrictHostKeyChecking=no" -r ./db $SSH_PROD_USER@$SSH_PROD_HOST:/go/
-   - ssh -P$SSH_PROD_PORT  -i ~/.ssh/id_rsa -o "StrictHostKeyChecking=no" $SSH_PROD_USER@$SSH_PROD_HOST './go/setenv_rerun  main &'
+   - scp -P$SSH_PROD_PORT -i ~/.ssh/id_rsa -o "StrictHostKeyChecking=no" -r ./csr $SSH_PROD_USER@$SSH_PROD_HOST:/go/csr
+   - scp -P$SSH_PROD_PORT -i ~/.ssh/id_rsa -o "StrictHostKeyChecking=no" -r ./db $SSH_PROD_USER@$SSH_PROD_HOST:/go/db
+   - ssh -P$SSH_PROD_PORT  -i ~/.ssh/id_rsa -o "StrictHostKeyChecking=no" $SSH_PROD_USER@$SSH_PROD_HOST './go/setenv_rerun  csr &'
