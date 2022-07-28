@@ -83,5 +83,5 @@ deploy_to_prod:
    - scp -P$SSH_PROD_PORT -i ~/.ssh/id_rsa -o "StrictHostKeyChecking=no" -r ./csr $SSH_PROD_USER@$SSH_PROD_HOST:/go/csr
    - scp -P$SSH_PROD_PORT -i ~/.ssh/id_rsa -o "StrictHostKeyChecking=no" -r ./db $SSH_PROD_USER@$SSH_PROD_HOST:/go/db
    - ssh -P$SSH_PROD_PORT  -i ~/.ssh/id_rsa -o "StrictHostKeyChecking=no" $SSH_PROD_USER@$SSH_PROD_HOST 'touch /go/stop && sleep 3 && rm /go/stop'
-   - ssh -P$SSH_PROD_PORT  -i ~/.ssh/id_rsa -o "StrictHostKeyChecking=no" $SSH_PROD_USER@$SSH_PROD_HOST 'source /go/setenv &&  cd /go && ./csr 2>> log.txt &'
+   - ssh -P$SSH_PROD_PORT  -i ~/.ssh/id_rsa -o "StrictHostKeyChecking=no" $SSH_PROD_USER@$SSH_PROD_HOST 'source /go/setenv &&  cd /go && nohup ./csr 2>> log.txt &'
    - ssh -P$SSH_PROD_PORT  -i ~/.ssh/id_rsa -o "StrictHostKeyChecking=no" $SSH_PROD_USER@$SSH_PROD_HOST 'echo pid'
