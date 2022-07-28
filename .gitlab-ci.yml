@@ -75,7 +75,6 @@ deploy_to_prod:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
       when: always
   script:
-   - echo "kek"
    - mkdir -p ~/.ssh
    - echo "$SSH_PROD_PRIVATE_KEY" > ~/.ssh/id_rsa
    - chmod -R 700 ~/.ssh
@@ -83,4 +82,6 @@ deploy_to_prod:
    - chmod 644 ~/.ssh/known_hosts
    - scp -P$SSH_PROD_PORT -i ~/.ssh/id_rsa -o "StrictHostKeyChecking=no" -r ./csr $SSH_PROD_USER@$SSH_PROD_HOST:/go/csr
    - scp -P$SSH_PROD_PORT -i ~/.ssh/id_rsa -o "StrictHostKeyChecking=no" -r ./db $SSH_PROD_USER@$SSH_PROD_HOST:/go/db
-   - ssh -P$SSH_PROD_PORT  -i ~/.ssh/id_rsa -o "StrictHostKeyChecking=no" $SSH_PROD_USER@$SSH_PROD_HOST 'source /go/setenv &&   ./go/csr 2>> log.txt &'
+   - ssh -P$SSH_PROD_PORT  -i ~/.ssh/id_rsa -o "StrictHostKeyChecking=no" $SSH_PROD_USER@$SSH_PROD_HOST 'touch /go/stop && sleep 3 && rm /go/stop'
+   - ssh -P$SSH_PROD_PORT  -i ~/.ssh/id_rsa -o "StrictHostKeyChecking=no" $SSH_PROD_USER@$SSH_PROD_HOST 'source /go/setenv &&  cd /go && ./csr 2>> log.txt &'
+   - ssh -P$SSH_PROD_PORT  -i ~/.ssh/id_rsa -o "StrictHostKeyChecking=no" $SSH_PROD_USER@$SSH_PROD_HOST 'echo pid'
