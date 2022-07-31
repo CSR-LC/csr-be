@@ -79,14 +79,13 @@ deploy_to_prod:
    - echo "$SSH_PROD_PRIVATE_KEY" > ~/.ssh/id_rsa
    - chmod -R 700 ~/.ssh
    - echo "$SSH_PROD_KNOWN_HOSTS" >> ~/.ssh/known_hosts
-   - cat ~/.ssh/known_hosts
    - chmod 644 ~/.ssh/known_hosts
-   - ssh -P$SSH_PROD_PORT  -i ~/.ssh/id_rsa $SSH_PROD_USER@$SSH_PROD_HOST 'touch /go/stop && sleep 3 && rm /go/stop'
+   - ssh -P$SSH_PROD_PORT -i ~/.ssh/id_rsa $SSH_PROD_USER@$SSH_PROD_HOST 'touch /go/stop && sleep 3 && rm /go/stop'
    - sleep 5
-   - scp -P$SSH_PROD_PORT -i ~/.ssh/id_rsa  -r ./csr $SSH_PROD_USER@$SSH_PROD_HOST:/go/csr
+   - scp -P$SSH_PROD_PORT -i ~/.ssh/id_rsa -r ./csr $SSH_PROD_USER@$SSH_PROD_HOST:/go/csr
    - sleep 5
-   - scp -P$SSH_PROD_PORT -i ~/.ssh/id_rsa  -r ./db $SSH_PROD_USER@$SSH_PROD_HOST:/go/db
+   - scp -P$SSH_PROD_PORT -i ~/.ssh/id_rsa -r ./db $SSH_PROD_USER@$SSH_PROD_HOST:/go/db
    - sleep 5
-   - ssh -P$SSH_PROD_PORT  -i ~/.ssh/id_rsa  $SSH_PROD_USER@$SSH_PROD_HOST 'source /go/setenv &&  cd /go && nohup bash -c "./csr >> log.txt 2>&1 &"'
+   - ssh -P$SSH_PROD_PORT -i ~/.ssh/id_rsa $SSH_PROD_USER@$SSH_PROD_HOST 'source /go/setenv &&  cd /go && nohup bash -c "./csr >> log.txt 2>&1 &"'
    - sleep 5
-   - ssh -P$SSH_PROD_PORT  -i ~/.ssh/id_rsa  $SSH_PROD_USER@$SSH_PROD_HOST 'cat /go/pid'
+   - ssh -P$SSH_PROD_PORT -i ~/.ssh/id_rsa $SSH_PROD_USER@$SSH_PROD_HOST 'cat /go/pid'
