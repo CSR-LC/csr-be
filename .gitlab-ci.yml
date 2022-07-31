@@ -79,6 +79,7 @@ deploy_to_prod:
    - echo "$SSH_PROD_PRIVATE_KEY" > ~/.ssh/id_rsa
    - chmod -R 700 ~/.ssh
    - echo "$SSH_PROD_KNOWN_HOSTS" >> ~/.ssh/known_hosts
+   - cat ~/.ssh/known_hosts
    - chmod 644 ~/.ssh/known_hosts
    - ssh -P$SSH_PROD_PORT  -i ~/.ssh/id_rsa $SSH_PROD_USER@$SSH_PROD_HOST 'touch /go/stop && sleep 3 && rm /go/stop'
    - sleep 5
