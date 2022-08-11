@@ -7,6 +7,12 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/go-openapi/loads"
+
+	"git.epam.com/epm-lstr/epm-lstr-lc/be/ent/enttest"
+	"git.epam.com/epm-lstr/epm-lstr-lc/be/swagger/generated/restapi"
+	"git.epam.com/epm-lstr/epm-lstr-lc/be/swagger/generated/restapi/operations"
+
 	"github.com/go-openapi/runtime"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
@@ -19,6 +25,31 @@ import (
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/swagger/generated/models"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/swagger/generated/restapi/operations/users"
 )
+
+func TestSetUserHandler(t *testing.T) {
+	client := enttest.Open(t, "sqlite3", "file:userhandler?mode=memory&cache=shared&_fk=1")
+	defer client.Close()
+
+	logger := zap.NewNop()
+
+	swaggerSpec, err := loads.Analyzed(restapi.SwaggerJSON, "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	api := operations.NewBeAPI(swaggerSpec)
+	tokenManager := &servicemock.TokenManager{}
+	registrationConfirm := &servicemock.RegistrationConfirm{}
+	SetUserHandler(client, logger, api, tokenManager, registrationConfirm)
+
+	assert.NotEmpty(t, api.UsersLoginHandler)
+	assert.NotEmpty(t, api.UsersRefreshHandler)
+	assert.NotEmpty(t, api.UsersPostUserHandler)
+	assert.NotEmpty(t, api.UsersGetCurrentUserHandler)
+	assert.NotEmpty(t, api.UsersPatchUserHandler)
+	assert.NotEmpty(t, api.UsersGetUserHandler)
+	assert.NotEmpty(t, api.UsersGetAllUsersHandler)
+	assert.NotEmpty(t, api.UsersAssignRoleToUserHandler)
+}
 
 type UserTestSuite struct {
 	suite.Suite
@@ -57,7 +88,7 @@ func (s *UserTestSuite) TestUser_LoginUserFunc_InternalErr() {
 		},
 	}
 	err := errors.New("some error")
-	s.service.On("GenerateAccessToken", ctx, login, password).Return("", true, err)
+	s.service.On("GenerateTokens", ctx, login, password).Return("", "", true, err)
 
 	resp := handlerFunc(data)
 	responseRecorder := httptest.NewRecorder()
@@ -83,7 +114,7 @@ func (s *UserTestSuite) TestUser_LoginUserFunc_UnauthorizedErr() {
 		},
 	}
 	err := errors.New("some error")
-	s.service.On("GenerateAccessToken", ctx, login, password).Return("", false, err)
+	s.service.On("GenerateTokens", ctx, login, password).Return("", "", false, err)
 
 	resp := handlerFunc(data)
 	responseRecorder := httptest.NewRecorder()
@@ -108,13 +139,24 @@ func (s *UserTestSuite) TestUser_LoginUserFunc_OK() {
 			Password: &password,
 		},
 	}
-	s.service.On("GenerateAccessToken", ctx, login, password).Return("", false, nil)
+	accessToken := "accessToken"
+	refreshToken := "refreshToken"
+	s.service.On("GenerateTokens", ctx, login, password).Return(accessToken, refreshToken, false, nil)
 
 	resp := handlerFunc(data)
 	responseRecorder := httptest.NewRecorder()
 	producer := runtime.JSONProducer()
 	resp.WriteResponse(responseRecorder, producer)
 	assert.Equal(t, http.StatusOK, responseRecorder.Code)
+
+	var tokenPair models.TokenPair
+	err := json.Unmarshal(responseRecorder.Body.Bytes(), &tokenPair)
+	if err != nil {
+		t.Errorf("unable to unmarshal response: %v", err)
+	}
+	assert.Equal(t, accessToken, *tokenPair.AccessToken)
+	assert.Equal(t, refreshToken, *tokenPair.RefreshToken)
+
 	s.service.AssertExpectations(t)
 }
 
@@ -580,7 +622,8 @@ func (s *UserTestSuite) TestUser_GetUsersList_RepositoryErr() {
 	err := errors.New("some err")
 	s.userRepository.On("UserList", ctx).Return(nil, err)
 
-	resp := handlerFunc(data)
+	access := "dummy access"
+	resp := handlerFunc(data, access)
 	responseRecorder := httptest.NewRecorder()
 	producer := runtime.JSONProducer()
 	resp.WriteResponse(responseRecorder, producer)
@@ -605,7 +648,8 @@ func (s *UserTestSuite) TestUser_GetUsersList_MapErr() {
 	userList = append(userList, user)
 	s.userRepository.On("UserList", ctx).Return(userList, nil)
 
-	resp := handlerFunc(data)
+	access := "dummy access"
+	resp := handlerFunc(data, access)
 	responseRecorder := httptest.NewRecorder()
 	producer := runtime.JSONProducer()
 	resp.WriteResponse(responseRecorder, producer)
@@ -633,7 +677,8 @@ func (s *UserTestSuite) TestUser_GetUsersList_OK() {
 	userList = append(userList, user)
 	s.userRepository.On("UserList", ctx).Return(userList, nil)
 
-	resp := handlerFunc(data)
+	access := "dummy access"
+	resp := handlerFunc(data, access)
 	responseRecorder := httptest.NewRecorder()
 	producer := runtime.JSONProducer()
 	resp.WriteResponse(responseRecorder, producer)
@@ -664,7 +709,8 @@ func (s *UserTestSuite) TestUser_GetUserById_RepoErr() {
 	err := errors.New("some err")
 	s.userRepository.On("GetUserByID", ctx, userID).Return(nil, err)
 
-	resp := handlerFunc(data)
+	access := "dummy access"
+	resp := handlerFunc(data, access)
 	responseRecorder := httptest.NewRecorder()
 	producer := runtime.JSONProducer()
 	resp.WriteResponse(responseRecorder, producer)
@@ -689,7 +735,8 @@ func (s *UserTestSuite) TestUser_GetUserById_MapErr() {
 	}
 	s.userRepository.On("GetUserByID", ctx, userID).Return(user, nil)
 
-	resp := handlerFunc(data)
+	access := "dummy access"
+	resp := handlerFunc(data, access)
 	responseRecorder := httptest.NewRecorder()
 	producer := runtime.JSONProducer()
 	resp.WriteResponse(responseRecorder, producer)
@@ -717,7 +764,8 @@ func (s *UserTestSuite) TestUser_GetUserById_OK() {
 	}
 	s.userRepository.On("GetUserByID", ctx, userID).Return(user, nil)
 
-	resp := handlerFunc(data)
+	access := "dummy access"
+	resp := handlerFunc(data, access)
 	responseRecorder := httptest.NewRecorder()
 	producer := runtime.JSONProducer()
 	resp.WriteResponse(responseRecorder, producer)

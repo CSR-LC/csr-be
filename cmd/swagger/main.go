@@ -5,14 +5,11 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"log"
 	"os"
-	"strconv"
 	"time"
 
 	"entgo.io/ent/dialect"
 	entsql "entgo.io/ent/dialect/sql"
-	"github.com/go-openapi/loads"
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/database/sqlite3"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
@@ -22,20 +19,15 @@ import (
 
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/ent"
 	entMigrate "git.epam.com/epm-lstr/epm-lstr-lc/be/ent/migrate"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/swagger/email"
+	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/config"
+	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/logger"
+	"git.epam.com/epm-lstr/epm-lstr-lc/be/swagger"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/swagger/generated/restapi"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/swagger/generated/restapi/operations"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/swagger/handlers"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/swagger/middlewares"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/swagger/repositories"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/swagger/services"
 )
 
 func main() {
-	var loggerConfig = zap.NewProductionConfig()
-	loggerConfig.Level.SetLevel(zap.DebugLevel)
-
-	logger, err := loggerConfig.Build()
+	ctx := context.Background()
+	logger, err := logger.Setup()
 	if err != nil {
 		logger.Fatal("load config error", zap.Error(err))
 	}
@@ -49,8 +41,6 @@ func main() {
 		}
 	}()
 
-	//dbHost := getEnv("DB_HOST", "localhost")
-
 	db, err := sql.Open("sqlite3", "file:csr?mode=memory&cache=shared&_fk=1")
 	if err != nil {
 		logger.Fatal("cant open db", zap.Error(err))
@@ -59,8 +49,6 @@ func main() {
 	// Create an ent.Driver from `db`.
 	drv := entsql.OpenDB(dialect.SQLite, db)
 	entClient := ent.NewClient(ent.Driver(drv))
-
-	ctx := context.Background()
 
 	// Run the auto migration tool.
 	if err := entClient.Schema.Create(ctx, entMigrate.WithDropIndex(true)); err != nil {
@@ -84,188 +72,33 @@ func main() {
 		logger.Error("migration error", zap.Error(err))
 	}
 
-	swaggerSpec, err := loads.Analyzed(restapi.SwaggerJSON, "")
+	// conf
+	serverConfig, err := config.SetupServerConfig()
 	if err != nil {
-		logger.Error("error loading swagger spec", zap.Error(err))
-		return
+		logger.Fatal("fail to setup server config", zap.Error(err))
 	}
 
-	emailSenderServerHost := os.Getenv("EMAIL_SENDER_SERVER_HOST")
-	if emailSenderServerHost == "" {
-		log.Fatalln("EMAIL_SENDER_SERVER_HOST not specified")
-	}
-	emailSenderServerPort := os.Getenv("EMAIL_SENDER_SERVER_PORT")
-	if emailSenderServerPort == "" {
-		log.Fatalln("EMAIL_SENDER_SERVER_PORT not specified")
-	}
-	emailSenderPassword := os.Getenv("EMAIL_SENDER_PASSWORD")
-	if emailSenderPassword == "" {
-		log.Fatalln("EMAIL_SENDER_PASSWORD not specified")
-	}
-	emailSenderFromAddress := os.Getenv("EMAIL_SENDER_FROM_ADDRESS")
-	if emailSenderFromAddress == "" {
-		log.Fatalln("EMAIL_SENDER_FROM_ADDRESS not specified")
-	}
-	emailSenderFromName := os.Getenv("EMAIL_SENDER_FROM_NAME")
-	if emailSenderFromName == "" {
-		log.Fatalln("EMAIL_SENDER_FROM_NAME not specified")
-	}
-
-	passwordResetExpirationMinutes := os.Getenv("PASSWORD_RESET_EXPIRATION_MINUTES")
-	if passwordResetExpirationMinutes == "" {
-		log.Fatalln("PASSWORD_RESET_EXPIRATION_MINUTES not specified")
-	}
-	passwordResetExpirationMinutesInt, err := strconv.Atoi(passwordResetExpirationMinutes)
+	appConfig, err := config.SetupAppConfig()
 	if err != nil {
-		log.Fatalln("PASSWORD_RESET_EXPIRATION_MINUTES not a number")
+		logger.Fatal("fail to setup app config", zap.Error(err))
+	}
+	// setup swagger api
+	api, err := swagger.SetupAPI(entClient, logger, appConfig)
+	if err != nil {
+		logger.Fatal("error setup swagger api", zap.Error(err))
 	}
 
-	passwordRepo := repositories.NewPasswordResetRepository(entClient)
-	regConfirmRepo := repositories.NewRegistrationConfirmRepository(entClient)
-
-	emailSenderWebsiteUrl := getEnv("EMAIL_SENDER_WEBSITE_URL", "https://csr.golangforall.com/")
-	if emailSenderWebsiteUrl == "" {
-		log.Fatalln("EMAIL_SENDER_WEBSITE_URL not specified")
-	}
-
-	mailSendClient := email.NewSenderSmtp(
-		emailSenderWebsiteUrl,
-		emailSenderServerHost,
-		emailSenderServerPort,
-		emailSenderPassword,
-		emailSenderFromAddress,
-		emailSenderFromName)
-
-	petSizeHandler := handlers.NewPetSize(logger)
-
-	equipmentHandler := handlers.NewEquipment(logger)
-
-	userHandler := handlers.NewUser(logger)
-
-	roleHandler := handlers.NewRole(logger)
-
-	kindsHandler := handlers.NewKind(logger)
-
-	photosServerURL := getEnv("PHOTOS_SERVER_URL", "http://localhost:8080/")
-	photosFolder := getEnv("PHOTOS_FOLDER", "equipments_photos")
-	photosHandler := handlers.NewPhoto(photosFolder, photosServerURL, logger)
-
-	statusHandler := handlers.NewStatus(logger)
-	activeAreasHandler := handlers.NewActiveArea(logger)
-
-	userRepository := repositories.NewUserRepository(entClient)
-	ttl := time.Duration(passwordResetExpirationMinutesInt) * time.Minute
-	passwordService := services.NewPasswordResetService(mailSendClient, userRepository, passwordRepo, logger, &ttl)
-	passwordResetHandler := handlers.NewPasswordReset(
-		logger,
-		passwordService,
-	)
-
-	regConfirmService := services.NewRegistrationConfirmService(mailSendClient, userRepository, regConfirmRepo, logger, &ttl)
-	regConfirmHandler := handlers.NewRegistrationConfirmHandler(
-		logger,
-		regConfirmService,
-	)
-
-	blockerHandler := handlers.NewBlocker(logger)
-
-	ordersHandler := handlers.NewOrder(logger)
-
-	orderStatus := handlers.NewOrderStatus(logger)
-
-	api := operations.NewBeAPI(swaggerSpec)
-	api.UseSwaggerUI()
-
-	jwtSecretKey := os.Getenv("JWT_SECRET_KEY")
-	if jwtSecretKey == "" {
-		logger.Error("JWT_SECRET_KEY not specified", zap.Error(err))
-	}
-	api.BearerAuth = middlewares.BearerAuthenticateFunc(jwtSecretKey, logger)
-
-	tokenRepository := repositories.NewTokenRepository(entClient)
-	tokenManager := services.NewTokenManager(userRepository, tokenRepository, jwtSecretKey, logger)
-	api.UsersLoginHandler = userHandler.LoginUserFunc(tokenManager)
-	api.UsersRefreshHandler = userHandler.Refresh(tokenManager)
-
-	api.UsersPostUserHandler = userHandler.PostUserFunc(userRepository, regConfirmService)
-	api.UsersGetCurrentUserHandler = userHandler.GetUserFunc(userRepository)
-	api.UsersPatchUserHandler = userHandler.PatchUserFunc(userRepository)
-	api.UsersGetUserHandler = userHandler.GetUserById(userRepository)
-	api.UsersGetAllUsersHandler = userHandler.GetUsersList(userRepository)
-	api.UsersAssignRoleToUserHandler = userHandler.AssignRoleToUserFunc(userRepository)
-
-	blockerRepository := repositories.NewBlockerRepository(entClient)
-	api.UsersBlockUserHandler = blockerHandler.BlockUserFunc(blockerRepository)
-	api.UsersUnblockUserHandler = blockerHandler.UnblockUserFunc(blockerRepository)
-
-	roleRepository := repositories.NewRoleRepository(entClient)
-	api.RolesGetRolesHandler = roleHandler.GetRolesFunc(roleRepository)
-
-	kindRepository := repositories.NewKindRepository(entClient)
-	api.KindsCreateNewKindHandler = kindsHandler.CreateNewKindFunc(kindRepository)
-	api.KindsGetKindByIDHandler = kindsHandler.GetKindByIDFunc(kindRepository)
-	api.KindsDeleteKindHandler = kindsHandler.DeleteKindFunc(kindRepository)
-	api.KindsGetAllKindsHandler = kindsHandler.GetAllKindsFunc(kindRepository)
-	api.KindsPatchKindHandler = kindsHandler.PatchKindFunc(kindRepository)
-
-	equipmentStatusRepository := repositories.NewEquipmentStatusRepository(entClient)
-	api.StatusPostStatusHandler = statusHandler.PostStatusFunc(equipmentStatusRepository)
-	api.StatusGetStatusesHandler = statusHandler.GetStatusesFunc(equipmentStatusRepository)
-	api.StatusGetStatusHandler = statusHandler.GetStatusFunc(equipmentStatusRepository)
-	api.StatusDeleteStatusHandler = statusHandler.DeleteStatusFunc(equipmentStatusRepository)
-
-	equipmentRepository := repositories.NewEquipmentRepository(entClient)
-	api.EquipmentCreateNewEquipmentHandler = equipmentHandler.PostEquipmentFunc(equipmentRepository)
-	api.EquipmentGetEquipmentHandler = equipmentHandler.GetEquipmentFunc(equipmentRepository)
-	api.EquipmentDeleteEquipmentHandler = equipmentHandler.DeleteEquipmentFunc(equipmentRepository)
-	api.EquipmentGetAllEquipmentHandler = equipmentHandler.ListEquipmentFunc(equipmentRepository)
-	api.EquipmentEditEquipmentHandler = equipmentHandler.EditEquipmentFunc(equipmentRepository)
-	api.EquipmentFindEquipmentHandler = equipmentHandler.FindEquipmentFunc(equipmentRepository)
-
-	photoRepository := repositories.NewPhotoRepository(entClient)
-	api.PhotosCreateNewPhotoHandler = photosHandler.CreateNewPhotoFunc(photoRepository)
-	api.PhotosGetPhotoHandler = photosHandler.GetPhotoFunc(photoRepository)
-	api.PhotosDeletePhotoHandler = photosHandler.DeletePhotoFunc(photoRepository)
-	api.PhotosDownloadPhotoHandler = photosHandler.DownloadPhotoFunc(photoRepository)
-
-	activeAreasRepository := repositories.NewActiveAreaRepository(entClient)
-	api.ActiveAreasGetAllActiveAreasHandler = activeAreasHandler.GetActiveAreasFunc(activeAreasRepository)
-
-	api.PasswordResetSendLinkByLoginHandler = passwordResetHandler.SendLinkByLoginFunc()
-	api.PasswordResetGetPasswordResetLinkHandler = passwordResetHandler.GetPasswordResetLinkFunc()
-
-	api.RegistrationConfirmSendRegistrationConfirmLinkByLoginHandler = regConfirmHandler.SendRegistrationConfirmLinkByLoginFunc()
-	api.RegistrationConfirmVerifyRegistrationConfirmTokenHandler = regConfirmHandler.VerifyRegistrationConfirmTokenFunc()
-
-	orderRepository := repositories.NewOrderRepository(entClient)
-	api.OrdersGetAllOrdersHandler = ordersHandler.ListOrderFunc(orderRepository)
-	api.OrdersCreateOrderHandler = ordersHandler.CreateOrderFunc(orderRepository)
-	api.OrdersUpdateOrderHandler = ordersHandler.UpdateOrderFunc(orderRepository)
-
-	orderStatusRepertory := repositories.NewOrderFilter(entClient)
-	api.OrdersGetOrdersByStatusHandler = orderStatus.GetOrdersByStatus(orderStatusRepertory)
-	api.OrdersGetOrdersByDateAndStatusHandler = orderStatus.GetOrdersByPeriodAndStatus(orderStatusRepertory)
-
-	statusRepository := repositories.NewOrderStatusRepository(entClient)
-	api.OrdersAddNewOrderStatusHandler = orderStatus.AddNewStatusToOrder(statusRepository)
-	api.OrdersGetFullOrderHistoryHandler = orderStatus.OrderStatusesHistory(statusRepository)
-
-	orderStatusNameRepository := repositories.NewStatusNameRepository(entClient)
-	api.OrdersGetAllStatusNamesHandler = orderStatus.GetAllStatusNames(orderStatusNameRepository)
-
-	petSizeRepo := repositories.NewPetSizeRepository(entClient)
-	api.PetSizeGetAllPetSizeHandler = petSizeHandler.GetAllPetSizeFunc(petSizeRepo)
-	api.PetSizeEditPetSizeHandler = petSizeHandler.UpdatePetSizeByID(petSizeRepo)
-	api.PetSizeDeletePetSizeHandler = petSizeHandler.DeletePetSizeByID(petSizeRepo)
-	api.PetSizeCreateNewPetSizeHandler = petSizeHandler.CreatePetSizeFunc(petSizeRepo)
-	api.PetSizeGetPetSizeHandler = petSizeHandler.GetPetSizeByID(petSizeRepo)
-
+	// run server
 	server := restapi.NewServer(api)
 	listeners := []string{"http"}
 
 	server.EnabledListeners = listeners
-	server.Host = getEnv("SERVER_HOST", "0.0.0.0")
-	server.Port = 8080
+	server.Host = serverConfig.Host
+	server.Port = serverConfig.Port
+
+	if err := writePID(); err != nil {
+		logger.Fatal("failed to write pid file", zap.Error(err))
+	}
 
 	if err := writePID(); err != nil {
 		logger.Fatal("failed to write pid file", zap.Error(err))
@@ -276,8 +109,8 @@ func main() {
 		return
 	}
 
-	if err := server.Shutdown(); err != nil {
-		logger.Error("error shutting down server", zap.Error(err))
+	if errShutdown := server.Shutdown(); errShutdown != nil {
+		logger.Error("error shutting down server", zap.Error(errShutdown))
 		return
 	}
 }

@@ -7,19 +7,39 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/ent"
-
+	"github.com/go-openapi/loads"
 	"github.com/go-openapi/runtime"
+	_ "github.com/mattn/go-sqlite3"
 	"github.com/stretchr/testify/assert"
-
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/swagger/generated/models"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/swagger/generated/restapi/operations/status"
-
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/zap"
 
+	"git.epam.com/epm-lstr/epm-lstr-lc/be/ent"
+	"git.epam.com/epm-lstr/epm-lstr-lc/be/ent/enttest"
 	repomock "git.epam.com/epm-lstr/epm-lstr-lc/be/internal/mocks/repositories"
+	"git.epam.com/epm-lstr/epm-lstr-lc/be/swagger/generated/models"
+	"git.epam.com/epm-lstr/epm-lstr-lc/be/swagger/generated/restapi"
+	"git.epam.com/epm-lstr/epm-lstr-lc/be/swagger/generated/restapi/operations"
+	"git.epam.com/epm-lstr/epm-lstr-lc/be/swagger/generated/restapi/operations/status"
 )
+
+func TestSetEquipmentStatusHandler(t *testing.T) {
+	client := enttest.Open(t, "sqlite3", "file:eqstatushandler?mode=memory&cache=shared&_fk=1")
+	defer client.Close()
+
+	logger := zap.NewNop()
+
+	swaggerSpec, err := loads.Analyzed(restapi.SwaggerJSON, "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	api := operations.NewBeAPI(swaggerSpec)
+	SetEquipmentStatusHandler(client, logger, api)
+	assert.NotEmpty(t, api.StatusPostStatusHandler)
+	assert.NotEmpty(t, api.StatusGetStatusesHandler)
+	assert.NotEmpty(t, api.StatusGetStatusHandler)
+	assert.NotEmpty(t, api.StatusDeleteStatusHandler)
+}
 
 type StatusTestSuite struct {
 	suite.Suite
@@ -54,7 +74,8 @@ func (s *StatusTestSuite) TestStatus_PostStatus_RepoErr() {
 	s.repository.On("Create", ctx, statusName).Return(nil, err)
 
 	handlerFunc := s.handler.PostStatusFunc(s.repository)
-	resp := handlerFunc.Handle(data)
+	access := "dummy access"
+	resp := handlerFunc.Handle(data, access)
 
 	responseRecorder := httptest.NewRecorder()
 	producer := runtime.JSONProducer()
@@ -81,7 +102,8 @@ func (s *StatusTestSuite) TestStatus_PostStatus_OK() {
 	s.repository.On("Create", ctx, statusName).Return(statusToReturn, nil)
 
 	handlerFunc := s.handler.PostStatusFunc(s.repository)
-	resp := handlerFunc.Handle(data)
+	access := "dummy access"
+	resp := handlerFunc.Handle(data, access)
 
 	responseRecorder := httptest.NewRecorder()
 	producer := runtime.JSONProducer()
@@ -110,7 +132,8 @@ func (s *StatusTestSuite) TestStatus_GetStatuses_RepoErr() {
 	s.repository.On("GetAll", ctx).Return(nil, err)
 
 	handlerFunc := s.handler.GetStatusesFunc(s.repository)
-	resp := handlerFunc.Handle(data)
+	access := "dummy access"
+	resp := handlerFunc.Handle(data, access)
 
 	responseRecorder := httptest.NewRecorder()
 	producer := runtime.JSONProducer()
@@ -135,7 +158,8 @@ func (s *StatusTestSuite) TestStatus_GetStatuses_OK() {
 	s.repository.On("GetAll", ctx).Return(statusesToReturn, nil)
 
 	handlerFunc := s.handler.GetStatusesFunc(s.repository)
-	resp := handlerFunc.Handle(data)
+	access := "dummy access"
+	resp := handlerFunc.Handle(data, access)
 
 	responseRecorder := httptest.NewRecorder()
 	producer := runtime.JSONProducer()
@@ -167,7 +191,8 @@ func (s *StatusTestSuite) TestStatus_GetStatus_RepoErr() {
 	s.repository.On("Get", ctx, statusID).Return(nil, err)
 
 	handlerFunc := s.handler.GetStatusFunc(s.repository)
-	resp := handlerFunc.Handle(data)
+	access := "dummy access"
+	resp := handlerFunc.Handle(data, access)
 
 	responseRecorder := httptest.NewRecorder()
 	producer := runtime.JSONProducer()
@@ -194,7 +219,8 @@ func (s *StatusTestSuite) TestStatus_GetStatus_OK() {
 	s.repository.On("Create", ctx, statusName).Return(statusToReturn, nil)
 
 	handlerFunc := s.handler.PostStatusFunc(s.repository)
-	resp := handlerFunc.Handle(data)
+	access := "dummy access"
+	resp := handlerFunc.Handle(data, access)
 
 	responseRecorder := httptest.NewRecorder()
 	producer := runtime.JSONProducer()
@@ -225,7 +251,8 @@ func (s *StatusTestSuite) TestStatus_DeleteStatus_RepoErr() {
 	s.repository.On("Delete", ctx, statusID).Return(nil, err)
 
 	handlerFunc := s.handler.DeleteStatusFunc(s.repository)
-	resp := handlerFunc.Handle(data)
+	access := "dummy access"
+	resp := handlerFunc.Handle(data, access)
 
 	responseRecorder := httptest.NewRecorder()
 	producer := runtime.JSONProducer()
@@ -250,7 +277,8 @@ func (s *StatusTestSuite) TestStatus_DeleteStatus_OK() {
 	s.repository.On("Delete", ctx, statusID).Return(statusToReturn, nil)
 
 	handlerFunc := s.handler.DeleteStatusFunc(s.repository)
-	resp := handlerFunc.Handle(data)
+	access := "dummy access"
+	resp := handlerFunc.Handle(data, access)
 
 	responseRecorder := httptest.NewRecorder()
 	producer := runtime.JSONProducer()

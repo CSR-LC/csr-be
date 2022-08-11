@@ -10,10 +10,26 @@ import (
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/ent"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/swagger/authentication"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/swagger/generated/models"
+	"git.epam.com/epm-lstr/epm-lstr-lc/be/swagger/generated/restapi/operations"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/swagger/generated/restapi/operations/users"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/swagger/repositories"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/swagger/services"
 )
+
+func SetUserHandler(client *ent.Client, logger *zap.Logger, api *operations.BeAPI,
+	tokenManager services.TokenManager, regConfirmService services.RegistrationConfirm) {
+	userRepo := repositories.NewUserRepository(client)
+	userHandler := NewUser(logger)
+
+	api.UsersLoginHandler = userHandler.LoginUserFunc(tokenManager)
+	api.UsersRefreshHandler = userHandler.Refresh(tokenManager)
+	api.UsersPostUserHandler = userHandler.PostUserFunc(userRepo, regConfirmService)
+	api.UsersGetCurrentUserHandler = userHandler.GetUserFunc(userRepo)
+	api.UsersPatchUserHandler = userHandler.PatchUserFunc(userRepo)
+	api.UsersGetUserHandler = userHandler.GetUserById(userRepo)
+	api.UsersGetAllUsersHandler = userHandler.GetUsersList(userRepo)
+	api.UsersAssignRoleToUserHandler = userHandler.AssignRoleToUserFunc(userRepo)
+}
 
 type User struct {
 	logger *zap.Logger
@@ -30,7 +46,7 @@ func (c User) LoginUserFunc(service services.TokenManager) users.LoginHandlerFun
 		ctx := p.HTTPRequest.Context()
 		login := *p.Login.Login
 		password := *p.Login.Password
-		accessToken, isInternalErr, err := service.GenerateAccessToken(ctx, login, password)
+		accessToken, refreshToken, isInternalErr, err := service.GenerateTokens(ctx, login, password)
 		if err != nil {
 			if isInternalErr {
 				return users.NewLoginDefault(http.StatusInternalServerError)
@@ -38,7 +54,10 @@ func (c User) LoginUserFunc(service services.TokenManager) users.LoginHandlerFun
 			return users.NewLoginUnauthorized().WithPayload("Invalid login or password")
 		}
 
-		return users.NewLoginOK().WithPayload(&models.AccessToken{AccessToken: &accessToken})
+		return users.NewLoginOK().WithPayload(&models.TokenPair{
+			AccessToken:  &accessToken,
+			RefreshToken: &refreshToken,
+		})
 	}
 }
 
@@ -160,7 +179,7 @@ func (c User) AssignRoleToUserFunc(repository repositories.UserRepository) users
 }
 
 func (c User) GetUserById(repository repositories.UserRepository) users.GetUserHandlerFunc {
-	return func(p users.GetUserParams) middleware.Responder {
+	return func(p users.GetUserParams, access interface{}) middleware.Responder {
 		ctx := p.HTTPRequest.Context()
 		id := int(p.UserID)
 		foundUser, err := repository.GetUserByID(ctx, id)
@@ -181,7 +200,7 @@ func (c User) GetUserById(repository repositories.UserRepository) users.GetUserH
 }
 
 func (c User) GetUsersList(repository repositories.UserRepository) users.GetAllUsersHandlerFunc {
-	return func(p users.GetAllUsersParams) middleware.Responder {
+	return func(p users.GetAllUsersParams, access interface{}) middleware.Responder {
 		ctx := p.HTTPRequest.Context()
 		all, err := repository.UserList(ctx)
 		if err != nil {

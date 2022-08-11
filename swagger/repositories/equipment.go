@@ -48,13 +48,14 @@ func (r *equipmentRepository) EquipmentsByFilter(ctx context.Context, filter mod
 			OptionalStringEquipment(filter.Description, equipment.FieldDescription),
 			OptionalStringEquipment(filter.Category, equipment.FieldCategory),
 			OptionalIntEquipment(filter.CompensationСost, equipment.FieldCompensationCost),
-			OptionalStringEquipment(filter.Condition, equipment.FieldCondition),
 			OptionalIntEquipment(filter.InventoryNumber, equipment.FieldInventoryNumber),
 			OptionalStringEquipment(filter.Supplier, equipment.FieldSupplier),
 			OptionalStringEquipment(filter.ReceiptDate, equipment.FieldReceiptDate),
 			OptionalIntEquipment(filter.MaximumAmount, equipment.FieldMaximumAmount),
 			OptionalIntEquipment(filter.MaximumDays, equipment.FieldMaximumDays),
 			OptionalStringEquipment(filter.Title, equipment.FieldTitle),
+			OptionalStringEquipment(filter.TechnicalIssues, equipment.FieldTechIssue),
+			OptionalStringEquipment(filter.Condition, equipment.FieldCondition),
 		).
 		WithPetSize().
 		WithKind().
@@ -79,7 +80,8 @@ func (r *equipmentRepository) CreateEquipment(ctx context.Context, NewEquipment 
 		SetDescription(*NewEquipment.Description).
 		SetCategory(*NewEquipment.Category).
 		SetCompensationCost(*NewEquipment.CompensationСost).
-		SetCondition(*NewEquipment.Condition).
+		SetTechIssue(*NewEquipment.TechnicalIssues).
+		SetCondition(NewEquipment.Condition).
 		SetInventoryNumber(*NewEquipment.InventoryNumber).
 		SetSupplier(*NewEquipment.Supplier).
 		SetReceiptDate(*NewEquipment.ReceiptDate).
@@ -154,8 +156,9 @@ func (r *equipmentRepository) UpdateEquipmentByID(ctx context.Context, id int, e
 	if *eq.CompensationСost != 0 {
 		edit.SetCompensationCost(*eq.CompensationСost)
 	}
-	if *eq.Condition != "" {
-		edit.SetCondition(*eq.Condition)
+	if *eq.TechnicalIssues != "" {
+		edit.SetTechIssue(*eq.TechnicalIssues)
+		edit.SetCondition(eq.Condition)
 	}
 	if *eq.InventoryNumber != 0 {
 		edit.SetInventoryNumber(*eq.InventoryNumber)
@@ -197,7 +200,7 @@ func (r *equipmentRepository) UpdateEquipmentByID(ctx context.Context, id int, e
 	if err != nil {
 		return nil, err
 	}
-	result, err := r.client.Equipment.Query().Where(equipment.ID(eqToUpdate.ID)).WithKind().WithStatus().WithPetSize().WithPhoto().Only(ctx)
+	result, err := r.client.Equipment.Query().Where(equipment.ID(eqToUpdate.ID)).WithKind().WithStatus().WithPetSize().WithPetKinds().WithPhoto().Only(ctx)
 	if err != nil {
 		return nil, err
 	}

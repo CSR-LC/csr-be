@@ -7,16 +7,40 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/go-openapi/loads"
 	"github.com/go-openapi/runtime"
+	_ "github.com/mattn/go-sqlite3"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/zap"
 
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/ent"
+	"git.epam.com/epm-lstr/epm-lstr-lc/be/ent/enttest"
 	repomock "git.epam.com/epm-lstr/epm-lstr-lc/be/internal/mocks/repositories"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/swagger/generated/models"
+	"git.epam.com/epm-lstr/epm-lstr-lc/be/swagger/generated/restapi"
+	"git.epam.com/epm-lstr/epm-lstr-lc/be/swagger/generated/restapi/operations"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/swagger/generated/restapi/operations/kinds"
 )
+
+func TestSetKindHandler(t *testing.T) {
+	client := enttest.Open(t, "sqlite3", "file:kindhandler?mode=memory&cache=shared&_fk=1")
+	defer client.Close()
+
+	logger := zap.NewNop()
+
+	swaggerSpec, err := loads.Analyzed(restapi.SwaggerJSON, "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	api := operations.NewBeAPI(swaggerSpec)
+	SetKindHandler(client, logger, api)
+	assert.NotEmpty(t, api.KindsCreateNewKindHandler)
+	assert.NotEmpty(t, api.KindsGetKindByIDHandler)
+	assert.NotEmpty(t, api.KindsDeleteKindHandler)
+	assert.NotEmpty(t, api.KindsGetAllKindsHandler)
+	assert.NotEmpty(t, api.KindsPatchKindHandler)
+}
 
 type KindTestSuite struct {
 	suite.Suite
@@ -56,7 +80,8 @@ func (s *KindTestSuite) TestKind_CreateKind_RepoErr() {
 	s.repository.On("CreateKind", ctx, newKind).Return(nil, err)
 
 	handlerFunc := s.handler.CreateNewKindFunc(s.repository)
-	resp := handlerFunc.Handle(data)
+	access := "dummy access"
+	resp := handlerFunc.Handle(data, access)
 
 	responseRecorder := httptest.NewRecorder()
 	producer := runtime.JSONProducer()
@@ -92,7 +117,8 @@ func (s *KindTestSuite) TestKind_CreateKind_OK() {
 	s.repository.On("CreateKind", ctx, newKind).Return(kindToReturn, nil)
 
 	handlerFunc := s.handler.CreateNewKindFunc(s.repository)
-	resp := handlerFunc.Handle(data)
+	access := "dummy access"
+	resp := handlerFunc.Handle(data, access)
 
 	responseRecorder := httptest.NewRecorder()
 	producer := runtime.JSONProducer()
@@ -125,7 +151,8 @@ func (s *KindTestSuite) TestKind_GetAllKinds_RepoErr() {
 	s.repository.On("AllKind", ctx).Return(nil, err)
 
 	handlerFunc := s.handler.GetAllKindsFunc(s.repository)
-	resp := handlerFunc.Handle(data)
+	access := "dummy access"
+	resp := handlerFunc.Handle(data, access)
 
 	responseRecorder := httptest.NewRecorder()
 	producer := runtime.JSONProducer()
@@ -155,7 +182,8 @@ func (s *KindTestSuite) TestKind_GetAllKinds_OK() {
 	s.repository.On("AllKind", ctx).Return(kindsToReturn, nil)
 
 	handlerFunc := s.handler.GetAllKindsFunc(s.repository)
-	resp := handlerFunc.Handle(data)
+	access := "dummy access"
+	resp := handlerFunc.Handle(data, access)
 
 	responseRecorder := httptest.NewRecorder()
 	producer := runtime.JSONProducer()
@@ -190,7 +218,8 @@ func (s *KindTestSuite) TestKind_GetKindByID_RepoErr() {
 	s.repository.On("KindByID", ctx, int(data.KindID)).Return(nil, err)
 
 	handlerFunc := s.handler.GetKindByIDFunc(s.repository)
-	resp := handlerFunc.Handle(data)
+	access := "dummy access"
+	resp := handlerFunc.Handle(data, access)
 
 	responseRecorder := httptest.NewRecorder()
 	producer := runtime.JSONProducer()
@@ -219,7 +248,8 @@ func (s *KindTestSuite) TestKind_GetKindByID_OK() {
 	s.repository.On("KindByID", ctx, int(data.KindID)).Return(kindToReturn, nil)
 
 	handlerFunc := s.handler.GetKindByIDFunc(s.repository)
-	resp := handlerFunc.Handle(data)
+	access := "dummy access"
+	resp := handlerFunc.Handle(data, access)
 
 	responseRecorder := httptest.NewRecorder()
 	producer := runtime.JSONProducer()
@@ -253,7 +283,8 @@ func (s *KindTestSuite) TestKind_DeleteKind_RepoErr() {
 	s.repository.On("DeleteKindByID", ctx, int(data.KindID)).Return(err)
 
 	handlerFunc := s.handler.DeleteKindFunc(s.repository)
-	resp := handlerFunc.Handle(data)
+	access := "dummy access"
+	resp := handlerFunc.Handle(data, access)
 
 	responseRecorder := httptest.NewRecorder()
 	producer := runtime.JSONProducer()
@@ -276,7 +307,8 @@ func (s *KindTestSuite) TestKind_DeleteKind_OK() {
 	s.repository.On("DeleteKindByID", ctx, int(data.KindID)).Return(nil)
 
 	handlerFunc := s.handler.DeleteKindFunc(s.repository)
-	resp := handlerFunc.Handle(data)
+	access := "dummy access"
+	resp := handlerFunc.Handle(data, access)
 
 	responseRecorder := httptest.NewRecorder()
 	producer := runtime.JSONProducer()
@@ -304,7 +336,8 @@ func (s *KindTestSuite) TestKind_PatchKind_RepoErr() {
 	s.repository.On("UpdateKind", ctx, int(data.KindID), patch).Return(nil, err)
 
 	handlerFunc := s.handler.PatchKindFunc(s.repository)
-	resp := handlerFunc.Handle(data)
+	access := "dummy access"
+	resp := handlerFunc.Handle(data, access)
 
 	responseRecorder := httptest.NewRecorder()
 	producer := runtime.JSONProducer()
@@ -337,7 +370,8 @@ func (s *KindTestSuite) TestKind_PatchKind_OK() {
 	s.repository.On("UpdateKind", ctx, int(data.KindID), patch).Return(updatedKind, nil)
 
 	handlerFunc := s.handler.PatchKindFunc(s.repository)
-	resp := handlerFunc.Handle(data)
+	access := "dummy access"
+	resp := handlerFunc.Handle(data, access)
 
 	responseRecorder := httptest.NewRecorder()
 	producer := runtime.JSONProducer()

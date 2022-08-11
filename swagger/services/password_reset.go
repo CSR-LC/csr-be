@@ -4,13 +4,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/utils"
 	"time"
 
 	"github.com/google/uuid"
 	"go.uber.org/zap"
 	"golang.org/x/crypto/bcrypt"
 
+	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/utils"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/swagger/email"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/swagger/repositories"
 )
@@ -19,18 +19,21 @@ type passwordReset struct {
 	email.Sender
 	repositories.UserRepository
 	repositories.PasswordResetRepository
+	utils.PasswordGenerator
 	logger *zap.Logger
 	ttl    *time.Duration
 }
 
 func NewPasswordResetService(emailClient email.Sender, userRepository repositories.UserRepository,
-	passwordResetRepository repositories.PasswordResetRepository, logger *zap.Logger, ttl *time.Duration) PasswordReset {
+	passwordResetRepository repositories.PasswordResetRepository, logger *zap.Logger, ttl *time.Duration,
+	passwordGenerator utils.PasswordGenerator) PasswordReset {
 	return &passwordReset{
 		Sender:                  emailClient,
 		UserRepository:          userRepository,
 		PasswordResetRepository: passwordResetRepository,
 		logger:                  logger,
 		ttl:                     ttl,
+		PasswordGenerator:       passwordGenerator,
 	}
 }
 
@@ -77,7 +80,7 @@ func (p *passwordReset) VerifyTokenAndSendPassword(ctx context.Context, tokenToV
 		return errors.New("token expired")
 	}
 	login := token.Edges.Users.Login
-	password, err := utils.GenerateRandomResetPassword()
+	password, err := p.PasswordGenerator.NewPassword()
 	if err != nil {
 		p.logger.Error("Error while generating password", zap.Error(err))
 		return err

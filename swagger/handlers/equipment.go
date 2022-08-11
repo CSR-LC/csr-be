@@ -9,9 +9,22 @@ import (
 
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/ent"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/swagger/generated/models"
+	"git.epam.com/epm-lstr/epm-lstr-lc/be/swagger/generated/restapi/operations"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/swagger/generated/restapi/operations/equipment"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/swagger/repositories"
+	"git.epam.com/epm-lstr/epm-lstr-lc/be/swagger/services"
 )
+
+func SetEquipmentHandler(client *ent.Client, logger *zap.Logger, api *operations.BeAPI, filesManager services.FileManager) {
+	equipmentRepo := repositories.NewEquipmentRepository(client)
+	equipmentHandler := NewEquipment(logger)
+	api.EquipmentCreateNewEquipmentHandler = equipmentHandler.PostEquipmentFunc(equipmentRepo)
+	api.EquipmentGetEquipmentHandler = equipmentHandler.GetEquipmentFunc(equipmentRepo)
+	api.EquipmentDeleteEquipmentHandler = equipmentHandler.DeleteEquipmentFunc(equipmentRepo, filesManager)
+	api.EquipmentGetAllEquipmentHandler = equipmentHandler.ListEquipmentFunc(equipmentRepo)
+	api.EquipmentEditEquipmentHandler = equipmentHandler.EditEquipmentFunc(equipmentRepo)
+	api.EquipmentFindEquipmentHandler = equipmentHandler.FindEquipmentFunc(equipmentRepo)
+}
 
 type Equipment struct {
 	logger *zap.Logger
@@ -24,7 +37,7 @@ func NewEquipment(logger *zap.Logger) *Equipment {
 }
 
 func (c Equipment) PostEquipmentFunc(repository repositories.EquipmentRepository) equipment.CreateNewEquipmentHandlerFunc {
-	return func(s equipment.CreateNewEquipmentParams) middleware.Responder {
+	return func(s equipment.CreateNewEquipmentParams, access interface{}) middleware.Responder {
 		ctx := s.HTTPRequest.Context()
 		eq, err := repository.CreateEquipment(ctx, *s.NewEquipment)
 		if err != nil {
@@ -44,7 +57,7 @@ func (c Equipment) PostEquipmentFunc(repository repositories.EquipmentRepository
 }
 
 func (c Equipment) GetEquipmentFunc(repository repositories.EquipmentRepository) equipment.GetEquipmentHandlerFunc {
-	return func(s equipment.GetEquipmentParams) middleware.Responder {
+	return func(s equipment.GetEquipmentParams, access interface{}) middleware.Responder {
 		ctx := s.HTTPRequest.Context()
 		eq, err := repository.EquipmentByID(ctx, int(s.EquipmentID))
 		if err != nil {
@@ -62,8 +75,9 @@ func (c Equipment) GetEquipmentFunc(repository repositories.EquipmentRepository)
 	}
 }
 
-func (c Equipment) DeleteEquipmentFunc(repository repositories.EquipmentRepository) equipment.DeleteEquipmentHandlerFunc {
-	return func(s equipment.DeleteEquipmentParams) middleware.Responder {
+func (c Equipment) DeleteEquipmentFunc(repository repositories.EquipmentRepository,
+	filesManager services.FileManager) equipment.DeleteEquipmentHandlerFunc {
+	return func(s equipment.DeleteEquipmentParams, access interface{}) middleware.Responder {
 		ctx := s.HTTPRequest.Context()
 		eq, err := repository.EquipmentByID(ctx, int(s.EquipmentID))
 		if err != nil {
@@ -83,8 +97,11 @@ func (c Equipment) DeleteEquipmentFunc(repository repositories.EquipmentReposito
 
 		if err := repository.DeleteEquipmentPhoto(ctx, eq.Edges.Photo.ID); err != nil {
 			c.logger.Error("Error while deleting photo from db", zap.Error(err))
-		} else if err := deletePhotoFile(eq.Edges.Photo.ID); err != nil {
-			c.logger.Error("Error while deleting photo file", zap.Error(err))
+		} else {
+			err = filesManager.DeleteFile(eq.Edges.Photo.FileName)
+			if err != nil {
+				c.logger.Error("Error while deleting photo file", zap.Error(err))
+			}
 		}
 
 		return equipment.NewDeleteEquipmentOK().WithPayload("Equipment deleted")
@@ -92,7 +109,7 @@ func (c Equipment) DeleteEquipmentFunc(repository repositories.EquipmentReposito
 }
 
 func (c Equipment) ListEquipmentFunc(repository repositories.EquipmentRepository) equipment.GetAllEquipmentHandlerFunc {
-	return func(s equipment.GetAllEquipmentParams) middleware.Responder {
+	return func(s equipment.GetAllEquipmentParams, access interface{}) middleware.Responder {
 		ctx := s.HTTPRequest.Context()
 		equipments, err := repository.AllEquipments(ctx)
 		if err != nil {
@@ -120,7 +137,7 @@ func (c Equipment) ListEquipmentFunc(repository repositories.EquipmentRepository
 }
 
 func (c Equipment) EditEquipmentFunc(repository repositories.EquipmentRepository) equipment.EditEquipmentHandlerFunc {
-	return func(s equipment.EditEquipmentParams) middleware.Responder {
+	return func(s equipment.EditEquipmentParams, access interface{}) middleware.Responder {
 		ctx := s.HTTPRequest.Context()
 		eq, err := repository.UpdateEquipmentByID(ctx, int(s.EquipmentID), s.EditEquipment)
 		if err != nil {
@@ -140,7 +157,7 @@ func (c Equipment) EditEquipmentFunc(repository repositories.EquipmentRepository
 }
 
 func (c Equipment) FindEquipmentFunc(EquipmentRepo repositories.EquipmentRepository) equipment.FindEquipmentHandlerFunc {
-	return func(s equipment.FindEquipmentParams) middleware.Responder {
+	return func(s equipment.FindEquipmentParams, access interface{}) middleware.Responder {
 		ctx := s.HTTPRequest.Context()
 		equipmentFilter := *s.FindEquipment
 		foundEquipment, err := EquipmentRepo.EquipmentsByFilter(ctx, equipmentFilter)
@@ -185,7 +202,7 @@ func mapEquipmentResponse(eq *ent.Equipment) (*models.EquipmentResponse, error) 
 	var petKinds []*models.PetKind
 	for _, petKindEdge := range eq.Edges.PetKinds {
 		petKindID := int64(petKindEdge.ID)
-		petKind := models.PetKind{ID: &petKindID, Name: petKindEdge.Name}
+		petKind := models.PetKind{ID: petKindID, Name: &petKindEdge.Name}
 		petKinds = append(petKinds, &petKind)
 	}
 
@@ -195,15 +212,16 @@ func mapEquipmentResponse(eq *ent.Equipment) (*models.EquipmentResponse, error) 
 		petSizeID = &idInt64
 	}
 
-	if eq.Edges.Photo == nil {
-		return nil, errors.New("equipment photo is nil")
+	var photoURL string
+	if eq.Edges.Photo != nil {
+		photoURL = eq.Edges.Photo.URL
 	}
-	photoURL := eq.Edges.Photo.URL
 
 	return &models.EquipmentResponse{
 		Category:         &eq.Category,
 		CompensationСost: &eq.CompensationCost,
-		Condition:        &eq.Condition,
+		TechnicalIssues:  &eq.TechIssue,
+		Condition:        eq.Condition,
 		Description:      &eq.Description,
 		ID:               &id,
 		InventoryNumber:  &eq.InventoryNumber,
