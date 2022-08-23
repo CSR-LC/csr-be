@@ -3,17 +3,14 @@ package handlers
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
+	"math"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 	"time"
 
 	"github.com/go-openapi/loads"
-
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/ent/enttest"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/swagger/generated/restapi"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/swagger/generated/restapi/operations"
-
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/strfmt"
 	_ "github.com/mattn/go-sqlite3"
@@ -22,9 +19,14 @@ import (
 	"go.uber.org/zap"
 
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/ent"
+	"git.epam.com/epm-lstr/epm-lstr-lc/be/ent/enttest"
+	"git.epam.com/epm-lstr/epm-lstr-lc/be/ent/order"
 	repomock "git.epam.com/epm-lstr/epm-lstr-lc/be/internal/mocks/repositories"
+	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/utils"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/swagger/authentication"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/swagger/generated/models"
+	"git.epam.com/epm-lstr/epm-lstr-lc/be/swagger/generated/restapi"
+	"git.epam.com/epm-lstr/epm-lstr-lc/be/swagger/generated/restapi/operations"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/swagger/generated/restapi/operations/orders"
 )
 
@@ -56,15 +58,15 @@ type OrderStatusTestSuite struct {
 	orderStatus           *OrderStatus
 }
 
-func orderWithEdges(t *testing.T) ent.Order {
+func orderWithEdges(t *testing.T, id int) *ent.Order {
 	t.Helper()
-	return ent.Order{
-		ID:          1,
-		Description: "test description",
-		Quantity:    1,
-		RentStart:   time.Now().UTC(),
-		RentEnd:     time.Now().UTC(),
-		CreatedAt:   time.Now().UTC(),
+	return &ent.Order{
+		ID:          id,
+		Description: fmt.Sprintf("test description %d", id),
+		Quantity:    id%2 + 1,
+		RentStart:   time.Now().Add(time.Duration(-id*24) * time.Hour),
+		RentEnd:     time.Now().Add(time.Duration(id*24) * time.Hour),
+		CreatedAt:   time.Now().Add(time.Duration(-id) * time.Hour),
 		Edges: ent.OrderEdges{
 			Users: []*ent.User{
 				{
@@ -79,10 +81,10 @@ func orderWithEdges(t *testing.T) ent.Order {
 			},
 			OrderStatus: []*ent.OrderStatus{
 				{
-					ID: 1,
+					ID: id,
 					Edges: ent.OrderStatusEdges{
 						StatusName: &ent.StatusName{
-							ID: 1,
+							ID: id%2 + 1,
 						},
 						Users: &ent.User{
 							ID: 1,
@@ -517,7 +519,7 @@ func (s *OrderStatusTestSuite) TestOrderStatus_GetOrdersByStatus_RepoErr() {
 	}
 
 	err := errors.New("error")
-	s.orderFilterRepository.On("OrdersByStatus", ctx, statusName).Return(nil, err)
+	s.orderFilterRepository.On("OrdersByStatusTotal", ctx, statusName).Return(0, err)
 
 	resp := handlerFunc(params, access)
 	responseRecorder := httptest.NewRecorder()
@@ -548,13 +550,21 @@ func (s *OrderStatusTestSuite) TestOrderStatus_GetOrdersByStatus_EmptyResult() {
 		Status:      statusName,
 	}
 
-	s.orderFilterRepository.On("OrdersByStatus", ctx, statusName).Return(nil, nil)
+	s.orderFilterRepository.On("OrdersByStatusTotal", ctx, statusName).
+		Return(0, nil)
 
 	resp := handlerFunc(params, access)
 	responseRecorder := httptest.NewRecorder()
 	producer := runtime.JSONProducer()
 	resp.WriteResponse(responseRecorder, producer)
-	assert.Equal(t, http.StatusNotFound, responseRecorder.Code)
+	assert.Equal(t, http.StatusOK, responseRecorder.Code)
+
+	responseOrders := models.OrderList{}
+	err := json.Unmarshal(responseRecorder.Body.Bytes(), &responseOrders)
+	if err != nil {
+		t.Fatal(err)
+	}
+	assert.Equal(t, 0, int(*responseOrders.Total))
 	s.orderFilterRepository.AssertExpectations(t)
 }
 
@@ -575,15 +585,21 @@ func (s *OrderStatusTestSuite) TestOrderStatus_GetOrdersByStatus_MapErr() {
 	}
 	handlerFunc := s.orderStatus.GetOrdersByStatus(s.orderFilterRepository)
 	statusName := "status"
+	limit := math.MaxInt
+	offset := 0
+	orderBy := utils.AscOrder
+	orderColumn := order.FieldID
 	params := orders.GetOrdersByStatusParams{
 		HTTPRequest: &request,
 		Status:      statusName,
 	}
 
-	count := 1
-	ordersToReturn := make([]ent.Order, count)
-	ordersToReturn[0] = ent.Order{}
-	s.orderFilterRepository.On("OrdersByStatus", ctx, statusName).Return(ordersToReturn, nil)
+	ordersToReturn := []*ent.Order{{}}
+
+	s.orderFilterRepository.On("OrdersByStatusTotal", ctx, statusName).
+		Return(1, nil)
+	s.orderFilterRepository.On("OrdersByStatus", ctx, statusName, limit, offset, orderBy, orderColumn).
+		Return(ordersToReturn, nil)
 
 	resp := handlerFunc(params, access)
 	responseRecorder := httptest.NewRecorder()
@@ -593,7 +609,7 @@ func (s *OrderStatusTestSuite) TestOrderStatus_GetOrdersByStatus_MapErr() {
 	s.orderFilterRepository.AssertExpectations(t)
 }
 
-func (s *OrderStatusTestSuite) TestOrderStatus_GetOrdersByStatus_OK() {
+func (s *OrderStatusTestSuite) TestOrderStatus_GetOrdersByStatus_EmptyPaginationParams() {
 	t := s.T()
 	request := http.Request{}
 	ctx := request.Context()
@@ -610,36 +626,341 @@ func (s *OrderStatusTestSuite) TestOrderStatus_GetOrdersByStatus_OK() {
 	}
 	handlerFunc := s.orderStatus.GetOrdersByStatus(s.orderFilterRepository)
 	statusName := "status"
+	limit := math.MaxInt
+	offset := 0
+	orderBy := utils.AscOrder
+	orderColumn := order.FieldID
 	params := orders.GetOrdersByStatusParams{
 		HTTPRequest: &request,
 		Status:      statusName,
 	}
 
-	count := 1
-	ordersToReturn := make([]ent.Order, count)
-	ordersToReturn[0] = orderWithEdges(t)
-	s.orderFilterRepository.On("OrdersByStatus", ctx, statusName).Return(ordersToReturn, nil)
+	ordersToReturn := []*ent.Order{
+		orderWithEdges(t, 1),
+	}
+	s.orderFilterRepository.On("OrdersByStatusTotal", ctx, statusName).
+		Return(1, nil)
+	s.orderFilterRepository.On("OrdersByStatus",
+		ctx, statusName, limit, offset, orderBy, orderColumn).
+		Return(ordersToReturn, nil)
 
 	resp := handlerFunc(params, access)
 	responseRecorder := httptest.NewRecorder()
 	producer := runtime.JSONProducer()
 	resp.WriteResponse(responseRecorder, producer)
 	assert.Equal(t, http.StatusOK, responseRecorder.Code)
-	responseOrders := &[]models.Order{}
-	err := json.Unmarshal(responseRecorder.Body.Bytes(), responseOrders)
+	responseOrders := models.OrderList{}
+	err := json.Unmarshal(responseRecorder.Body.Bytes(), &responseOrders)
 	if err != nil {
 		t.Fatal(err)
 	}
-	assert.Equal(t, count, len(*responseOrders))
-	assert.Equal(t, ordersToReturn[0].ID, int(*(*responseOrders)[0].ID))
-	assert.Equal(t, ordersToReturn[0].Description, *(*responseOrders)[0].Description)
-	assert.Equal(t, ordersToReturn[0].Quantity, int(*(*responseOrders)[0].Quantity))
-	assert.Equal(t, strfmt.DateTime(ordersToReturn[0].RentStart).String(), (*responseOrders)[0].RentStart.String())
-	assert.Equal(t, strfmt.DateTime(ordersToReturn[0].RentEnd).String(), (*responseOrders)[0].RentEnd.String())
-	assert.Equal(t, ordersToReturn[0].Edges.Users[0].ID, int(*(*responseOrders)[0].User.ID))
-	assert.Equal(t, ordersToReturn[0].Edges.Users[0].Login, *(*responseOrders)[0].User.Name)
-	assert.Equal(t, ordersToReturn[0].Edges.Equipments[0].Description, *(*responseOrders)[0].Equipment.Description)
-	assert.Equal(t, ordersToReturn[0].Edges.OrderStatus[0].Edges.StatusName.ID, int(*(*responseOrders)[0].LastStatus.ID))
+	assert.Equal(t, len(ordersToReturn), int(*responseOrders.Total))
+	assert.Equal(t, len(ordersToReturn), len(responseOrders.Items))
+	for _, o := range responseOrders.Items {
+		assert.True(t, containsOrder(t, ordersToReturn, o))
+	}
+	s.orderFilterRepository.AssertExpectations(t)
+}
+
+func (s *OrderStatusTestSuite) TestOrderStatus_GetOrdersByStatus_LimitGreaterThanTotal() {
+	t := s.T()
+	request := http.Request{}
+	ctx := request.Context()
+	userID := 1
+	login := "login"
+	role := &authentication.Role{
+		Id:   userID,
+		Slug: authentication.AdminSlug,
+	}
+	access := authentication.Auth{
+		Id:    userID,
+		Login: login,
+		Role:  role,
+	}
+	handlerFunc := s.orderStatus.GetOrdersByStatus(s.orderFilterRepository)
+	statusName := "status"
+	limit := int64(5)
+	offset := int64(0)
+	orderBy := utils.AscOrder
+	orderColumn := order.FieldID
+	params := orders.GetOrdersByStatusParams{
+		HTTPRequest: &request,
+		Status:      statusName,
+		Limit:       &limit,
+		Offset:      &offset,
+		OrderBy:     &orderBy,
+		OrderColumn: &orderColumn,
+	}
+
+	allOrders := []*ent.Order{
+		orderWithEdges(t, 1),
+		orderWithEdges(t, 2),
+		orderWithEdges(t, 3),
+		orderWithEdges(t, 4),
+		orderWithEdges(t, 5),
+	}
+	ordersByStatus := []*ent.Order{
+		allOrders[0],
+		allOrders[2],
+		allOrders[4],
+	}
+	s.orderFilterRepository.On("OrdersByStatusTotal", ctx, statusName).
+		Return(len(ordersByStatus), nil)
+	s.orderFilterRepository.On("OrdersByStatus",
+		ctx, statusName, int(limit), int(offset), orderBy, orderColumn).
+		Return(ordersByStatus, nil)
+
+	resp := handlerFunc(params, access)
+	responseRecorder := httptest.NewRecorder()
+	producer := runtime.JSONProducer()
+	resp.WriteResponse(responseRecorder, producer)
+	assert.Equal(t, http.StatusOK, responseRecorder.Code)
+	responseOrders := models.OrderList{}
+	err := json.Unmarshal(responseRecorder.Body.Bytes(), &responseOrders)
+	if err != nil {
+		t.Fatal(err)
+	}
+	assert.Equal(t, len(ordersByStatus), int(*responseOrders.Total))
+	assert.GreaterOrEqual(t, int(limit), len(responseOrders.Items))
+	for _, o := range responseOrders.Items {
+		assert.True(t, containsOrder(t, ordersByStatus, o))
+	}
+	s.orderFilterRepository.AssertExpectations(t)
+}
+
+func (s *OrderStatusTestSuite) TestOrderStatus_GetOrdersByStatus_LimitLessThanTotal() {
+	t := s.T()
+	request := http.Request{}
+	ctx := request.Context()
+	userID := 1
+	login := "login"
+	role := &authentication.Role{
+		Id:   userID,
+		Slug: authentication.AdminSlug,
+	}
+	access := authentication.Auth{
+		Id:    userID,
+		Login: login,
+		Role:  role,
+	}
+	handlerFunc := s.orderStatus.GetOrdersByStatus(s.orderFilterRepository)
+	statusName := "status"
+	limit := int64(2)
+	offset := int64(0)
+	orderBy := utils.AscOrder
+	orderColumn := order.FieldID
+	params := orders.GetOrdersByStatusParams{
+		HTTPRequest: &request,
+		Status:      statusName,
+		Limit:       &limit,
+		Offset:      &offset,
+		OrderBy:     &orderBy,
+		OrderColumn: &orderColumn,
+	}
+
+	allOrders := []*ent.Order{
+		orderWithEdges(t, 1),
+		orderWithEdges(t, 2),
+		orderWithEdges(t, 3),
+		orderWithEdges(t, 4),
+		orderWithEdges(t, 5),
+	}
+	ordersByStatus := []*ent.Order{
+		allOrders[0],
+		allOrders[2],
+		allOrders[4],
+	}
+	s.orderFilterRepository.On("OrdersByStatusTotal", ctx, statusName).
+		Return(len(ordersByStatus), nil)
+	s.orderFilterRepository.On("OrdersByStatus",
+		ctx, statusName, int(limit), int(offset), orderBy, orderColumn).
+		Return(ordersByStatus[:limit], nil)
+
+	resp := handlerFunc(params, access)
+	responseRecorder := httptest.NewRecorder()
+	producer := runtime.JSONProducer()
+	resp.WriteResponse(responseRecorder, producer)
+	assert.Equal(t, http.StatusOK, responseRecorder.Code)
+	responseOrders := models.OrderList{}
+	err := json.Unmarshal(responseRecorder.Body.Bytes(), &responseOrders)
+	if err != nil {
+		t.Fatal(err)
+	}
+	assert.Equal(t, len(ordersByStatus), int(*responseOrders.Total))
+	assert.GreaterOrEqual(t, int(limit), len(responseOrders.Items))
+	assert.Greater(t, len(ordersByStatus), len(responseOrders.Items))
+	for _, o := range responseOrders.Items {
+		assert.True(t, containsOrder(t, ordersByStatus, o))
+	}
+	s.orderFilterRepository.AssertExpectations(t)
+}
+
+func (s *OrderStatusTestSuite) TestOrderStatus_GetOrdersByStatus_SecondPage() {
+	t := s.T()
+	request := http.Request{}
+	ctx := request.Context()
+	userID := 1
+	login := "login"
+	role := &authentication.Role{
+		Id:   userID,
+		Slug: authentication.AdminSlug,
+	}
+	access := authentication.Auth{
+		Id:    userID,
+		Login: login,
+		Role:  role,
+	}
+	handlerFunc := s.orderStatus.GetOrdersByStatus(s.orderFilterRepository)
+	statusName := "status"
+	limit := int64(2)
+	offset := int64(2)
+	orderBy := utils.AscOrder
+	orderColumn := order.FieldID
+	params := orders.GetOrdersByStatusParams{
+		HTTPRequest: &request,
+		Status:      statusName,
+		Limit:       &limit,
+		Offset:      &offset,
+		OrderBy:     &orderBy,
+		OrderColumn: &orderColumn,
+	}
+
+	allOrders := []*ent.Order{
+		orderWithEdges(t, 1),
+		orderWithEdges(t, 2),
+		orderWithEdges(t, 3),
+		orderWithEdges(t, 4),
+		orderWithEdges(t, 5),
+	}
+	ordersByStatus := []*ent.Order{
+		allOrders[0],
+		allOrders[2],
+		allOrders[4],
+	}
+	s.orderFilterRepository.On("OrdersByStatusTotal", ctx, statusName).
+		Return(len(ordersByStatus), nil)
+	s.orderFilterRepository.On("OrdersByStatus",
+		ctx, statusName, int(limit), int(offset), orderBy, orderColumn).
+		Return(ordersByStatus[offset:], nil)
+
+	resp := handlerFunc(params, access)
+	responseRecorder := httptest.NewRecorder()
+	producer := runtime.JSONProducer()
+	resp.WriteResponse(responseRecorder, producer)
+	assert.Equal(t, http.StatusOK, responseRecorder.Code)
+	responseOrders := models.OrderList{}
+	err := json.Unmarshal(responseRecorder.Body.Bytes(), &responseOrders)
+	if err != nil {
+		t.Fatal(err)
+	}
+	assert.Equal(t, len(ordersByStatus), int(*responseOrders.Total))
+	assert.GreaterOrEqual(t, int(limit), len(responseOrders.Items))
+	assert.Equal(t, len(ordersByStatus)-int(offset), len(responseOrders.Items))
+	assert.Greater(t, len(ordersByStatus), len(responseOrders.Items))
+	for _, o := range responseOrders.Items {
+		assert.True(t, containsOrder(t, ordersByStatus, o))
+	}
+	s.orderFilterRepository.AssertExpectations(t)
+}
+
+func (s *OrderStatusTestSuite) TestOrderStatus_GetOrdersByStatus_SeveralPages() {
+	t := s.T()
+	request := http.Request{}
+	ctx := request.Context()
+	userID := 1
+	login := "login"
+	role := &authentication.Role{
+		Id:   userID,
+		Slug: authentication.AdminSlug,
+	}
+	access := authentication.Auth{
+		Id:    userID,
+		Login: login,
+		Role:  role,
+	}
+	handlerFunc := s.orderStatus.GetOrdersByStatus(s.orderFilterRepository)
+	statusName := "status"
+	limit := int64(2)
+	offset := int64(0)
+	orderBy := utils.AscOrder
+	orderColumn := order.FieldID
+	params := orders.GetOrdersByStatusParams{
+		HTTPRequest: &request,
+		Status:      statusName,
+		Limit:       &limit,
+		Offset:      &offset,
+		OrderBy:     &orderBy,
+		OrderColumn: &orderColumn,
+	}
+
+	allOrders := []*ent.Order{
+		orderWithEdges(t, 1),
+		orderWithEdges(t, 2),
+		orderWithEdges(t, 3),
+		orderWithEdges(t, 4),
+		orderWithEdges(t, 5),
+	}
+	ordersByStatus := []*ent.Order{
+		allOrders[0],
+		allOrders[2],
+		allOrders[4],
+	}
+	s.orderFilterRepository.On("OrdersByStatusTotal", ctx, statusName).
+		Return(len(ordersByStatus), nil)
+	s.orderFilterRepository.On("OrdersByStatus",
+		ctx, statusName, int(limit), int(offset), orderBy, orderColumn).
+		Return(ordersByStatus[:limit], nil)
+
+	resp := handlerFunc(params, access)
+	responseRecorder := httptest.NewRecorder()
+	producer := runtime.JSONProducer()
+	resp.WriteResponse(responseRecorder, producer)
+	assert.Equal(t, http.StatusOK, responseRecorder.Code)
+	firstPage := models.OrderList{}
+	err := json.Unmarshal(responseRecorder.Body.Bytes(), &firstPage)
+	if err != nil {
+		t.Fatal(err)
+	}
+	assert.Equal(t, len(ordersByStatus), int(*firstPage.Total))
+	assert.Equal(t, int(limit), len(firstPage.Items))
+	for _, o := range firstPage.Items {
+		assert.True(t, containsOrder(t, ordersByStatus, o))
+	}
+
+	offset = limit
+	params = orders.GetOrdersByStatusParams{
+		HTTPRequest: &request,
+		Status:      statusName,
+		Limit:       &limit,
+		Offset:      &offset,
+		OrderBy:     &orderBy,
+		OrderColumn: &orderColumn,
+	}
+	s.orderFilterRepository.On("OrdersByStatusTotal", ctx, statusName).
+		Return(len(ordersByStatus), nil)
+	s.orderFilterRepository.On("OrdersByStatus",
+		ctx, statusName, int(limit), int(offset), orderBy, orderColumn).
+		Return(ordersByStatus[offset:], nil)
+
+	resp = handlerFunc(params, access)
+	responseRecorder = httptest.NewRecorder()
+	producer = runtime.JSONProducer()
+	resp.WriteResponse(responseRecorder, producer)
+	assert.Equal(t, http.StatusOK, responseRecorder.Code)
+	secondPage := models.OrderList{}
+	err = json.Unmarshal(responseRecorder.Body.Bytes(), &secondPage)
+	if err != nil {
+		t.Fatal(err)
+	}
+	assert.Equal(t, len(ordersByStatus), int(*secondPage.Total))
+	assert.GreaterOrEqual(t, int(limit), len(secondPage.Items))
+	assert.Equal(t, len(ordersByStatus)-int(offset), len(secondPage.Items))
+	assert.Greater(t, len(ordersByStatus), len(secondPage.Items))
+	for _, o := range secondPage.Items {
+		assert.True(t, containsOrder(t, ordersByStatus, o))
+	}
+
+	assert.False(t, ordersDuplicated(t, firstPage.Items, secondPage.Items))
 	s.orderFilterRepository.AssertExpectations(t)
 }
 
@@ -695,14 +1016,57 @@ func (s *OrderStatusTestSuite) TestOrderStatus_GetOrdersByPeriodAndStatus_RepoEr
 		StatusName:  status,
 		ToDate:      strfmt.Date(toTime),
 	}
-
-	s.orderFilterRepository.On("OrdersByPeriodAndStatus", ctx, fromTime, toTime, status).Return(nil, errors.New("repo error"))
+	s.orderFilterRepository.On("OrdersByPeriodAndStatusTotal", ctx, fromTime, toTime, status).
+		Return(0, errors.New("repo error"))
 
 	resp := handlerFunc(params, access)
 	responseRecorder := httptest.NewRecorder()
 	producer := runtime.JSONProducer()
 	resp.WriteResponse(responseRecorder, producer)
 	assert.Equal(t, http.StatusInternalServerError, responseRecorder.Code)
+	s.orderFilterRepository.AssertExpectations(t)
+}
+
+func (s *OrderStatusTestSuite) TestOrderStatus_GetOrdersByPeriodAndStatus_EmptyResult() {
+	t := s.T()
+	request := http.Request{}
+	ctx := request.Context()
+	userID := 1
+	login := "login"
+	role := &authentication.Role{
+		Id:   userID,
+		Slug: authentication.AdminSlug,
+	}
+	access := authentication.Auth{
+		Id:    userID,
+		Login: login,
+		Role:  role,
+	}
+	handlerFunc := s.orderStatus.GetOrdersByPeriodAndStatus(s.orderFilterRepository)
+	status := "status"
+	fromTime := time.Now().UTC()
+	toTime := time.Now().UTC()
+	params := orders.GetOrdersByDateAndStatusParams{
+		HTTPRequest: &request,
+		FromDate:    strfmt.Date(fromTime),
+		StatusName:  status,
+		ToDate:      strfmt.Date(toTime),
+	}
+	s.orderFilterRepository.On("OrdersByPeriodAndStatusTotal", ctx, fromTime, toTime, status).
+		Return(0, nil)
+
+	resp := handlerFunc(params, access)
+	responseRecorder := httptest.NewRecorder()
+	producer := runtime.JSONProducer()
+	resp.WriteResponse(responseRecorder, producer)
+	assert.Equal(t, http.StatusOK, responseRecorder.Code)
+	responseOrders := models.OrderList{}
+	err := json.Unmarshal(responseRecorder.Body.Bytes(), &responseOrders)
+	if err != nil {
+		t.Fatal(err)
+	}
+	assert.Equal(t, 0, int(*responseOrders.Total))
+	assert.Equal(t, 0, len(responseOrders.Items))
 	s.orderFilterRepository.AssertExpectations(t)
 }
 
@@ -725,17 +1089,23 @@ func (s *OrderStatusTestSuite) TestOrderStatus_GetOrdersByPeriodAndStatus_MapErr
 	status := "status"
 	fromTime := time.Now().UTC()
 	toTime := time.Now().UTC()
+	limit := math.MaxInt
+	offset := 0
+	orderBy := utils.AscOrder
+	orderColumn := order.FieldID
 	params := orders.GetOrdersByDateAndStatusParams{
 		HTTPRequest: &request,
 		FromDate:    strfmt.Date(fromTime),
 		StatusName:  status,
 		ToDate:      strfmt.Date(toTime),
 	}
-	count := 1
-	ordersToReturn := make([]ent.Order, count)
-	ordersToReturn[0] = ent.Order{}
+	ordersToReturn := []*ent.Order{{}}
 
-	s.orderFilterRepository.On("OrdersByPeriodAndStatus", ctx, fromTime, toTime, status).Return(ordersToReturn, nil)
+	s.orderFilterRepository.On("OrdersByPeriodAndStatusTotal", ctx, fromTime, toTime, status).
+		Return(1, nil)
+	s.orderFilterRepository.On("OrdersByPeriodAndStatus",
+		ctx, fromTime, toTime, status, limit, offset, orderBy, orderColumn).
+		Return(ordersToReturn, nil)
 
 	resp := handlerFunc(params, access)
 	responseRecorder := httptest.NewRecorder()
@@ -745,7 +1115,7 @@ func (s *OrderStatusTestSuite) TestOrderStatus_GetOrdersByPeriodAndStatus_MapErr
 	s.orderFilterRepository.AssertExpectations(t)
 }
 
-func (s *OrderStatusTestSuite) TestOrderStatus_GetOrdersByPeriodAndStatus_OK() {
+func (s *OrderStatusTestSuite) TestOrderStatus_GetOrdersByPeriodAndStatus_EmptyPaginationParams() {
 	t := s.T()
 	request := http.Request{}
 	ctx := request.Context()
@@ -764,22 +1134,350 @@ func (s *OrderStatusTestSuite) TestOrderStatus_GetOrdersByPeriodAndStatus_OK() {
 	status := "status"
 	fromTime := time.Now().UTC()
 	toTime := time.Now().UTC()
+	limit := math.MaxInt
+	offset := 0
+	orderBy := utils.AscOrder
+	orderColumn := order.FieldID
 	params := orders.GetOrdersByDateAndStatusParams{
 		HTTPRequest: &request,
 		FromDate:    strfmt.Date(fromTime),
 		StatusName:  status,
 		ToDate:      strfmt.Date(toTime),
 	}
-	count := 1
-	ordersToReturn := make([]ent.Order, count)
-	ordersToReturn[0] = orderWithEdges(t)
+	ordersToReturn := []*ent.Order{
+		orderWithEdges(t, 1),
+	}
 
-	s.orderFilterRepository.On("OrdersByPeriodAndStatus", ctx, fromTime, toTime, status).Return(ordersToReturn, nil)
+	s.orderFilterRepository.On("OrdersByPeriodAndStatusTotal", ctx, fromTime, toTime, status).
+		Return(1, nil)
+	s.orderFilterRepository.On("OrdersByPeriodAndStatus",
+		ctx, fromTime, toTime, status, limit, offset, orderBy, orderColumn).
+		Return(ordersToReturn, nil)
 
 	resp := handlerFunc(params, access)
 	responseRecorder := httptest.NewRecorder()
 	producer := runtime.JSONProducer()
 	resp.WriteResponse(responseRecorder, producer)
 	assert.Equal(t, http.StatusOK, responseRecorder.Code)
+	s.orderFilterRepository.AssertExpectations(t)
+}
+
+func (s *OrderStatusTestSuite) TestOrderStatus_GetOrdersByPeriodAndStatus_LimitGreaterThanTotal() {
+	t := s.T()
+	request := http.Request{}
+	ctx := request.Context()
+	userID := 1
+	login := "login"
+	role := &authentication.Role{
+		Id:   userID,
+		Slug: authentication.AdminSlug,
+	}
+	access := authentication.Auth{
+		Id:    userID,
+		Login: login,
+		Role:  role,
+	}
+	handlerFunc := s.orderStatus.GetOrdersByPeriodAndStatus(s.orderFilterRepository)
+	statusName := "status"
+	limit := int64(5)
+	offset := int64(0)
+	orderBy := utils.AscOrder
+	orderColumn := order.FieldID
+	from := time.Now().Add(-6 * time.Hour)
+	to := time.Now().Add(6 * time.Hour)
+	params := orders.GetOrdersByDateAndStatusParams{
+		HTTPRequest: &request,
+		StatusName:  statusName,
+		Limit:       &limit,
+		Offset:      &offset,
+		OrderBy:     &orderBy,
+		OrderColumn: &orderColumn,
+		FromDate:    strfmt.Date(from),
+		ToDate:      strfmt.Date(to),
+	}
+
+	allOrders := []*ent.Order{
+		orderWithEdges(t, 1),
+		orderWithEdges(t, 3),
+		orderWithEdges(t, 5),
+		orderWithEdges(t, 7),
+		orderWithEdges(t, 9),
+	}
+	ordersByStatus := []*ent.Order{
+		allOrders[0],
+		allOrders[1],
+		allOrders[2],
+	}
+	s.orderFilterRepository.On("OrdersByPeriodAndStatusTotal", ctx, from, to, statusName).
+		Return(len(ordersByStatus), nil)
+	s.orderFilterRepository.On("OrdersByPeriodAndStatus",
+		ctx, from, to, statusName, int(limit), int(offset), orderBy, orderColumn).
+		Return(ordersByStatus, nil)
+
+	resp := handlerFunc(params, access)
+	responseRecorder := httptest.NewRecorder()
+	producer := runtime.JSONProducer()
+	resp.WriteResponse(responseRecorder, producer)
+	assert.Equal(t, http.StatusOK, responseRecorder.Code)
+	responseOrders := models.OrderList{}
+	err := json.Unmarshal(responseRecorder.Body.Bytes(), &responseOrders)
+	if err != nil {
+		t.Fatal(err)
+	}
+	assert.Equal(t, len(ordersByStatus), int(*responseOrders.Total))
+	assert.GreaterOrEqual(t, int(limit), len(responseOrders.Items))
+	for _, o := range responseOrders.Items {
+		assert.True(t, containsOrder(t, ordersByStatus, o))
+	}
+	s.orderFilterRepository.AssertExpectations(t)
+}
+
+func (s *OrderStatusTestSuite) TestOrderStatus_GetOrdersByPeriodAndStatus_LimitLessThanTotal() {
+	t := s.T()
+	request := http.Request{}
+	ctx := request.Context()
+	userID := 1
+	login := "login"
+	role := &authentication.Role{
+		Id:   userID,
+		Slug: authentication.AdminSlug,
+	}
+	access := authentication.Auth{
+		Id:    userID,
+		Login: login,
+		Role:  role,
+	}
+	handlerFunc := s.orderStatus.GetOrdersByPeriodAndStatus(s.orderFilterRepository)
+	statusName := "status"
+	limit := int64(2)
+	offset := int64(0)
+	orderBy := utils.AscOrder
+	orderColumn := order.FieldID
+	from := time.Now().Add(-6 * time.Hour)
+	to := time.Now().Add(6 * time.Hour)
+	params := orders.GetOrdersByDateAndStatusParams{
+		HTTPRequest: &request,
+		StatusName:  statusName,
+		Limit:       &limit,
+		Offset:      &offset,
+		OrderBy:     &orderBy,
+		OrderColumn: &orderColumn,
+		FromDate:    strfmt.Date(from),
+		ToDate:      strfmt.Date(to),
+	}
+
+	allOrders := []*ent.Order{
+		orderWithEdges(t, 1),
+		orderWithEdges(t, 3),
+		orderWithEdges(t, 5),
+		orderWithEdges(t, 7),
+		orderWithEdges(t, 9),
+	}
+	ordersByStatus := []*ent.Order{
+		allOrders[0],
+		allOrders[1],
+		allOrders[2],
+	}
+	s.orderFilterRepository.On("OrdersByPeriodAndStatusTotal", ctx, from, to, statusName).
+		Return(len(ordersByStatus), nil)
+	s.orderFilterRepository.On("OrdersByPeriodAndStatus",
+		ctx, from, to, statusName, int(limit), int(offset), orderBy, orderColumn).
+		Return(ordersByStatus[:limit], nil)
+
+	resp := handlerFunc(params, access)
+	responseRecorder := httptest.NewRecorder()
+	producer := runtime.JSONProducer()
+	resp.WriteResponse(responseRecorder, producer)
+	assert.Equal(t, http.StatusOK, responseRecorder.Code)
+	responseOrders := models.OrderList{}
+	err := json.Unmarshal(responseRecorder.Body.Bytes(), &responseOrders)
+	if err != nil {
+		t.Fatal(err)
+	}
+	assert.Equal(t, len(ordersByStatus), int(*responseOrders.Total))
+	assert.GreaterOrEqual(t, int(limit), len(responseOrders.Items))
+	assert.Greater(t, len(ordersByStatus), len(responseOrders.Items))
+	for _, o := range responseOrders.Items {
+		assert.True(t, containsOrder(t, ordersByStatus, o))
+	}
+	s.orderFilterRepository.AssertExpectations(t)
+}
+
+func (s *OrderStatusTestSuite) TestOrderStatus_GetOrdersByPeriodAndStatus_SecondPage() {
+	t := s.T()
+	request := http.Request{}
+	ctx := request.Context()
+	userID := 1
+	login := "login"
+	role := &authentication.Role{
+		Id:   userID,
+		Slug: authentication.AdminSlug,
+	}
+	access := authentication.Auth{
+		Id:    userID,
+		Login: login,
+		Role:  role,
+	}
+	handlerFunc := s.orderStatus.GetOrdersByPeriodAndStatus(s.orderFilterRepository)
+	statusName := "status"
+	limit := int64(2)
+	offset := int64(2)
+	orderBy := utils.AscOrder
+	orderColumn := order.FieldID
+	from := time.Now().Add(-6 * time.Hour)
+	to := time.Now().Add(6 * time.Hour)
+	params := orders.GetOrdersByDateAndStatusParams{
+		HTTPRequest: &request,
+		StatusName:  statusName,
+		Limit:       &limit,
+		Offset:      &offset,
+		OrderBy:     &orderBy,
+		OrderColumn: &orderColumn,
+		FromDate:    strfmt.Date(from),
+		ToDate:      strfmt.Date(to),
+	}
+
+	allOrders := []*ent.Order{
+		orderWithEdges(t, 1),
+		orderWithEdges(t, 3),
+		orderWithEdges(t, 5),
+		orderWithEdges(t, 7),
+		orderWithEdges(t, 9),
+	}
+	ordersByStatus := []*ent.Order{
+		allOrders[0],
+		allOrders[1],
+		allOrders[2],
+	}
+	s.orderFilterRepository.On("OrdersByPeriodAndStatusTotal", ctx, from, to, statusName).
+		Return(len(ordersByStatus), nil)
+	s.orderFilterRepository.On("OrdersByPeriodAndStatus",
+		ctx, from, to, statusName, int(limit), int(offset), orderBy, orderColumn).
+		Return(ordersByStatus[offset:], nil)
+
+	resp := handlerFunc(params, access)
+	responseRecorder := httptest.NewRecorder()
+	producer := runtime.JSONProducer()
+	resp.WriteResponse(responseRecorder, producer)
+	assert.Equal(t, http.StatusOK, responseRecorder.Code)
+	responseOrders := models.OrderList{}
+	err := json.Unmarshal(responseRecorder.Body.Bytes(), &responseOrders)
+	if err != nil {
+		t.Fatal(err)
+	}
+	assert.Equal(t, len(ordersByStatus), int(*responseOrders.Total))
+	assert.GreaterOrEqual(t, int(limit), len(responseOrders.Items))
+	assert.Equal(t, len(ordersByStatus)-int(offset), len(responseOrders.Items))
+	assert.Greater(t, len(ordersByStatus), len(responseOrders.Items))
+	for _, o := range responseOrders.Items {
+		assert.True(t, containsOrder(t, ordersByStatus, o))
+	}
+	s.orderFilterRepository.AssertExpectations(t)
+}
+
+func (s *OrderStatusTestSuite) TestOrderStatus_GetOrdersByPeriodAndStatus_SeveralPages() {
+	t := s.T()
+	request := http.Request{}
+	ctx := request.Context()
+	userID := 1
+	login := "login"
+	role := &authentication.Role{
+		Id:   userID,
+		Slug: authentication.AdminSlug,
+	}
+	access := authentication.Auth{
+		Id:    userID,
+		Login: login,
+		Role:  role,
+	}
+	handlerFunc := s.orderStatus.GetOrdersByPeriodAndStatus(s.orderFilterRepository)
+	statusName := "status"
+	limit := int64(2)
+	offset := int64(0)
+	orderBy := utils.AscOrder
+	orderColumn := order.FieldID
+	from := time.Now().Add(-6 * time.Hour)
+	to := time.Now().Add(6 * time.Hour)
+	params := orders.GetOrdersByDateAndStatusParams{
+		HTTPRequest: &request,
+		StatusName:  statusName,
+		Limit:       &limit,
+		Offset:      &offset,
+		OrderBy:     &orderBy,
+		OrderColumn: &orderColumn,
+		FromDate:    strfmt.Date(from),
+		ToDate:      strfmt.Date(to),
+	}
+
+	allOrders := []*ent.Order{
+		orderWithEdges(t, 1),
+		orderWithEdges(t, 2),
+		orderWithEdges(t, 3),
+		orderWithEdges(t, 4),
+		orderWithEdges(t, 5),
+	}
+	ordersByStatus := []*ent.Order{
+		allOrders[0],
+		allOrders[2],
+		allOrders[4],
+	}
+	s.orderFilterRepository.On("OrdersByPeriodAndStatusTotal", ctx, from, to, statusName).
+		Return(len(ordersByStatus), nil)
+	s.orderFilterRepository.On("OrdersByPeriodAndStatus",
+		ctx, from, to, statusName, int(limit), int(offset), orderBy, orderColumn).
+		Return(ordersByStatus[:limit], nil)
+
+	resp := handlerFunc(params, access)
+	responseRecorder := httptest.NewRecorder()
+	producer := runtime.JSONProducer()
+	resp.WriteResponse(responseRecorder, producer)
+	assert.Equal(t, http.StatusOK, responseRecorder.Code)
+	firstPage := models.OrderList{}
+	err := json.Unmarshal(responseRecorder.Body.Bytes(), &firstPage)
+	if err != nil {
+		t.Fatal(err)
+	}
+	assert.Equal(t, len(ordersByStatus), int(*firstPage.Total))
+	assert.Equal(t, int(limit), len(firstPage.Items))
+	for _, o := range firstPage.Items {
+		assert.True(t, containsOrder(t, ordersByStatus, o))
+	}
+
+	offset = limit
+	params = orders.GetOrdersByDateAndStatusParams{
+		HTTPRequest: &request,
+		StatusName:  statusName,
+		Limit:       &limit,
+		Offset:      &offset,
+		OrderBy:     &orderBy,
+		OrderColumn: &orderColumn,
+		FromDate:    strfmt.Date(from),
+		ToDate:      strfmt.Date(to),
+	}
+	s.orderFilterRepository.On("OrdersByPeriodAndStatusTotal", ctx, from, to, statusName).
+		Return(len(ordersByStatus), nil)
+	s.orderFilterRepository.On("OrdersByPeriodAndStatus",
+		ctx, from, to, statusName, int(limit), int(offset), orderBy, orderColumn).
+		Return(ordersByStatus[offset:], nil)
+
+	resp = handlerFunc(params, access)
+	responseRecorder = httptest.NewRecorder()
+	producer = runtime.JSONProducer()
+	resp.WriteResponse(responseRecorder, producer)
+	assert.Equal(t, http.StatusOK, responseRecorder.Code)
+	secondPage := models.OrderList{}
+	err = json.Unmarshal(responseRecorder.Body.Bytes(), &secondPage)
+	if err != nil {
+		t.Fatal(err)
+	}
+	assert.Equal(t, len(ordersByStatus), int(*secondPage.Total))
+	assert.GreaterOrEqual(t, int(limit), len(secondPage.Items))
+	assert.Equal(t, len(ordersByStatus)-int(offset), len(secondPage.Items))
+	assert.Greater(t, len(ordersByStatus), len(secondPage.Items))
+	for _, o := range secondPage.Items {
+		assert.True(t, containsOrder(t, ordersByStatus, o))
+	}
+
+	assert.False(t, ordersDuplicated(t, firstPage.Items, secondPage.Items))
 	s.orderFilterRepository.AssertExpectations(t)
 }
