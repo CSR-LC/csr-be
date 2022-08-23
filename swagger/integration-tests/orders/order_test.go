@@ -47,8 +47,9 @@ func TestIntegration_CreateOrder(t *testing.T) {
 		}
 		// в базе нет значений для создания ордера
 		res, err := client.Orders.CreateOrder(params, utils.AuthInfoFunc(token))
-		require.NoError(t, err)
+		require.Error(t, err)
 
+		// todo: refactor
 		_ = res
 	})
 }
