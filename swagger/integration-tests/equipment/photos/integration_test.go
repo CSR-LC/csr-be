@@ -20,7 +20,11 @@ var (
 	testPassword string
 )
 
-func TestMain(m *testing.M) {
+func TestIntegration_PhotosUpload(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping integration test")
+	}
+
 	ctx := context.Background()
 	beClient := utils.SetupClient()
 
@@ -33,17 +37,6 @@ func TestMain(m *testing.M) {
 	if err != nil {
 		log.Fatalf("CreateUser: %v", err)
 	}
-	os.Exit(m.Run())
-}
-
-func TestIntegration_PhotosUpload(t *testing.T) {
-	if testing.Short() {
-		t.Skip("skipping integration test")
-	}
-
-	ctx := context.Background()
-	beClient := utils.SetupClient()
-
 	loginUser, err := utils.LoginUser(ctx, beClient, testLogin, testPassword)
 	require.NoError(t, err)
 
