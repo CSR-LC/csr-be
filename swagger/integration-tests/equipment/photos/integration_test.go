@@ -9,10 +9,11 @@ import (
 	"os"
 	"testing"
 
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/client/photos"
-	utils "git.epam.com/epm-lstr/epm-lstr-lc/be/swagger/integration-tests"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"git.epam.com/epm-lstr/epm-lstr-lc/be/client/photos"
+	utils "git.epam.com/epm-lstr/epm-lstr-lc/be/swagger/integration-tests"
 )
 
 var (
@@ -37,6 +38,10 @@ func TestMain(m *testing.M) {
 }
 
 func TestIntegration_PhotosUpload(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping integration test")
+	}
+
 	ctx := context.Background()
 	beClient := utils.SetupClient()
 

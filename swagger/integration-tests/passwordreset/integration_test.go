@@ -5,16 +5,21 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/client/password_reset"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/swagger/generated/models"
 	utils "git.epam.com/epm-lstr/epm-lstr-lc/be/swagger/integration-tests"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 // todo: use token from create token request
 
 func TestIntegration_PasswordReset(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping integration test")
+	}
+
 	ctx := context.Background()
 	client := utils.SetupClient()
 
@@ -28,11 +33,14 @@ func TestIntegration_PasswordReset(t *testing.T) {
 		params := password_reset.NewSendLinkByLoginParamsWithContext(ctx)
 		params.Login = &models.SendPasswordResetLinkRequest{Data: &models.Login{
 			Login: user.Login,
-			// todo: get rid of SendConfToEmail, use test flag or env parameter
-			SendConfToEmail: false,
 		}}
-		_, err := client.PasswordReset.SendLinkByLogin(params)
+		got, err := client.PasswordReset.SendLinkByLogin(params)
 		require.NoError(t, err)
+
+		want := &password_reset.SendLinkByLoginOK{
+			Payload: models.PasswordResetResponse("Reset link sent"),
+		}
+		assert.Equal(t, want, got)
 	})
 
 	t.Run("create password reset link failed: login not provided", func(t *testing.T) {
@@ -40,8 +48,6 @@ func TestIntegration_PasswordReset(t *testing.T) {
 		login := ""
 		params.Login = &models.SendPasswordResetLinkRequest{Data: &models.Login{
 			Login: &login,
-			// todo: get rid of SendConfToEmail, use test flag or env parameter
-			SendConfToEmail: false,
 		}}
 		_, err = client.PasswordReset.SendLinkByLogin(params)
 		require.Error(t, err)
@@ -58,8 +64,6 @@ func TestIntegration_PasswordReset(t *testing.T) {
 		login := utils.LoginNotExist
 		params.Login = &models.SendPasswordResetLinkRequest{Data: &models.Login{
 			Login: &login,
-			// todo: get rid of SendConfToEmail, use test flag or env parameter
-			SendConfToEmail: false,
 		}}
 		_, err = client.PasswordReset.SendLinkByLogin(params)
 		require.Error(t, err)
@@ -75,6 +79,10 @@ func TestIntegration_PasswordReset(t *testing.T) {
 }
 
 func TestIntegration_PasswordResetGetLink(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping integration test")
+	}
+
 	ctx := context.Background()
 	client := utils.SetupClient()
 
@@ -84,26 +92,18 @@ func TestIntegration_PasswordResetGetLink(t *testing.T) {
 	_, err = utils.CreateUser(ctx, client, l, p)
 	require.NoError(t, err)
 
-	//loginUser, err := utils.LoginUser(ctx, client, l, p)
-	//require.NoError(t, err)
-
-	t.Run("get password reset link by login ok", func(t *testing.T) {
-		params := password_reset.NewGetPasswordResetLinkParamsWithContext(ctx)
-		// todo: use token from create token request
-		params.Token = "b4b2fdd3-2b30-4c4e-9326-826aaaa08391"
-		got, err := client.PasswordReset.GetPasswordResetLink(params)
-		require.NoError(t, err)
-
-		want := password_reset.NewGetPasswordResetLinkOK()
-		want.Payload = "Password successfully reset. Check your email"
-
-		assert.Equal(t, want, got)
-		//errExp := password_reset.NewGetPasswordResetLinkDefault(http.StatusInternalServerError)
-		//errExp.Payload = &models.Error{Data: &models.ErrorData{
-		//	Message: "Failed to verify token. Please try again later",
-		//}}
-		//assert.Equal(t, errExp, err)
-	})
+	//t.Run("get password reset link by login ok", func(t *testing.T) {
+	//	params := password_reset.NewGetPasswordResetLinkParamsWithContext(ctx)
+	//	// todo: use token from create token request
+	//	params.Token = "b4b2fdd3-2b30-4c4e-9326-826aaaa08391"
+	//	got, err := client.PasswordReset.GetPasswordResetLink(params)
+	//	require.NoError(t, err)
+	//
+	//	want := password_reset.NewGetPasswordResetLinkOK()
+	//	want.Payload = "Password successfully reset. Check your email"
+	//
+	//	assert.Equal(t, want, got)
+	//})
 
 	t.Run("get password reset link by login failed: error while getting token", func(t *testing.T) {
 		params := password_reset.NewGetPasswordResetLinkParamsWithContext(ctx)
