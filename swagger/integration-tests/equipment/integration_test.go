@@ -2,11 +2,11 @@ package equipment
 
 import (
 	"context"
-	"github.com/go-openapi/runtime"
-	"github.com/stretchr/testify/assert"
 	"os"
 	"testing"
 
+	"github.com/go-openapi/runtime"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/client"
@@ -49,7 +49,9 @@ func TestIntegration_CreateEquipment(t *testing.T) {
 		res, err := client.Equipment.CreateNewEquipment(params, auth)
 		require.NoError(t, err)
 
-		// location and order returned as nil, do we need these parameters?
+		// location returned as nil, in discussion we decided that this parameter will have more that one values
+		// for now it is not handled
+		// todo: uncomment string when it's handled properly
 		assert.Equal(t, model.Category, res.Payload.Category)
 		assert.Equal(t, model.CompensationСost, res.Payload.CompensationСost)
 		assert.Equal(t, model.Condition, res.Payload.Condition)
@@ -190,6 +192,7 @@ func TestIntegration_GetEquipment(t *testing.T) {
 		assert.Equal(t, model.MaximumAmount, res.Payload.MaximumAmount)
 		assert.Equal(t, model.MaximumDays, res.Payload.MaximumDays)
 		assert.Equal(t, model.Name, res.Payload.Name)
+		//assert.Equal(t, model.Location, res.Payload.Location)
 		assert.Equal(t, model.PetKinds[0], res.Payload.PetKinds[0].ID)
 		assert.Equal(t, model.PetSize, res.Payload.PetSize)
 		assert.Contains(t, *res.Payload.Photo, *model.PhotoID)
@@ -335,8 +338,6 @@ func TestIntegration_EditEquipment(t *testing.T) {
 	t.Run("Edit Equipment description", func(t *testing.T) {
 		desc := "new description"
 		model.Description = &desc
-		// doesn't look like proper way to edit parameters to pass petKind as nil
-		model.PetKinds = nil
 		params := equipment.NewEditEquipmentParamsWithContext(ctx).WithEquipmentID(*created.Payload.ID).
 			WithEditEquipment(model)
 
@@ -349,8 +350,6 @@ func TestIntegration_EditEquipment(t *testing.T) {
 	t.Run("Edit Equipment description failed: wrong Equipment ID", func(t *testing.T) {
 		desc := "new description"
 		model.Description = &desc
-		// doesn't look like proper way to edit parameters to pass petKind as nil
-		model.PetKinds = nil
 		params := equipment.NewEditEquipmentParamsWithContext(ctx).WithEquipmentID(int64(-10)).
 			WithEditEquipment(model)
 
@@ -456,7 +455,6 @@ func setParameters(ctx context.Context, client *client.Be, auth runtime.ClientAu
 	amount := int64(1)
 	mdays := int64(10)
 	catName := "Том"
-	order := int64(1)
 	rDate := "2018"
 
 	status, err := client.Status.GetStatus(status.NewGetStatusParamsWithContext(ctx).WithStatusID(1), auth)
@@ -507,7 +505,6 @@ func setParameters(ctx context.Context, client *client.Be, auth runtime.ClientAu
 		MaximumDays:      &mdays,
 		Name:             &catName,
 		NameSubstring:    "box",
-		Order:            &order,
 		PetKinds:         []int64{*cats.Payload.ID},
 		PetSize:          petSize.Payload.ID,
 		PhotoID:          &photo.Payload.Data.ID,
