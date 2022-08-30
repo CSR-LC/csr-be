@@ -17,7 +17,7 @@ import (
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/client/photos"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/client/status"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/swagger/generated/models"
-	utils "git.epam.com/epm-lstr/epm-lstr-lc/be/swagger/integration-tests"
+	utils "git.epam.com/epm-lstr/epm-lstr-lc/be/swagger/integration-tests/common"
 )
 
 func TestIntegration_CreateEquipment(t *testing.T) {
@@ -51,7 +51,7 @@ func TestIntegration_CreateEquipment(t *testing.T) {
 
 		// location returned as nil, in discussion we decided that this parameter will have more that one values
 		// for now it is not handled
-		// todo: uncomment string when it's handled properly
+		// todo: uncomment string below when it's handled properly
 		assert.Equal(t, model.Category, res.Payload.Category)
 		assert.Equal(t, model.CompensationСost, res.Payload.CompensationСost)
 		assert.Equal(t, model.Condition, res.Payload.Condition)
@@ -62,7 +62,6 @@ func TestIntegration_CreateEquipment(t *testing.T) {
 		assert.Equal(t, model.MaximumAmount, res.Payload.MaximumAmount)
 		assert.Equal(t, model.MaximumDays, res.Payload.MaximumDays)
 		assert.Equal(t, model.Name, res.Payload.Name)
-		//assert.Equal(t, order, *res.Payload.Order)
 		assert.Equal(t, model.PetKinds[0], res.Payload.PetKinds[0].ID)
 		assert.Equal(t, model.PetSize, res.Payload.PetSize)
 		assert.Contains(t, *res.Payload.Photo, *model.PhotoID)
@@ -183,6 +182,9 @@ func TestIntegration_GetEquipment(t *testing.T) {
 		res, err := client.Equipment.GetEquipment(params, auth)
 		require.NoError(t, err)
 
+		// location returned as nil, in discussion we decided that this parameter will have more that one values
+		// for now it is not handled
+		// todo: uncomment string below when it's handled properly
 		assert.Equal(t, model.Category, res.Payload.Category)
 		assert.Equal(t, model.CompensationСost, res.Payload.CompensationСost)
 		assert.Equal(t, model.Condition, res.Payload.Condition)
@@ -462,7 +464,7 @@ func setParameters(ctx context.Context, client *client.Be, auth runtime.ClientAu
 		return nil, err
 	}
 
-	f, err := os.Open("cat.jpeg")
+	f, err := os.Open("../common/cat.jpeg")
 	if err != nil {
 		return nil, err
 	}

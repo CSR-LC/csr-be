@@ -10,10 +10,8 @@ import (
 
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/client/password_reset"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/swagger/generated/models"
-	utils "git.epam.com/epm-lstr/epm-lstr-lc/be/swagger/integration-tests"
+	utils "git.epam.com/epm-lstr/epm-lstr-lc/be/swagger/integration-tests/common"
 )
-
-// todo: use token from create token request
 
 func TestIntegration_PasswordReset(t *testing.T) {
 	if testing.Short() {
@@ -91,19 +89,6 @@ func TestIntegration_PasswordResetGetLink(t *testing.T) {
 
 	_, err = utils.CreateUser(ctx, client, l, p)
 	require.NoError(t, err)
-
-	//t.Run("get password reset link by login ok", func(t *testing.T) {
-	//	params := password_reset.NewGetPasswordResetLinkParamsWithContext(ctx)
-	//	// todo: use token from create token request
-	//	params.Token = "b4b2fdd3-2b30-4c4e-9326-826aaaa08391"
-	//	got, err := client.PasswordReset.GetPasswordResetLink(params)
-	//	require.NoError(t, err)
-	//
-	//	want := password_reset.NewGetPasswordResetLinkOK()
-	//	want.Payload = "Password successfully reset. Check your email"
-	//
-	//	assert.Equal(t, want, got)
-	//})
 
 	t.Run("get password reset link by login failed: error while getting token", func(t *testing.T) {
 		params := password_reset.NewGetPasswordResetLinkParamsWithContext(ctx)

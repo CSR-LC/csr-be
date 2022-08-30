@@ -9,10 +9,12 @@ import (
 	"os"
 	"testing"
 
+	"golang.org/x/sys/unix"
+
 	"github.com/stretchr/testify/require"
 
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/client/photos"
-	utils "git.epam.com/epm-lstr/epm-lstr-lc/be/swagger/integration-tests"
+	utils "git.epam.com/epm-lstr/epm-lstr-lc/be/swagger/integration-tests/common"
 )
 
 var (
@@ -43,7 +45,7 @@ func TestIntegration_PhotosUpload(t *testing.T) {
 	t.Run("", func(t *testing.T) {
 		token := loginUser.GetPayload().AccessToken
 		fileName := "testfile.txt"
-
+		//os.Mkdir("test", 0600)
 		//id := "testimagename"
 		//url := "http://localhost:8080/api/equipments/photos/testimagename"
 		//fileName := "testimagename.jpg"
@@ -66,12 +68,16 @@ func TestIntegration_PhotosUpload(t *testing.T) {
 
 		params := photos.NewCreateNewPhotoParamsWithContext(ctx)
 		params.File = f
-		_, err = beClient.Photos.CreateNewPhoto(params, utils.AuthInfoFunc(token))
+		res, err := beClient.Photos.CreateNewPhoto(params, utils.AuthInfoFunc(token))
+		_ = res
 		require.NoError(t, err)
 		// todo: refactor
 	})
 }
 
+func writable(path string) bool {
+	return unix.Access(path, unix.W_OK) == nil
+}
 func generateImageBytes() ([]byte, error) {
 	buf := new(bytes.Buffer)
 	err := jpeg.Encode(buf, image.Rect(0, 0, 100, 100), nil)

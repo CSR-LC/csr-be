@@ -664,6 +664,10 @@ paths:
           description: 'Order created'
           schema:
             $ref: '#/definitions/Order'
+        default:
+          description: 'Unexpected error'
+          schema:
+            $ref: '#/definitions/Error'
       parameters:
         - name: data
           in: body
