@@ -32,7 +32,7 @@ var (
 	token *string
 )
 
-func TestSetup(t *testing.T) {
+func TestIntegration_BeforeOrderSetup(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping integration test")
 	}
@@ -299,10 +299,11 @@ func TestIntegration_GetAllOrders(t *testing.T) {
 
 	t.Run("Get All Orders failed: access", func(t *testing.T) {
 		params := orders.NewGetAllOrdersParamsWithContext(ctx)
-		_, gotErr := client.Orders.GetAllOrders(params, auth)
+		token := common.TokenNotExist
+		_, gotErr := client.Orders.GetAllOrders(params, common.AuthInfoFunc(&token))
 		require.Error(t, gotErr)
 
-		wantErr := orders.NewCreateOrderDefault(http.StatusInternalServerError)
+		wantErr := orders.NewGetAllOrdersDefault(http.StatusInternalServerError)
 		wantErr.Payload = &models.Error{Data: nil}
 		assert.Equal(t, wantErr, gotErr)
 	})
@@ -321,7 +322,7 @@ func TestIntegration_GetAllOrders(t *testing.T) {
 		_, gotErr := client.Orders.GetAllOrders(params, auth)
 		require.Error(t, gotErr)
 
-		wantErr := orders.NewCreateOrderDefault(http.StatusUnprocessableEntity)
+		wantErr := orders.NewGetAllOrdersDefault(http.StatusUnprocessableEntity)
 		wantErr.Payload = &models.Error{Data: nil}
 		assert.Equal(t, wantErr, gotErr)
 	})

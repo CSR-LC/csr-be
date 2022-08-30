@@ -470,13 +470,7 @@ func setParameters(ctx context.Context, client *client.Be, auth runtime.ClientAu
 	}
 	defer f.Close()
 
-	petSizeName := "chonker"
-	size := "extra large"
-	newPetSize := &models.PetSize{
-		Name: &petSizeName,
-		Size: &size,
-	}
-	petSize, err := client.PetSize.CreateNewPetSize(pet_size.NewCreateNewPetSizeParamsWithContext(ctx).WithNewPetSize(newPetSize), auth)
+	petSize, err := client.PetSize.GetAllPetSize(pet_size.NewGetAllPetSizeParamsWithContext(ctx), auth)
 	if err != nil {
 		return nil, err
 	}
@@ -508,7 +502,7 @@ func setParameters(ctx context.Context, client *client.Be, auth runtime.ClientAu
 		Name:             &catName,
 		NameSubstring:    "box",
 		PetKinds:         []int64{*cats.Payload.ID},
-		PetSize:          petSize.Payload.ID,
+		PetSize:          &petSize.Payload[0].ID,
 		PhotoID:          &photo.Payload.Data.ID,
 		ReceiptDate:      &rDate,
 		Status:           status.Payload.Data.ID,
