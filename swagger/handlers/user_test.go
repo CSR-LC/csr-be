@@ -2,14 +2,15 @@ package handlers
 
 import (
 	"encoding/json"
-	"entgo.io/ent/entc/integration/ent/user"
 	"errors"
 	"fmt"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/utils"
 	"math"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"entgo.io/ent/entc/integration/ent/user"
+	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/utils"
 
 	"github.com/go-openapi/loads"
 
@@ -557,7 +558,7 @@ func (s *UserTestSuite) TestUser_AssignRoleToUserFunc_RepoErr() {
 	access := authentication.Auth{
 		Id: 1,
 		Role: &authentication.Role{
-			Slug: authentication.AdminSlug,
+			Slug: authentication.Admin,
 		},
 	}
 	handlerFunc := s.user.AssignRoleToUserFunc(s.userRepository)
@@ -590,7 +591,7 @@ func (s *UserTestSuite) TestUser_AssignRoleToUserFunc_OK() {
 	access := authentication.Auth{
 		Id: 1,
 		Role: &authentication.Role{
-			Slug: authentication.AdminSlug,
+			Slug: authentication.Admin,
 		},
 	}
 	handlerFunc := s.user.AssignRoleToUserFunc(s.userRepository)

@@ -228,7 +228,7 @@ func (s *OrderStatusTestSuite) TestOrderStatus_OrderStatusesHistory_EmptyHistory
 	login := "login"
 	role := &authentication.Role{
 		Id:   userID,
-		Slug: authentication.AdminSlug,
+		Slug: authentication.Admin,
 	}
 	access := authentication.Auth{
 		Id:    userID,
@@ -260,7 +260,7 @@ func (s *OrderStatusTestSuite) TestOrderStatus_OrderStatusesHistory_MapError() {
 	login := "login"
 	role := &authentication.Role{
 		Id:   userID,
-		Slug: authentication.AdminSlug,
+		Slug: authentication.Admin,
 	}
 	access := authentication.Auth{
 		Id:    userID,
@@ -295,7 +295,7 @@ func (s *OrderStatusTestSuite) TestOrderStatus_OrderStatusesHistory_OK() {
 	login := "login"
 	role := &authentication.Role{
 		Id:   userID,
-		Slug: authentication.AdminSlug,
+		Slug: authentication.Admin,
 	}
 	access := authentication.Auth{
 		Id:    userID,
@@ -355,7 +355,7 @@ func (s *OrderStatusTestSuite) TestOrderStatus_AddNewStatusToOrder_EmptyData() {
 	login := "login"
 	role := &authentication.Role{
 		Id:   userID,
-		Slug: authentication.AdminSlug,
+		Slug: authentication.Admin,
 	}
 	access := authentication.Auth{
 		Id:    userID,
@@ -411,7 +411,7 @@ func (s *OrderStatusTestSuite) TestOrderStatus_AddNewStatusToOrder_RepoError() {
 	login := "login"
 	role := &authentication.Role{
 		Id:   userID,
-		Slug: authentication.AdminSlug,
+		Slug: authentication.Admin,
 	}
 	access := authentication.Auth{
 		Id:    userID,
@@ -444,7 +444,7 @@ func (s *OrderStatusTestSuite) TestOrderStatus_AddNewStatusToOrder_OK() {
 	login := "login"
 	role := &authentication.Role{
 		Id:   userID,
-		Slug: authentication.AdminSlug,
+		Slug: authentication.Admin,
 	}
 	access := authentication.Auth{
 		Id:    userID,
@@ -504,7 +504,7 @@ func (s *OrderStatusTestSuite) TestOrderStatus_GetOrdersByStatus_RepoErr() {
 	login := "login"
 	role := &authentication.Role{
 		Id:   userID,
-		Slug: authentication.AdminSlug,
+		Slug: authentication.Admin,
 	}
 	access := authentication.Auth{
 		Id:    userID,
@@ -536,7 +536,7 @@ func (s *OrderStatusTestSuite) TestOrderStatus_GetOrdersByStatus_EmptyResult() {
 	login := "login"
 	role := &authentication.Role{
 		Id:   userID,
-		Slug: authentication.AdminSlug,
+		Slug: authentication.Admin,
 	}
 	access := authentication.Auth{
 		Id:    userID,
@@ -576,7 +576,7 @@ func (s *OrderStatusTestSuite) TestOrderStatus_GetOrdersByStatus_MapErr() {
 	login := "login"
 	role := &authentication.Role{
 		Id:   userID,
-		Slug: authentication.AdminSlug,
+		Slug: authentication.Admin,
 	}
 	access := authentication.Auth{
 		Id:    userID,
@@ -617,7 +617,7 @@ func (s *OrderStatusTestSuite) TestOrderStatus_GetOrdersByStatus_EmptyPagination
 	login := "login"
 	role := &authentication.Role{
 		Id:   userID,
-		Slug: authentication.AdminSlug,
+		Slug: authentication.Admin,
 	}
 	access := authentication.Auth{
 		Id:    userID,
@@ -670,7 +670,7 @@ func (s *OrderStatusTestSuite) TestOrderStatus_GetOrdersByStatus_LimitGreaterTha
 	login := "login"
 	role := &authentication.Role{
 		Id:   userID,
-		Slug: authentication.AdminSlug,
+		Slug: authentication.Admin,
 	}
 	access := authentication.Auth{
 		Id:    userID,
@@ -736,7 +736,7 @@ func (s *OrderStatusTestSuite) TestOrderStatus_GetOrdersByStatus_LimitLessThanTo
 	login := "login"
 	role := &authentication.Role{
 		Id:   userID,
-		Slug: authentication.AdminSlug,
+		Slug: authentication.Admin,
 	}
 	access := authentication.Auth{
 		Id:    userID,
@@ -803,7 +803,7 @@ func (s *OrderStatusTestSuite) TestOrderStatus_GetOrdersByStatus_SecondPage() {
 	login := "login"
 	role := &authentication.Role{
 		Id:   userID,
-		Slug: authentication.AdminSlug,
+		Slug: authentication.Admin,
 	}
 	access := authentication.Auth{
 		Id:    userID,
@@ -871,7 +871,7 @@ func (s *OrderStatusTestSuite) TestOrderStatus_GetOrdersByStatus_SeveralPages() 
 	login := "login"
 	role := &authentication.Role{
 		Id:   userID,
-		Slug: authentication.AdminSlug,
+		Slug: authentication.Admin,
 	}
 	access := authentication.Auth{
 		Id:    userID,
@@ -999,7 +999,7 @@ func (s *OrderStatusTestSuite) TestOrderStatus_GetOrdersByPeriodAndStatus_RepoEr
 	login := "login"
 	role := &authentication.Role{
 		Id:   userID,
-		Slug: authentication.AdminSlug,
+		Slug: authentication.Admin,
 	}
 	access := authentication.Auth{
 		Id:    userID,
@@ -1035,7 +1035,7 @@ func (s *OrderStatusTestSuite) TestOrderStatus_GetOrdersByPeriodAndStatus_EmptyR
 	login := "login"
 	role := &authentication.Role{
 		Id:   userID,
-		Slug: authentication.AdminSlug,
+		Slug: authentication.Admin,
 	}
 	access := authentication.Auth{
 		Id:    userID,
@@ -1078,7 +1078,7 @@ func (s *OrderStatusTestSuite) TestOrderStatus_GetOrdersByPeriodAndStatus_MapErr
 	login := "login"
 	role := &authentication.Role{
 		Id:   userID,
-		Slug: authentication.AdminSlug,
+		Slug: authentication.Admin,
 	}
 	access := authentication.Auth{
 		Id:    userID,
@@ -1123,7 +1123,7 @@ func (s *OrderStatusTestSuite) TestOrderStatus_GetOrdersByPeriodAndStatus_EmptyP
 	login := "login"
 	role := &authentication.Role{
 		Id:   userID,
-		Slug: authentication.AdminSlug,
+		Slug: authentication.Admin,
 	}
 	access := authentication.Auth{
 		Id:    userID,
@@ -1170,7 +1170,7 @@ func (s *OrderStatusTestSuite) TestOrderStatus_GetOrdersByPeriodAndStatus_LimitG
 	login := "login"
 	role := &authentication.Role{
 		Id:   userID,
-		Slug: authentication.AdminSlug,
+		Slug: authentication.Admin,
 	}
 	access := authentication.Auth{
 		Id:    userID,
@@ -1240,7 +1240,7 @@ func (s *OrderStatusTestSuite) TestOrderStatus_GetOrdersByPeriodAndStatus_LimitL
 	login := "login"
 	role := &authentication.Role{
 		Id:   userID,
-		Slug: authentication.AdminSlug,
+		Slug: authentication.Admin,
 	}
 	access := authentication.Auth{
 		Id:    userID,
@@ -1311,7 +1311,7 @@ func (s *OrderStatusTestSuite) TestOrderStatus_GetOrdersByPeriodAndStatus_Second
 	login := "login"
 	role := &authentication.Role{
 		Id:   userID,
-		Slug: authentication.AdminSlug,
+		Slug: authentication.Admin,
 	}
 	access := authentication.Auth{
 		Id:    userID,
@@ -1383,7 +1383,7 @@ func (s *OrderStatusTestSuite) TestOrderStatus_GetOrdersByPeriodAndStatus_Severa
 	login := "login"
 	role := &authentication.Role{
 		Id:   userID,
-		Slug: authentication.AdminSlug,
+		Slug: authentication.Admin,
 	}
 	access := authentication.Auth{
 		Id:    userID,

@@ -34,7 +34,7 @@ func BearerAuthenticateFunc(key interface{}, _ *zap.Logger) func(string) (interf
 					if ok1 && ok2 {
 						rolePointer = &authentication.Role{
 							Id:   int(roleId),
-							Slug: slug,
+							Slug: authentication.SlugValues[slug],
 						}
 					}
 				}

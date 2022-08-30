@@ -1,6 +1,8 @@
 package swagger
 
 import (
+	"net/http"
+
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/config"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/utils"
 
@@ -8,6 +10,7 @@ import (
 	"go.uber.org/zap"
 
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/ent"
+	"git.epam.com/epm-lstr/epm-lstr-lc/be/swagger/authentication"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/swagger/email"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/swagger/generated/restapi"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/swagger/generated/restapi/operations"
@@ -49,6 +52,7 @@ func SetupAPI(entClient *ent.Client, logger *zap.Logger, config *config.AppConfi
 	api := operations.NewBeAPI(swaggerSpec)
 	api.UseSwaggerUI()
 	api.BearerAuth = middlewares.BearerAuthenticateFunc(jwtSecret, logger)
+	setupMiddlewares(logger, api)
 	handlers.SetActiveAreaHandler(entClient, logger, api)
 	handlers.SetBlockerHandler(entClient, logger, api)
 	handlers.SetEquipmentHandler(entClient, logger, api, fileManager)
@@ -64,4 +68,12 @@ func SetupAPI(entClient *ent.Client, logger *zap.Logger, config *config.AppConfi
 	handlers.SetUserHandler(entClient, logger, api, tokenManager, regConfirmService)
 	handlers.SetPetKindHandler(entClient, logger, api)
 	return api, nil
+}
+
+func setupMiddlewares(logger *zap.Logger, api *operations.BeAPI) {
+	api.AddMiddlewareFor(http.MethodPost, "/v1/management/users/{userId}/role", middlewares.CheckRole(authentication.Admin, logger))
+	api.AddMiddlewareFor(http.MethodGet, "/v1/order_statuses/{orderId}", middlewares.CheckRole(authentication.Admin, logger))
+	api.AddMiddlewareFor(http.MethodPost, "/v1/order_statuses/", middlewares.CheckRole(authentication.Admin, logger))
+	api.AddMiddlewareFor(http.MethodGet, "/v1/orders/status/{status}", middlewares.CheckRole(authentication.Admin, logger))
+	api.AddMiddlewareFor(http.MethodGet, "/v1/orders/from={fromDate}&to={toDate}&status={statusName}", middlewares.CheckRole(authentication.Admin, logger))
 }

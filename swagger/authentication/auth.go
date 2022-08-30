@@ -5,14 +5,24 @@ import (
 	"fmt"
 )
 
-type Role struct {
-	Id   int
-	Slug string
+type Slug string
+
+const (
+	Admin    Slug = "administrator"
+	Manager  Slug = "manager"
+	Operator Slug = "operator"
+)
+
+var SlugValues = map[string]Slug{
+	"administrator": Admin,
+	"manager":       Manager,
+	"operator":      Operator,
 }
 
-const AdminSlug = "administrator"
-const ManagerSlug = "manager"
-const OperatorSlug = "operator"
+type Role struct {
+	Id   int
+	Slug Slug
+}
 
 type Auth struct {
 	Id    int
@@ -24,21 +34,21 @@ func (a *Auth) IsAdmin() bool {
 	if a.Role == nil {
 		return false
 	}
-	return a.Role.Slug == AdminSlug
+	return a.Role.Slug == Admin
 }
 
 func (a *Auth) IsManager() bool {
 	if a.Role == nil {
 		return false
 	}
-	return a.Role.Slug == ManagerSlug
+	return a.Role.Slug == Manager
 }
 
 func (a *Auth) IsOperator() bool {
 	if a.Role == nil {
 		return false
 	}
-	return a.Role.Slug == OperatorSlug
+	return a.Role.Slug == Operator
 }
 
 func GetAuth(access interface{}) (*Auth, error) {

@@ -2,10 +2,11 @@ package handlers
 
 import (
 	"errors"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/ent/user"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/utils"
 	"math"
 	"net/http"
+
+	"git.epam.com/epm-lstr/epm-lstr-lc/be/ent/user"
+	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/utils"
 
 	"github.com/go-openapi/runtime/middleware"
 	"go.uber.org/zap"
@@ -162,16 +163,11 @@ func (c User) PatchUserFunc(repository repositories.UserRepository) users.PatchU
 
 func (c User) AssignRoleToUserFunc(repository repositories.UserRepository) users.AssignRoleToUserHandlerFunc {
 	return func(p users.AssignRoleToUserParams, access interface{}) middleware.Responder {
-		_, err := authentication.IsAdmin(access)
-		if err != nil {
-			c.logger.Error("user is not admin", zap.Error(err))
-			return users.NewAssignRoleToUserDefault(http.StatusForbidden).WithPayload(buildErrorPayload(err))
-		}
 		ctx := p.HTTPRequest.Context()
 		userId := int(p.UserID)
 		roleId := int(*p.Data.RoleID)
 
-		err = repository.SetUserRole(ctx, userId, roleId)
+		err := repository.SetUserRole(ctx, userId, roleId)
 		if err != nil {
 			c.logger.Error("set user role error", zap.Error(err))
 			return users.NewAssignRoleToUserDefault(http.StatusInternalServerError).WithPayload(buildErrorPayload(err))

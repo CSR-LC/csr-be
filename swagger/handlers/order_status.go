@@ -111,13 +111,6 @@ func MapStatus(status *ent.OrderStatus) (*models.OrderStatus, error) {
 }
 
 func rightForHistory(access interface{}, history []*ent.OrderStatus) bool {
-	isAdmin, err := authentication.IsAdmin(access)
-	if err != nil {
-		return false
-	}
-	if isAdmin {
-		return true
-	}
 	ownerID, err := authentication.GetUserId(access)
 	if err != nil {
 		return false
@@ -169,13 +162,6 @@ func (h *OrderStatus) AddNewStatusToOrder(repository repositories.OrderStatusRep
 }
 
 func rightForStatusCreation(access interface{}, status *string) bool {
-	isAdmin, err := authentication.IsAdmin(access)
-	if err != nil {
-		return false
-	}
-	if isAdmin {
-		return true
-	}
 	if status == nil {
 		return false
 	}
@@ -190,12 +176,6 @@ func (h *OrderStatus) GetOrdersByStatus(repository repositories.OrderRepositoryW
 		orderBy := utils.GetParamString(params.OrderBy, utils.AscOrder)
 		orderColumn := utils.GetParamString(params.OrderColumn, order.FieldID)
 
-		haveRight := hasSearchRight(access)
-		if !haveRight {
-			h.logger.Warn("User have no right to get orders by status", zap.Any("access", access))
-			return orders.NewGetOrdersByStatusDefault(http.StatusForbidden).
-				WithPayload(&models.Error{Data: &models.ErrorData{Message: "You don't have rights to get orders by status"}})
-		}
 		total, err := repository.OrdersByStatusTotal(ctx, params.Status)
 		if err != nil {
 			h.logger.Error("GetOrdersByStatus error", zap.Error(err))
@@ -232,14 +212,6 @@ func (h *OrderStatus) GetOrdersByStatus(repository repositories.OrderRepositoryW
 	}
 }
 
-func hasSearchRight(access interface{}) bool {
-	isAdmin, err := authentication.IsAdmin(access)
-	if err != nil {
-		return false
-	}
-	return isAdmin
-}
-
 func (h *OrderStatus) GetOrdersByPeriodAndStatus(repository repositories.OrderRepositoryWithFilter) orders.GetOrdersByDateAndStatusHandlerFunc {
 	return func(params orders.GetOrdersByDateAndStatusParams, access interface{}) middleware.Responder {
 		ctx := params.HTTPRequest.Context()
@@ -248,12 +220,6 @@ func (h *OrderStatus) GetOrdersByPeriodAndStatus(repository repositories.OrderRe
 		orderBy := utils.GetParamString(params.OrderBy, utils.AscOrder)
 		orderColumn := utils.GetParamString(params.OrderColumn, order.FieldID)
 
-		haveRight := hasSearchRight(access)
-		if !haveRight {
-			h.logger.Warn("User have no right to get orders by period and status", zap.Any("access", access))
-			return orders.NewGetOrdersByDateAndStatusDefault(http.StatusForbidden).
-				WithPayload(buildStringPayload("You don't have rights to get orders by period and status"))
-		}
 		total, err := repository.OrdersByPeriodAndStatusTotal(ctx,
 			time.Time(params.FromDate), time.Time(params.ToDate), params.StatusName)
 		if err != nil {
