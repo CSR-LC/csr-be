@@ -14,6 +14,48 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func TestIntegration_GetAllPetKind(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping integration test")
+	}
+
+	ctx := context.Background()
+	client := utils.SetupClient()
+
+	l, p, err := utils.GenerateLoginAndPassword()
+	require.NoError(t, err)
+
+	_, err = utils.CreateUser(ctx, client, l, p)
+	require.NoError(t, err)
+
+	loginUser, err := utils.LoginUser(ctx, client, l, p)
+	require.NoError(t, err)
+
+	token := loginUser.GetPayload().AccessToken
+
+	t.Run("Get All Pet Kinds ok", func(t *testing.T) {
+		params := pet_kind.NewGetAllPetKindsParamsWithContext(ctx)
+		res, err := client.PetKind.GetAllPetKinds(params, utils.AuthInfoFunc(token))
+		require.NoError(t, err)
+
+		got := len(res.Payload)
+		// migration has 3 items
+		want := migrationKindNumber
+		assert.Equal(t, want, got)
+	})
+
+	t.Run("Get All Pet Kinds failed: access token", func(t *testing.T) {
+		params := pet_kind.NewGetAllPetKindsParamsWithContext(ctx)
+		token := utils.TokenNotExist
+		_, gotErr := client.PetKind.GetAllPetKinds(params, utils.AuthInfoFunc(&token))
+		require.Error(t, gotErr)
+
+		wantErr := pet_kind.NewGetAllPetKindsDefault(http.StatusInternalServerError)
+		wantErr.Payload = &models.Error{Data: nil}
+		assert.Equal(t, wantErr, gotErr)
+	})
+}
+
 func TestIntegration_PetKind(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping integration test")

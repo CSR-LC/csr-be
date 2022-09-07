@@ -14,9 +14,52 @@ import (
 )
 
 var (
-	size = "test size"
-	name = "test pet name"
+	size                = "test size"
+	name                = "test pet name"
+	migrationSizeNumber = 4
 )
+
+func TestIntegration_GetAllPetSize(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping integration test")
+	}
+
+	ctx := context.Background()
+	client := utils.SetupClient()
+
+	l, p, err := utils.GenerateLoginAndPassword()
+	require.NoError(t, err)
+
+	_, err = utils.CreateUser(ctx, client, l, p)
+	require.NoError(t, err)
+
+	loginUser, err := utils.LoginUser(ctx, client, l, p)
+	require.NoError(t, err)
+
+	token := loginUser.GetPayload().AccessToken
+
+	t.Run("Get All Pet Size ok", func(t *testing.T) {
+		params := pet_size.NewGetAllPetSizeParamsWithContext(ctx)
+		res, err := client.PetSize.GetAllPetSize(params, utils.AuthInfoFunc(token))
+		require.NoError(t, err)
+
+		got := len(res.Payload)
+		// migration has 4 items
+		want := migrationSizeNumber
+		assert.Equal(t, want, got)
+	})
+
+	t.Run("Get All Pet Size failed: access token", func(t *testing.T) {
+		params := pet_size.NewGetAllPetSizeParamsWithContext(ctx)
+		token := utils.TokenNotExist
+		_, gotErr := client.PetSize.GetAllPetSize(params, utils.AuthInfoFunc(&token))
+		require.Error(t, gotErr)
+
+		wantErr := pet_size.NewGetAllPetSizeDefault(http.StatusInternalServerError)
+		wantErr.Payload = &models.Error{Data: nil}
+		assert.Equal(t, wantErr, gotErr)
+	})
+}
 
 func TestIntegration_PetSize(t *testing.T) {
 	if testing.Short() {

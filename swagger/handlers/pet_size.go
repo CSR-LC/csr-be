@@ -144,7 +144,7 @@ func (ps PetSize) GetPetSizeByID(repo repositories.PetSizeRepository) pet_size.G
 				})
 		}
 		id := int64(petSize.ID)
-		return pet_size.NewGetPetSizeOK().WithPayload(&models.PetSizeResponse{ID: &id, Name: &petSize.Name, Size: &petSize.Size})
+		return pet_size.NewGetPetSizeOK().WithPayload(&models.PetSizeResponse{ID: &id, Name: &petSize.Name, Size: &petSize.Size, IsUniversal: petSize.IsUniversal})
 	}
 }
 
