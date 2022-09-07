@@ -2,6 +2,8 @@ package orders
 
 import (
 	"context"
+	"flag"
+	"log"
 	"net/http"
 	"os"
 	"testing"
@@ -32,27 +34,37 @@ var (
 	token *string
 )
 
-func TestIntegration_BeforeOrderSetup(t *testing.T) {
-	if testing.Short() {
-		t.Skip("skipping integration test")
+var migrationOrderStatusNames = 5
+
+func TestMain(m *testing.M) {
+	flag.Parse()
+	if !testing.Short() {
+		ctx := context.Background()
+		client := common.SetupClient()
+
+		var err error
+		testLogin, testPassword, err := common.GenerateLoginAndPassword()
+		if err != nil {
+			log.Fatalf("GenerateLoginAndPassword: %v", err)
+		}
+		_, err = common.CreateUser(ctx, client, testLogin, testPassword)
+		if err != nil {
+			log.Fatalf("CreateUser: %v", err)
+		}
+		loginUser, err := common.LoginUser(ctx, client, testLogin, testPassword)
+		if err != nil {
+			log.Fatalf("LoginUser: %v", err)
+		}
+
+		token = loginUser.GetPayload().AccessToken
+		auth = common.AuthInfoFunc(token)
+
+		eq, err = createEquipment(ctx, client, auth)
+		if err != nil {
+			log.Fatalf("Equipment not created: %v", err)
+		}
+		os.Exit(m.Run())
 	}
-	ctx := context.Background()
-	client := common.SetupClient()
-
-	l, p, err := common.GenerateLoginAndPassword()
-	require.NoError(t, err)
-
-	_, err = common.CreateUser(ctx, client, l, p)
-	require.NoError(t, err)
-
-	loginUser, err := common.LoginUser(ctx, client, l, p)
-	require.NoError(t, err)
-
-	token = loginUser.GetPayload().AccessToken
-	auth = common.AuthInfoFunc(token)
-
-	eq, err = createEquipment(ctx, client, auth)
-	require.NoError(t, err)
 }
 
 func TestIntegration_CreateOrder(t *testing.T) {
@@ -419,6 +431,33 @@ func TestIntegration_UpdateOrder(t *testing.T) {
 		assert.Equal(t, quantity, *res.Payload.Quantity)
 		rentEnd.Equal(*res.Payload.RentEnd)
 		rentStart.Equal(*res.Payload.RentStart)
+	})
+}
+
+func TestIntegration_Orders_GetAllStatusNames(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping integration test")
+	}
+	ctx := context.Background()
+	client := common.SetupClient()
+
+	t.Run("Get All Status Names ok", func(t *testing.T) {
+		res, err := client.Orders.GetAllStatusNames(orders.NewGetAllStatusNamesParamsWithContext(ctx), auth)
+		require.NoError(t, err)
+
+		got := len(res.Payload)
+		want := migrationOrderStatusNames
+		assert.Equal(t, want, got)
+	})
+
+	t.Run("Get All Status Names failed: access failed", func(t *testing.T) {
+		token := common.TokenNotExist
+		_, gotErr := client.Orders.GetAllStatusNames(orders.NewGetAllStatusNamesParamsWithContext(ctx), common.AuthInfoFunc(&token))
+		require.Error(t, gotErr)
+
+		wantErr := orders.NewGetAllStatusNamesDefault(http.StatusInternalServerError)
+		wantErr.Payload = &models.Error{Data: nil}
+		assert.Equal(t, wantErr, gotErr)
 	})
 }
 
