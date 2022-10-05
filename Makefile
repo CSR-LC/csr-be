@@ -40,8 +40,6 @@ generate:
 	swagger generate server -f ./swagger/spec.yaml -s swagger/generated/restapi -m swagger/generated/models --exclude-main
 	swagger generate client -f ./swagger/spec.yaml -m swagger/generated/models
 	go generate ./ent
-	rm -rf ./internal/mocks
-	make mocks
 
 test:
 	go test -race ./... -coverprofile=coverage.out -short
@@ -59,6 +57,7 @@ integration-test: tag
 	docker-compose --env-file .env -f ./docker/docker-compose.test.yaml down
 
 make mocks:
+	rm -rf ./internal/mocks
 	make gen-repo-mock gen-email-client-mock gen-services-mocks utils-mocks
 
 gen-repo-mock:
