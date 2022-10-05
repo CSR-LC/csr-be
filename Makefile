@@ -40,6 +40,8 @@ generate:
 	swagger generate server -f ./swagger/spec.yaml -s swagger/generated/restapi -m swagger/generated/models --exclude-main
 	swagger generate client -f ./swagger/spec.yaml -m swagger/generated/models
 	go generate ./ent
+	rm -rf ./internal/mocks
+	make mocks
 
 test:
 	go test -race ./... -coverprofile=coverage.out -short
@@ -56,6 +58,9 @@ integration-test: tag
 	go test -race -v -timeout 10m ./... -run Integration
 	docker-compose --env-file .env -f ./docker/docker-compose.test.yaml down
 
+make mocks:
+	make gen-repo-mock gen-email-client-mock gen-services-mocks utils-mocks
+
 gen-repo-mock:
 	@docker run -v `pwd`:/src -w /src vektra/mockery:v2.13.1 --case snake --dir swagger/repositories --output internal/mocks/repositories --outpkg repositories --all
 
@@ -64,6 +69,9 @@ gen-email-client-mock:
 
 gen-services-mocks:
 	@docker run -v `pwd`:/src -w /src vektra/mockery:v2.13.1 --case snake --dir swagger/services --output internal/mocks/services --all
+
+utils-mocks:
+	@docker run -v `pwd`:/src -w /src vektra/mockery:v2.13.1 --case snake --dir internal/utils --output internal/mocks/utils --all
 
 linux-build-mac-version:
 	CGO_ENABLED=1 GOOS=linux CGO_LDFLAGS="-static" GOARCH=amd64 CC=x86_64-linux-musl-gcc CXX=x86_64-linux-musl-g++ go build ./cmd/swagger/main.go

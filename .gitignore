@@ -14,3 +14,4 @@ main
 pid
 /client
 /equipments_photos/*
+/internal/mocks/*

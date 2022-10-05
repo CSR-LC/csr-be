@@ -19,7 +19,7 @@ test:
   rules:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
   script:
-    - apk add --update --no-cache git build-base && rm -rf /var/cache/apk/*
+    - apk add --update --no-cache git build-base docker && rm -rf /var/cache/apk/*
     - go install github.com/go-swagger/go-swagger/cmd/swagger@v0.30.0 && go install entgo.io/ent/cmd/ent@v0.11.2
     - make generate && make test && make coverage
 
