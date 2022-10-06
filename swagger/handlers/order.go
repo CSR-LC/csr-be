@@ -95,7 +95,7 @@ func mapOrder(o *ent.Order, log *zap.Logger) (*models.Order, error) {
 		}
 		orderEquipments[i] = &models.EquipmentResponse{
 			TermsOfUse:       &eq.TermsOfUse,
-			CompensationСost: &eq.CompensationCost,
+			CompensationCost: &eq.CompensationCost,
 			Condition:        eq.Condition,
 			Description:      &eq.Description,
 			ID:               &eqID,
@@ -232,7 +232,7 @@ func (o Order) CreateOrderFunc(orderRepo repositories.OrderRepository,
 		}
 		var availableEquipments []int
 		for _, eq := range equipmentsByCategory {
-			isEquipmentAvailable, err := eqStatusRepo.IsAvailableByPeriod(ctx, eq.ID,
+			isEquipmentAvailable, err := eqStatusRepo.HasStatusByPeriod(ctx, repositories.EquipmentStatusAvailable, eq.ID,
 				time.Time(*p.Data.RentStart), time.Time(*p.Data.RentEnd))
 			if err != nil {
 				o.logger.Error("error while checking if equipment is available for period", zap.Error(err))
