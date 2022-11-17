@@ -72,17 +72,17 @@ deploy_stage:
   environment:
     name: staging
   stage: deploy
-#  rules:
-#    - if: $START_DEPLOY_TO_STAGE == "true"
-#    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
-#      when: always
+  rules:
+    - if: $START_DEPLOY_TO_STAGE == "true"
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      when: always
   script:
     - mkdir -p ~/.ssh
     - echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
     - chmod -R 700 ~/.ssh
     - echo "$SSH_KNOWN_HOSTS" >> ~/.ssh/known_hosts
     - chmod 644 ~/.ssh/known_hosts
-    - mkdir ~/csr && echo $STAGE_FILE
+    - mkdir ~/csr
     - cat $STAGE_FILE >> ~/csr/stage_file
     - scp -o "StrictHostKeyChecking=no" -P$SSH_PORT -r ./csr $SSH_USER@$SSH_HOST:~/tmp_csr
     - ssh -o "StrictHostKeyChecking=no" $SSH_USER@$SSH_HOST 'rm -rf /var/www/csr/db'
