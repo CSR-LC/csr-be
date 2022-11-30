@@ -12,7 +12,9 @@ on:
         default: 'falce'
   # Triggers the workflow on push or pull request events but only for the "main" branch
   push:
-    branches: [ "main","EPMUII-7055" ]
+    branches: 
+    - "main"
+    - "EPMUII-7055"
   pull_request:
     branches: [ "main" ]
 
