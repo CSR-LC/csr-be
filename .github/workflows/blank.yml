@@ -33,6 +33,7 @@ jobs:
 
       # Runs a single command using the runners shell
       - name: Test
+        uses: addnab/docker-run-action@v3
         with:
           image: golang:1.19-alpine
           options: -v ${{ github.workspace }}:/data
