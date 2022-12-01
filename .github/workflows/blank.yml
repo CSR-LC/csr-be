@@ -38,7 +38,7 @@ jobs:
           image: golang:1.19-alpine
           options: -v ${{ github.workspace }}:/data
           run: |
-            cd data
+            cd /data
             ls
             cat Makefile
             set -e
