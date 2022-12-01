@@ -50,7 +50,7 @@ jobs:
             apk add --update --no-cache make
             make setup_alpine && make setup && make generate && make test
             make coverage && coverage_total=$(make coverage_total | tail -n1) && echo $coverage_total
-            'echo "$coverage_total<$min_coverage" | bc | grep 0 || (echo "coverage below requirement: $min_coverage" && exit 1)'
+            'echo "$coverage_total<70" | bc | grep 0 || (echo "coverage below requirement: 70" && exit 1)'
 
 
       # Runs a set of commands using the runners shell
