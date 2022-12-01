@@ -9,7 +9,7 @@ on:
       flutter_version:
         description: 'Deploy?'
         required: false
-        default: 'falce'
+        default: 'false'
   # Triggers the workflow on push or pull request events but only for the "main" branch
   push:
     branches: [ "main","EPMUII-7055" ]
@@ -39,6 +39,8 @@ jobs:
           options: -v ${{ github.workspace }}:/data
           run: |
             cd data
+            ls
+            cat Makefile
             set -e
             apk add --update --no-cache make
             make setup_alpine && make setup && make generate && make test
