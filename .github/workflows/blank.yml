@@ -55,6 +55,7 @@ jobs:
           image: registry.gitlab.com/gitlab-org/gitlab-build-images:golangci-lint-alpine
           options: -v ${{ github.workspace }}:/data
           run: |
+           cd /data
            set -e
            apk add --update --no-cache make
            make setup_alpine && make setup && make generate
@@ -67,6 +68,7 @@ jobs:
           image: golang:1.19-alpine
           options: -v ${{ github.workspace }}:/data
           run: |
+            cd /data
             apk add --update --no-cache make
             make setup_alpine && make setup && make generate
             make build
