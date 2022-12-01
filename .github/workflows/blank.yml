@@ -33,10 +33,15 @@ jobs:
 
       # Runs a single command using the runners shell
       - name: Test
+        env:
+          min_coverage: '70'
+          coverage_result: '/total:\s+\(statements\)\s+(\d+.\d+)\%/'
         uses: addnab/docker-run-action@v3
         with:
           image: golang:1.19-alpine
           options: -v ${{ github.workspace }}:/data
+          
+            
           run: |
             cd /data
             ls
