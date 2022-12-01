@@ -41,6 +41,7 @@ jobs:
           image: golang:1.19-alpine
           options: -v ${{ github.workspace }}:/data
           run: |
+            cd /data
             set -e
             apk add --update --no-cache make
             make setup_alpine && make setup && make generate && make test
