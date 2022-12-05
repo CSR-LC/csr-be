@@ -6,7 +6,7 @@ name: CI
 on:
   workflow_dispatch:
     inputs:
-      flutter_version:
+      deploy:
         description: 'Deploy?'
         required: false
         default: 'false'
@@ -78,7 +78,7 @@ jobs:
             retention-days: 5
 
       - name: Deploy
-        if: github.repository == 'stage'
+        if: github.deploy == 'stage'
         uses: addnab/docker-run-action@v3
         env: 
           name: stage
