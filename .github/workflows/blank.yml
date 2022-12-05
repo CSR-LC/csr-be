@@ -59,7 +59,7 @@ jobs:
            set -e
            apk add --update --no-cache make
            make setup_alpine && make setup && make generate
-           '[ -e .golangci.yml ] || cp /golangci/.golangci.yml .'
+#           '[ -e .golangci.yml ] || cp /golangci/.golangci.yml .'
            make lint
 
       - name: Build
