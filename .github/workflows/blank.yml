@@ -70,6 +70,7 @@ jobs:
             cd /data
             apk add --update --no-cache make
             make setup_alpine && make setup && make generate
+            echo "start build"
             CGO_ENABLED=0 go build -o csr ./cmd/swagger/...
 
 #       - name: Deploy
