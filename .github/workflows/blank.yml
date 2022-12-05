@@ -21,8 +21,11 @@ on:
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
+  
   # This workflow contains a single job called "build"
   build:
+    environment:
+      name: stage
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
 
@@ -81,7 +84,12 @@ jobs:
       
         uses: addnab/docker-run-action@v3
         env: 
-          name: stage
+          ENV: "stage"
+          DEPLOY_SSH_PRIVATE_KEY: ${{ secrets.DEPLOY_SSH_PRIVATE_KEY }}
+          DEPLOY_CONFIG: ${{ secrets.DEPLOY_CONFIG }}
+          DEPLOY_SSH_PORT: ${{ secrets.DEPLOY_SSH_PORT }}
+          DEPLOY_SSH_USER: ${{ secrets.DEPLOY_SSH_USER }}
+          DEPLOY_SSH_HOST: ${{ secrets.DEPLOY_SSH_HOST }}
         with:
           image: kroniak/ssh-client
           options: -v ${{ github.workspace }}:/data
@@ -93,7 +101,7 @@ jobs:
             echo "$DEPLOY_SSH_PRIVATE_KEY" > ~/.ssh/ssh_deploy
             chmod -R 700 ~/.ssh
             echo "$DEPLOY_CONFIG" > ./config.json
-            ENV="stage" make deploy_ssh
+            make deploy_ssh
 
 
 
