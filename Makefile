@@ -40,7 +40,7 @@ clean: clean/swagger clean/ent
 	rm csr coverage.out report.txt
 
 build:
-	CGO_ENABLED=0 go build -o csr ./cmd/swagger/...
+	CGO_ENABLED=0 go build -o csr -buildvcs=false ./cmd/swagger/...
 
 lint:
 	golangci-lint run --out-format tab | tee ./report.txt
