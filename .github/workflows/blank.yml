@@ -78,7 +78,7 @@ jobs:
             retention-days: 5
 
       - name: Deploy
-        if: github.deploy == 'stage'
+      
         uses: addnab/docker-run-action@v3
         env: 
           name: stage
