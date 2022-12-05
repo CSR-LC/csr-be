@@ -46,7 +46,7 @@ jobs:
             apk add --update --no-cache make
             make setup_alpine && make setup && make generate && make test
             make coverage && coverage_total=$(make coverage_total | tail -n1) && echo $coverage_total
-            #'echo "$coverage_total<70" | bc | grep 0 || (echo "coverage below requirement: 70" && exit 1)'
+
 
 
       - name: Lint
@@ -59,7 +59,6 @@ jobs:
            set -e
            apk add --update --no-cache make
            make setup_alpine && make setup && make generate
-#           '[ -e .golangci.yml ] || cp /golangci/.golangci.yml .'
            make lint
 
       - name: Build
