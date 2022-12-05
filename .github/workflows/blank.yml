@@ -70,9 +70,12 @@ jobs:
             cd /data
             apk add --update --no-cache make
             make setup_alpine && make setup && make generate && make build
-          name: my-artifact
-          path: csr
-          retention-days: 5
+      - name: 'Upload Artifact'
+        uses: actions/upload-artifact@v3
+        with:
+            name: my-artifact
+            path: csr
+            retention-days: 5
 
 #       - name: Deploy
 #         env:
