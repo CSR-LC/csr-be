@@ -81,18 +81,23 @@ jobs:
             retention-days: 5
 
       - name: Deploy
-      
-        uses: addnab/docker-run-action@v3
         env: 
+            ENV: "stage"
+            DEPLOY_SSH_PRIVATE_KEY: ${{ secrets.DEPLOY_SSH_PRIVATE_KEY }}
+            DEPLOY_CONFIG: ${{ secrets.DEPLOY_CONFIG }}
+            DEPLOY_SSH_PORT: ${{ secrets.DEPLOY_SSH_PORT }}
+            DEPLOY_SSH_USER: ${{ secrets.DEPLOY_SSH_USER }}
+            DEPLOY_SSH_HOST: ${{ secrets.DEPLOY_SSH_HOST }}
+        uses: addnab/docker-run-action@v3
+        with:
+          image: kroniak/ssh-client
+          options: -v ${{ github.workspace }}:/data
           ENV: "stage"
           DEPLOY_SSH_PRIVATE_KEY: ${{ secrets.DEPLOY_SSH_PRIVATE_KEY }}
           DEPLOY_CONFIG: ${{ secrets.DEPLOY_CONFIG }}
           DEPLOY_SSH_PORT: ${{ secrets.DEPLOY_SSH_PORT }}
           DEPLOY_SSH_USER: ${{ secrets.DEPLOY_SSH_USER }}
           DEPLOY_SSH_HOST: ${{ secrets.DEPLOY_SSH_HOST }}
-        with:
-          image: kroniak/ssh-client
-          options: -v ${{ github.workspace }}:/data
           run: |
             cd /data
             apk add --update --no-cache make
