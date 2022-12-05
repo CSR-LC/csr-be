@@ -96,6 +96,8 @@ jobs:
           run: |
             cd /data
             apk add --update --no-cache make
+            echo $ENV
+            echo $DEPLOY_SSH_USER
             make setup_alpine
             mkdir -p ~/.ssh
             echo "$DEPLOY_SSH_PRIVATE_KEY" > ~/.ssh/ssh_deploy
