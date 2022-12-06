@@ -86,7 +86,8 @@ jobs:
         with:
           image: kroniak/ssh-client
           options:
-            -e ENV=stage -e DEPLOY_CONFIG=lel
+            -e ENV=stage 
+            -e DEPLOY_CONFIG="${{ secrets.DEPLOY_SSH_PORT }}"
             -v ${{ github.workspace }}:/data
 #             --e DEPLOY_SSH_PORT=${{ secrets.DEPLOY_SSH_PORT }}
 #             --e DEPLOY_SSH_USER=${{ secrets.DEPLOY_SSH_USER }}
