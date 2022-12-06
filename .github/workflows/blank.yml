@@ -87,7 +87,7 @@ jobs:
           key: ${{ secrets.DEPLOY_SSH_PRIVATE_KEY }}
           port: ${{ secrets.DEPLOY_SSH_PORT }}
           script: |
-            whoami
+            touch test1
 #            ls -la
 #            echo ${{ secrets.DEPLOY_CONFIG }} > config.conf
           
