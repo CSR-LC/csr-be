@@ -88,7 +88,8 @@ jobs:
           port: ${{ secrets.DEPLOY_SSH_PORT }}
           script: |
             whoami
-            echo ${{ secrets.DEPLOY_CONFIG }} > config.conf
+            ls -la
+#            echo ${{ secrets.DEPLOY_CONFIG }} > config.conf
           
 
 #       - name: Deploy
