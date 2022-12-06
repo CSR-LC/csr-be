@@ -67,21 +67,34 @@ jobs:
 #            make setup_alpine && make setup && make generate
 #            make lint
 
-#       - name: Build
-#         uses: addnab/docker-run-action@v3
-#         with:
-#           image: golang:1.19-alpine
-#           options: -v ${{ github.workspace }}:/data
-#           run: |
-#             cd /data
-#             apk add --update --no-cache make
-#             make setup_alpine && make setup && make generate && make build
-#       - name: 'Upload Artifact'
-#         uses: actions/upload-artifact@v3
-#         with:
-#             name: my-artifact
-#             path: csr
-#             retention-days: 5
+      - name: Build
+        uses: addnab/docker-run-action@v3
+        with:
+          image: golang:1.19-alpine
+          options: -v ${{ github.workspace }}:/data
+          run: |
+            cd /data
+            apk add --update --no-cache make
+            make setup_alpine && make setup && make generate && make build
+      - name: 'Upload Artifact'
+        uses: actions/upload-artifact@v3
+        with:
+            name: my-artifact
+            path: csr
+            retention-days: 5
+            
+      - name: Upload artifact to server
+        if: ${{ github.event.inputs.deploy }} 
+        uses: easingthemes/ssh-deploy@main
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.DEPLOY_SSH_PRIVATE_KEY }}
+          ARGS: "-rltgoDzvO"
+          SOURCE: "csr"
+          REMOTE_HOST: ${{ secrets.DEPLOY_SSH_HOST }}
+          REMOTE_PORT: ${{ secrets.DEPLOY_SSH_USER }}
+          REMOTE_USER: ${{ secrets.REMOTE_USER }}
+          TARGET: ~/tmp_csr1
+
 
       - name: Deploy
         if: ${{ github.event.inputs.deploy }} 
@@ -92,8 +105,12 @@ jobs:
           key: ${{ secrets.DEPLOY_SSH_PRIVATE_KEY }}
           port: ${{ secrets.DEPLOY_SSH_PORT }}
           script: |
+            whoami
+ #           mkdir -p /var/www/csr/${{ github.event.inputs.environment }}/
+ #           sudo systemctl daemon-reload && sudo service ${{ github.event.inputs.environment }}.csr stop \ 
+ #           cp ~/tmp_csr /var/www/csr/${{ github.event.inputs.environment }}/server \
+ #           sudo service ${{ github.event.inputs.environment }}.csr start
            
-            touch ${{ github.event.inputs.environment }}
           #  mkdir -p /var/www/csr/${env}/  echo "${{ secrets.DEPLOY_CONFIG }}" > config.json
            # sudo systemctl daemon-reload && sudo service ${env}.csr stop && cp ~/tmp_csr /var/www/csr/${env}/server && sudo service ${env}.csr start
           
