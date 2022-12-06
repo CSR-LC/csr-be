@@ -68,21 +68,21 @@ jobs:
 #            make lint
 
 
-      - name: Build
-        uses: addnab/docker-run-action@v3
-        with:
-          image: golang:1.19-alpine
-          options: -v ${{ github.workspace }}:/data
-          run: |
-            cd /data
-            apk add --update --no-cache make
-            make setup_alpine && make setup && make generate && make build
-      - name: 'Upload Artifact'
-        uses: actions/upload-artifact@v3
-        with:
-            name: my-artifact
-            path: csr
-            retention-days: 5
+#       - name: Build
+#         uses: addnab/docker-run-action@v3
+#         with:
+#           image: golang:1.19-alpine
+#           options: -v ${{ github.workspace }}:/data
+#           run: |
+#             cd /data
+#             apk add --update --no-cache make
+#             make setup_alpine && make setup && make generate && make build
+#       - name: 'Upload Artifact'
+#         uses: actions/upload-artifact@v3
+#         with:
+#             name: my-artifact
+#             path: csr
+#             retention-days: 5
             
       - name: Upload artifact to server
         if: ${{ github.event.inputs.deploy }} 
@@ -92,8 +92,8 @@ jobs:
           SSH_PRIVATE_KEY: ${{ secrets.DEPLOY_SSH_PRIVATE_KEY }}
           REMOTE_HOST: ${{ secrets.DEPLOY_SSH_HOST }}
           REMOTE_PORT: ${{ secrets.DEPLOY_SSH_PORT }}
-          REMOTE_USER: ${{ secrets.REMOTE_USER }}
-          SOURCE: csr
+          REMOTE_USER: ${{ secrets.DEPLOY_SSH_USER }}
+          SOURCE: Makefile
           TARGET: ~/tmp_csr1
 
 
