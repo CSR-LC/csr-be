@@ -82,7 +82,8 @@ jobs:
 #             name: my-artifact
 #             path: csr
 #             retention-days: 5
-      - name: executing remote ssh commands using password
+      - name: Redeploy
+        if: ${{ github.event.inputs.deploy }} == stage
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.DEPLOY_SSH_HOST }}
