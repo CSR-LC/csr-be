@@ -85,15 +85,14 @@ jobs:
         uses: addnab/docker-run-action@v3
         with:
           image: kroniak/ssh-client
-          env: 
-            ENV="stage"
-            DEPLOY_SSH_PRIVATE_KEY=${{ secrets.DEPLOY_SSH_PRIVATE_KEY }}
-            DEPLOY_CONFIG=${{ secrets.DEPLOY_CONFIG }}
-            DEPLOY_SSH_PORT=${{ secrets.DEPLOY_SSH_PORT }}
-            DEPLOY_SSH_USER=${{ secrets.DEPLOY_SSH_USER }}
-            DEPLOY_SSH_HOST=${{ secrets.DEPLOY_SSH_HOST }}
-           
-          options: -v ${{ github.workspace }}:/data
+          options:
+            -e ENV="stage"
+            -e DEPLOY_SSH_PRIVATE_KEY=${{ secrets.DEPLOY_SSH_PRIVATE_KEY }}
+            -e DEPLOY_CONFIG=${{ secrets.DEPLOY_CONFIG }}
+            -e DEPLOY_SSH_PORT=${{ secrets.DEPLOY_SSH_PORT }}
+            -e DEPLOY_SSH_USER=${{ secrets.DEPLOY_SSH_USER }}
+            -e DEPLOY_SSH_HOST=${{ secrets.DEPLOY_SSH_HOST }}
+            -v ${{ github.workspace }}:/data
           run: |
             cd /data
             apk add --update --no-cache make
