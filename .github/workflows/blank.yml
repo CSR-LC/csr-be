@@ -67,6 +67,7 @@ jobs:
 #            make setup_alpine && make setup && make generate
 #            make lint
 
+
       - name: Build
         uses: addnab/docker-run-action@v3
         with:
@@ -87,12 +88,12 @@ jobs:
         if: ${{ github.event.inputs.deploy }} 
         uses: easingthemes/ssh-deploy@main
         env:
-          SSH_PRIVATE_KEY: ${{ secrets.DEPLOY_SSH_PRIVATE_KEY }}
           ARGS: "-rltgoDzvO"
-          SOURCE: "csr"
+          SSH_PRIVATE_KEY: ${{ secrets.DEPLOY_SSH_PRIVATE_KEY }}
           REMOTE_HOST: ${{ secrets.DEPLOY_SSH_HOST }}
-          REMOTE_PORT: ${{ secrets.DEPLOY_SSH_USER }}
+          REMOTE_PORT: ${{ secrets.DEPLOY_SSH_PORT }}
           REMOTE_USER: ${{ secrets.REMOTE_USER }}
+          SOURCE: ${{ GITHUB_WORKSPACE }}/csr
           TARGET: ~/tmp_csr1
 
 
