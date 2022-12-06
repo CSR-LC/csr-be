@@ -7,9 +7,12 @@ on:
   workflow_dispatch:
     inputs:
       deploy:
-        description: 'Deploy?'
-        required: false
-        default: 'stage'
+        type: choice
+        description: Deploy
+        options: 
+        - no
+        - stage
+        - prod
   # Triggers the workflow on push or pull request events but only for the "main" branch
   push:
     branches: [ "main","EPMUII-7055" ]
