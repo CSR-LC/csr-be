@@ -82,7 +82,7 @@ jobs:
 
       - name: Deploy
         env: 
-            ENV: 123
+            ENV: "123"
             DEPLOY_SSH_PRIVATE_KEY: ${{ secrets.DEPLOY_SSH_PRIVATE_KEY }}
             DEPLOY_CONFIG: ${{ secrets.DEPLOY_CONFIG }}
             DEPLOY_SSH_PORT: ${{ secrets.DEPLOY_SSH_PORT }}
