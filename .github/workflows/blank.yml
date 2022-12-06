@@ -79,37 +79,48 @@ jobs:
 #             name: my-artifact
 #             path: csr
 #             retention-days: 5
-
-      - name: Deploy
-       
-        uses: addnab/docker-run-action@v3
+      - name: executing remote ssh commands using password
+        uses: appleboy/ssh-action@master
         with:
-          image: kroniak/ssh-client
-          options:
-            -v ${{ github.workspace }}:/data
-            -e ENV=stage 
-            -e DEPLOY_SSH_PORT=${{ secrets.DEPLOY_SSH_PORT }}
-            -e DEPLOY_SSH_USER=${{ secrets.DEPLOY_SSH_USER }}
-            -e DEPLOY_SSH_HOST=${{ secrets.DEPLOY_SSH_HOST }}
-            -e DEPLOY_SSH_PRIVATE_KEY=${{ secrets.DEPLOY_SSH_PRIVATE_KEY }}
-#             -e DEPLOY_CONFIG=${{ secrets.DEPLOY_CONFIG }}
+          host: ${{ secrets.DEPLOY_SSH_HOST }}
+          username: ${{ secrets.DEPLOY_SSH_USER }}
+          key: ${{ secrets.DEPLOY_SSH_PRIVATE_KEY }}
+          port: ${{ secrets.DEPLOY_SSH_PORT }}
+          script: |
+            whoami
+            echo ${{ secrets.DEPLOY_CONFIG }} > config.conf
+          
+
+#       - name: Deploy
+       
+#         uses: addnab/docker-run-action@v3
+#         with:
+#           image: kroniak/ssh-client
+#           options:
+#             -v ${{ github.workspace }}:/data
+#             -e ENV=stage 
+#             -e DEPLOY_SSH_PORT=${{ secrets.DEPLOY_SSH_PORT }}
+#             -e DEPLOY_SSH_USER=${{ secrets.DEPLOY_SSH_USER }}
+#             -e DEPLOY_SSH_HOST=
+#             -e DEPLOY_SSH_PRIVATE_KEY=
+# #             -e DEPLOY_CONFIG=${{ secrets.DEPLOY_CONFIG }}
             
-#             -
-#             -
-#             -
-#
+# #             -
+# #             -
+# #             -
+# #
             
-          run: |
-            cd /data
-            apk add --update --no-cache make
-            echo "$ENV"
-            echo "$DEPLOY_CONFIG"
-            make setup_alpine
-            mkdir -p ~/.ssh
-            echo "$DEPLOY_SSH_PRIVATE_KEY" > ~/.ssh/ssh_deploy
-            chmod -R 700 ~/.ssh
-            echo "$DEPLOY_CONFIG" > ./config.json
-            make deploy_ssh
+#           run: |
+#             cd /data
+#             apk add --update --no-cache make
+#             echo "$ENV"
+#             echo "$DEPLOY_CONFIG"
+#             make setup_alpine
+#             mkdir -p ~/.ssh
+#             echo "$DEPLOY_SSH_PRIVATE_KEY" > ~/.ssh/ssh_deploy
+#             chmod -R 700 ~/.ssh
+#             echo "$DEPLOY_CONFIG" > ./config.json
+#             make deploy_ssh
 
 
 
