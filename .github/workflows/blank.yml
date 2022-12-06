@@ -64,21 +64,21 @@ jobs:
 #            make setup_alpine && make setup && make generate
 #            make lint
 
-      - name: Build
-        uses: addnab/docker-run-action@v3
-        with:
-          image: golang:1.19-alpine
-          options: -v ${{ github.workspace }}:/data
-          run: |
-            cd /data
-            apk add --update --no-cache make
-            make setup_alpine && make setup && make generate && make build
-      - name: 'Upload Artifact'
-        uses: actions/upload-artifact@v3
-        with:
-            name: my-artifact
-            path: csr
-            retention-days: 5
+#       - name: Build
+#         uses: addnab/docker-run-action@v3
+#         with:
+#           image: golang:1.19-alpine
+#           options: -v ${{ github.workspace }}:/data
+#           run: |
+#             cd /data
+#             apk add --update --no-cache make
+#             make setup_alpine && make setup && make generate && make build
+#       - name: 'Upload Artifact'
+#         uses: actions/upload-artifact@v3
+#         with:
+#             name: my-artifact
+#             path: csr
+#             retention-days: 5
 
       - name: Deploy
         env: 
@@ -95,8 +95,8 @@ jobs:
           run: |
             cd /data
             apk add --update --no-cache make
-            echo $ENV
-            echo $DEPLOY_SSH_USER
+            echo "$ENV"
+            echo "$DEPLOY_SSH_USER"
             make setup_alpine
             mkdir -p ~/.ssh
             echo "$DEPLOY_SSH_PRIVATE_KEY" > ~/.ssh/ssh_deploy
