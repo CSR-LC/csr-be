@@ -90,8 +90,8 @@ jobs:
             -e ENV=stage 
             -e DEPLOY_SSH_PORT=${{ secrets.DEPLOY_SSH_PORT }}
             -e DEPLOY_SSH_USER=${{ secrets.DEPLOY_SSH_USER }}
-            -e DEPLOY_SSH_HOST=${{ secrets.DEPLOY_SSH_HOST }}
-            -e DEPLOY_SSH_PRIVATE_KEY=${{ secrets.DEPLOY_SSH_PRIVATE_KEY }}
+#             -e DEPLOY_SSH_HOST=${{ secrets.DEPLOY_SSH_HOST }}
+#             -e DEPLOY_SSH_PRIVATE_KEY=${{ secrets.DEPLOY_SSH_PRIVATE_KEY }}
 #             -e DEPLOY_CONFIG=${{ secrets.DEPLOY_CONFIG }}
             
 #             -
