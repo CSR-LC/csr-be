@@ -89,9 +89,9 @@ jobs:
         uses: easingthemes/ssh-deploy@main
         env:
           SSH_PRIVATE_KEY: ${{ secrets.DEPLOY_SSH_PRIVATE_KEY }}
-          REMOTE_HOST: ${{ secrets.DEPLOY_SSH_HOST }}
-          REMOTE_PORT: ${{ secrets.DEPLOY_SSH_PORT }}
-          REMOTE_USER: ${{ secrets.DEPLOY_SSH_USER }}
+          REMOTE_HOST: 185.105.91.56 # ${{ secrets.DEPLOY_SSH_HOST }}
+          REMOTE_PORT: 6984 #${{ secrets.DEPLOY_SSH_PORT }}
+          REMOTE_USER: csr #${{ secrets.DEPLOY_SSH_USER }}
           SOURCE: Makefile
           TARGET: ~/tmp_csr1
 
