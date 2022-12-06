@@ -85,9 +85,10 @@ jobs:
 #             retention-days: 5
             
       - name: Upload artifact to server
-        if: ${{ github.event.inputs.deploy }} 
+#         if: ${{ github.event.inputs.deploy }} 
         uses: easingthemes/ssh-deploy@main
         env:
+          ARGS: -o "StrictHostKeyChecking=no"
           SSH_PRIVATE_KEY: ${{ secrets.DEPLOY_SSH_PRIVATE_KEY }}
           REMOTE_HOST: 185.105.91.56 # ${{ secrets.DEPLOY_SSH_HOST }}
           REMOTE_PORT: 6984 #${{ secrets.DEPLOY_SSH_PORT }}
