@@ -86,20 +86,18 @@ jobs:
         with:
           image: kroniak/ssh-client
           options:
-            -e ENV="stage"
-            -e DEPLOY_SSH_PRIVATE_KEY=${{ secrets.DEPLOY_SSH_PRIVATE_KEY }}
+            -e ENV="stage" -e DEPLOY_CONFIG=${{ secrets.DEPLOY_CONFIG }}
             -v ${{ github.workspace }}:/data
-             
-#             --e DEPLOY_CONFIG=${{ secrets.DEPLOY_CONFIG }}
 #             --e DEPLOY_SSH_PORT=${{ secrets.DEPLOY_SSH_PORT }}
 #             --e DEPLOY_SSH_USER=${{ secrets.DEPLOY_SSH_USER }}
 #             --e DEPLOY_SSH_HOST=${{ secrets.DEPLOY_SSH_HOST }}
+#-e DEPLOY_SSH_PRIVATE_KEY=${{ secrets.DEPLOY_SSH_PRIVATE_KEY }}
             
           run: |
             cd /data
             apk add --update --no-cache make
             echo "$ENV"
-            echo "$DEPLOY_SSH_USER"
+            echo "$DEPLOY_CONFIG"
             make setup_alpine
             mkdir -p ~/.ssh
             echo "$DEPLOY_SSH_PRIVATE_KEY" > ~/.ssh/ssh_deploy
