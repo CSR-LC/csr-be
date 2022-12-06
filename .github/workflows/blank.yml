@@ -93,7 +93,7 @@ jobs:
           REMOTE_HOST: ${{ secrets.DEPLOY_SSH_HOST }}
           REMOTE_PORT: ${{ secrets.DEPLOY_SSH_PORT }}
           REMOTE_USER: ${{ secrets.REMOTE_USER }}
-          SOURCE: ${{ GITHUB_WORKSPACE }}/csr
+          SOURCE: csr
           TARGET: ~/tmp_csr1
 
 
