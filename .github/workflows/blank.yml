@@ -93,7 +93,7 @@ jobs:
           port: ${{ secrets.DEPLOY_SSH_PORT }}
           script: |
            
-            touch ${{ github.event.inputs.deploy }}
+            touch ${{ github.event.inputs.environment }}
           #  mkdir -p /var/www/csr/${env}/  echo "${{ secrets.DEPLOY_CONFIG }}" > config.json
            # sudo systemctl daemon-reload && sudo service ${env}.csr stop && cp ~/tmp_csr /var/www/csr/${env}/server && sudo service ${env}.csr start
           
