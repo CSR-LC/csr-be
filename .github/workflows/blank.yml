@@ -92,7 +92,7 @@ jobs:
           key: ${{ secrets.DEPLOY_SSH_PRIVATE_KEY }}
           port: ${{ secrets.DEPLOY_SSH_PORT }}
           source: csr
-          target: ~/tmp_csr1
+          target: ~/
             
 #       - name: Upload artifact to server
 # #         if: ${{ github.event.inputs.deploy }} 
@@ -116,11 +116,11 @@ jobs:
           key: ${{ secrets.DEPLOY_SSH_PRIVATE_KEY }}
           port: ${{ secrets.DEPLOY_SSH_PORT }}
           script: |
-            whoami
- #           mkdir -p /var/www/csr/${{ github.event.inputs.environment }}/
- #           sudo systemctl daemon-reload && sudo service ${{ github.event.inputs.environment }}.csr stop \ 
- #           cp ~/tmp_csr /var/www/csr/${{ github.event.inputs.environment }}/server \
- #           sudo service ${{ github.event.inputs.environment }}.csr start
+           mkdir -p /var/www/csr/${{ github.event.inputs.environment }}/
+           echo "${{ secrets.DEPLOY_CONFIG }}" > /var/www/csr/${env}/config.json
+           sudo systemctl daemon-reload && sudo service ${{ github.event.inputs.environment }}.csr stop \ 
+           cp ~/tmp_csr /var/www/csr/${{ github.event.inputs.environment }}/server \
+           sudo service ${{ github.event.inputs.environment }}.csr start
            
           #  mkdir -p /var/www/csr/${env}/  echo "${{ secrets.DEPLOY_CONFIG }}" > config.json
            # sudo systemctl daemon-reload && sudo service ${env}.csr stop && cp ~/tmp_csr /var/www/csr/${env}/server && sudo service ${env}.csr start
