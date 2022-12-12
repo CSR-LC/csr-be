@@ -906,6 +906,7 @@ paths:
             - created_at
             - rent_start
             - rent_end
+            - is_first
           default: id
       operationId: GetOrdersByStatus
       responses:
@@ -974,6 +975,7 @@ paths:
             - created_at
             - rent_start
             - rent_end
+            - is_first
           default: id
       operationId: GetOrdersByDateAndStatus
       responses:
@@ -2629,6 +2631,7 @@ definitions:
       - user
       - equipments
       - last_status
+      - is_first
     properties:
       id:
         type: integer
@@ -2652,6 +2655,9 @@ definitions:
       last_status:
         type: object
         $ref: '#/definitions/OrderStatus'
+      is_first:
+        type: boolean
+        example: false
   OrderStatuses:
     type: array
     items:

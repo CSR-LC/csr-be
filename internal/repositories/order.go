@@ -144,7 +144,7 @@ func (r *orderRepository) Create(ctx context.Context, data *models.OrderCreateRe
 	if err != nil {
 		return nil, err
 	}
-
+	//
 	ordersWithApprovedStatus, err := tx.Order.Query().
 		Where(order.HasOrderStatusWith(orderstatus.
 			HasOrderStatusNameWith(orderstatusname.StatusEQ(domain.OrderStatusApproved)))).
@@ -159,7 +159,7 @@ func (r *orderRepository) Create(ctx context.Context, data *models.OrderCreateRe
 	if ordersWithApprovedStatus == 0 {
 		isFirst = true
 	}
-
+	//
 	createdOrder, err := tx.Order.
 		Create().
 		SetDescription(*data.Description).
