@@ -66,9 +66,14 @@ jobs:
            apk add --update --no-cache make
            make setup_alpine && make setup && make generate
            make lint
+      - name: 'Upload Artifact'
+        uses: actions/upload-artifact@v3
+        with:
+            name: lint-report
+            path: /data/report.txt
+            retention-days: 5
 
-
-#       - name: Build
+ #       - name: Build
 #         uses: addnab/docker-run-action@v3
 #         with:
 #           image: golang:1.19-alpine
