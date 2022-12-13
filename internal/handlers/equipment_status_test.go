@@ -48,6 +48,15 @@ type StatusTestSuite struct {
 	handler    *EquipmentStatusName
 }
 
+func ValidStatus(t *testing.T) *ent.EquipmentStatusName {
+	t.Helper()
+	return &ent.EquipmentStatusName{
+		ID:   1,
+		Name: "Available",
+	}
+
+}
+
 func TestStatusSuite(t *testing.T) {
 	suite.Run(t, new(StatusTestSuite))
 }
