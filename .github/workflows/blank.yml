@@ -66,7 +66,15 @@ jobs:
            echo "1"
            apk add --update --no-cache make
            echo "2"
-           make setup_alpine && make setup && make generate
+           apk add --update --no-cache git build-base && rm -rf /var/cache/apk/*
+           go install github.com/go-swagger/go-swagger/cmd/swagger@v0.30.0
+           go install github.com/vektra/mockery/v2@v2.15.0
+           go install entgo.io/ent/cmd/ent@v0.11.2
+           swagger generate server -f ./swagger.yaml -s ./internal/generated/swagger/restapi -m ./internal/generated/swagger/models --exclude-main
+           swagger generate client -c ./internal/generated/swagger/client -f ./swagger.yaml -m ./internal/generated/swagger/models
+           go run -mod=mod entgo.io/ent/cmd/ent generate --target ./internal/generated/ent ./internal/ent/schema
+           mockery --all --case snake --dir ./pkg/domain --output ./internal/generated/mocks
+           find ./internal/generated/mocks/* -exec rm -rf {} \; || true
            echo "3"
            golangci-lint run --out-format tab > report.txt
            echo "4"
