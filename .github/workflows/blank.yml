@@ -62,7 +62,6 @@ jobs:
           options: -v ${{ github.workspace }}:/data
           run: |
            cd /data
-           set -e
            apk add --update --no-cache make
            make setup_alpine && make setup && make generate
            golangci-lint run --out-format tab > report.txt
