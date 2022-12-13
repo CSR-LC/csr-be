@@ -70,7 +70,7 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
             name: lint-report
-            path: /data/report.txt
+            path: report.txt
             retention-days: 5
 
  #       - name: Build
