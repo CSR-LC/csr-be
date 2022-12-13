@@ -62,14 +62,15 @@ jobs:
           options: -v ${{ github.workspace }}:/data
           run: |
            cd /data
-           ls
+           echo "1"
            apk add --update --no-cache make
-           ls
+           echo "2"
            make setup_alpine && make setup && make generate
-           ls
+           echo "3"
            golangci-lint run --out-format tab > report.txt
-           ls
+           echo "4"
            cat report.txt
+           echo "5"
       - name: 'Upload Artifact'
         uses: actions/upload-artifact@v3
         with:
