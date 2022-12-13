@@ -65,7 +65,8 @@ jobs:
            set -e
            apk add --update --no-cache make
            make setup_alpine && make setup && make generate
-           golangci-lint run --out-format tab >> /report.txt
+           golangci-lint run --out-format tab > report.txt
+           cat report.txt
       - name: 'Upload Artifact'
         uses: actions/upload-artifact@v3
         with:
