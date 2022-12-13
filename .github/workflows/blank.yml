@@ -65,13 +65,13 @@ jobs:
            set -e
            apk add --update --no-cache make
            make setup_alpine && make setup && make generate
-           golangci-lint run --out-format tab
-#       - name: 'Upload Artifact'
-#         uses: actions/upload-artifact@v3
-#         with:
-#             name: lint-report
-#             path: report.txt
-#             retention-days: 5
+           golangci-lint run --out-format tab > report.txt
+      - name: 'Upload Artifact'
+        uses: actions/upload-artifact@v3
+        with:
+            name: lint-report
+            path: report.txt
+            retention-days: 5
 
  #       - name: Build
 #         uses: addnab/docker-run-action@v3
