@@ -61,6 +61,7 @@ jobs:
           image: registry.gitlab.com/gitlab-org/gitlab-build-images:golangci-lint-alpine
           options: -v ${{ github.workspace }}:/data
           run: |
+           set -e
            cd /data
            echo "1"
            apk add --update --no-cache make
