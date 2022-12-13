@@ -52,7 +52,7 @@ func ValidStatus(t *testing.T) *ent.EquipmentStatusName {
 	t.Helper()
 	return &ent.EquipmentStatusName{
 		ID:   1,
-		Name: "Available",
+		Name: "available",
 	}
 
 }
