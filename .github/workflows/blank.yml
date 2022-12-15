@@ -48,7 +48,8 @@ jobs:
            make setup_alpine && make setup && make generate 
            go test $(go list ./... | grep -v generated) -race -coverprofile=coverage.out -short
            make coverage && coverage_total=$(make coverage_total | tail -n1) && echo $coverage_total
-           "echo \"$coverage_total<$min_coverage\" | bc | grep 0 || (echo \"coverage below requirement: $min_coverage\" && exit 1)"
+           if [ $min_coverage -gt $coverage_total ]; then exit 1; fi
+#           "echo \"$coverage_total<$min_coverage\" | bc | grep 0 || (echo \"coverage below requirement: $min_coverage\" && exit 1)"
 #         uses: addnab/docker-run-action@v3
 #         with:
 #           image:
