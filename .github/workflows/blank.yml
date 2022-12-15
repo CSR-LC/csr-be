@@ -84,7 +84,7 @@ jobs:
            echo "2.8"
            mockery --all --case snake --dir ./pkg/domain --output ./internal/generated/mocks
            echo "3"
-           golangci-lint run --out-format tab 
+           golangci-lint run --out-format tab | tee report.txt
            echo "4"
            cat report.txt
            echo "5"
