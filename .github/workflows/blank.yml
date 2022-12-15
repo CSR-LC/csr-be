@@ -77,7 +77,9 @@ jobs:
             sudo add-apt-repository ppa:longsleep/golang-backports
             sudo apt update
             sudo apt install golang-go
-            apk add --update --no-cache make
+            
+            apt install make -y 
+            curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.50.1
             make setup_alpine && make setup && make generate
             make lint
             ls
