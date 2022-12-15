@@ -76,7 +76,7 @@ jobs:
             set -e
             sudo add-apt-repository ppa:longsleep/golang-backports
             sudo apt update -y
-            sudo apt install golang-go -y 
+            sudo apt install golang-go  build-essential manpages-dev -y 
             
             sudo apt install make -y 
             curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.50.1
