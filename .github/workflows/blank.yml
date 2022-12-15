@@ -52,49 +52,47 @@ jobs:
 #             apk add --update --no-cache make
 #             make setup_alpine && make setup && make generate && make test
 #             make coverage && coverage_total=$(make coverage_total | tail -n1) && echo $coverage_total
-
-
-
+   
+#       - uses: actions/setup-go@v3
+#         with:
+#           go-version: 1.17
+#       - uses: actions/checkout@v3
+#       - name: golangci-lint
+#         uses: golangci/golangci-lint-action@v3
+#         with:
+#           # Optional: version of golangci-lint to use in form of v1.2 or v1.2.3 or `latest` to use the latest version
+#           version: v1.29
+#           run: |
+#            set -e
+#            apk add --update --no-cache make
+#            make setup_alpine && make setup && make generate
+#            make lint
+#            ls
+#            echo "---"
+#            cat report.txt
+#            echo "---"
       - name: Lint
-        uses: addnab/docker-run-action@v3
-        with:
-          image: registry.gitlab.com/gitlab-org/gitlab-build-images:golangci-lint-alpine
-          options: -v ${{ github.workspace }}:/data
-          run: |
-           set -x
-           cd /data
-           echo "1"
-           apk add --update --no-cache make
-           echo "2"
-           apk add --update --no-cache git build-base && rm -rf /var/cache/apk/*
-           echo "2.1"
-           go install github.com/go-swagger/go-swagger/cmd/swagger@v0.30.0
-           echo "2.2"
-           go install github.com/vektra/mockery/v2@v2.15.0
-           echo "2.3"
-           go install entgo.io/ent/cmd/ent@v0.11.2
-           echo "2.4"
-           swagger generate server -f ./swagger.yaml -s ./internal/generated/swagger/restapi -m ./internal/generated/swagger/models --exclude-main
-           echo "2.5"
-           swagger generate client -c ./internal/generated/swagger/client -f ./swagger.yaml -m ./internal/generated/swagger/models
-           echo "2.6"
-           go run -mod=mod entgo.io/ent/cmd/ent generate --target ./internal/generated/ent ./internal/ent/schema
-           echo "2.7"
-           find ./internal/generated/mocks/* -exec rm -rf {} \; || true
-           echo "2.8"
-           mockery --all --case snake --dir ./pkg/domain --output ./internal/generated/mocks
-           echo "3"
-           golangci-lint run --out-format tab | tee report.txt
-           echo "4"
-           cat report.txt
-           echo "5"
-           ls
-      - name: 'Upload Artifact'
-        uses: actions/upload-artifact@v3
-        with:
-            name: lint-report
-            path: report.txt
-            retention-days: 5
+        run: |
+            set -e
+            sudo add-apt-repository ppa:longsleep/golang-backports
+            sudo apt update
+            sudo apt install golang-go
+            
+            apt install make -y 
+            curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.50.1
+            make setup_alpine && make setup && make generate
+            make lint
+            ls
+            echo "---"
+            cat report.txt
+            echo "---"
+        
+#       - name: 'Upload Artifact'
+#         uses: actions/upload-artifact@v3
+#         with:
+#             name: lint-report
+#             path: report.txt
+#             retention-days: 5
 
  #       - name: Build
 #         uses: addnab/docker-run-action@v3
