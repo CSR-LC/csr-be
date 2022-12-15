@@ -46,7 +46,7 @@ lint:
 	golangci-lint run --out-format tab | tee ./report.txt
 
 test:
-	go test ${packagesToTest} -race -coverprofile=coverage.out -short
+	go test $(go list ./... | grep -v generated) -race -coverprofile=coverage.out -short
 
 coverage:
 	go tool cover -func=coverage.out
