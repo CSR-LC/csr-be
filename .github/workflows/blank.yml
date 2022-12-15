@@ -30,7 +30,7 @@ jobs:
     environment:
       name: stage
     # The type of runner that the job will run on
-    runs-on: registry.gitlab.com/gitlab-org/gitlab-build-images:golangci-lint-alpine
+    runs-on: ubuntu-latest
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
@@ -52,9 +52,17 @@ jobs:
 #             apk add --update --no-cache make
 #             make setup_alpine && make setup && make generate && make test
 #             make coverage && coverage_total=$(make coverage_total | tail -n1) && echo $coverage_total
-
-      - name: Lint
-        run: |
+   
+      - uses: actions/setup-go@v3
+        with:
+          go-version: 1.17
+      - uses: actions/checkout@v3
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v3
+        with:
+          # Optional: version of golangci-lint to use in form of v1.2 or v1.2.3 or `latest` to use the latest version
+          version: v1.29
+          run: |
            set -e
            apk add --update --no-cache make
            make setup_alpine && make setup && make generate
@@ -63,12 +71,14 @@ jobs:
            echo "---"
            cat report.txt
            echo "---"
-      - name: 'Upload Artifact'
-        uses: actions/upload-artifact@v3
-        with:
-            name: lint-report
-            path: report.txt
-            retention-days: 5
+#       - name: Lint
+        
+#       - name: 'Upload Artifact'
+#         uses: actions/upload-artifact@v3
+#         with:
+#             name: lint-report
+#             path: report.txt
+#             retention-days: 5
 
  #       - name: Build
 #         uses: addnab/docker-run-action@v3
