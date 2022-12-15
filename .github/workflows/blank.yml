@@ -40,6 +40,7 @@ jobs:
 
       # Runs a single command using the runners shell
       - name: Test
+        coverage: '/total:\s+\(statements\)\s+(\d+.\d+\%)/'
         env:
            min_coverage: '70'
            coverage_result: '/total:\s+\(statements\)\s+(\d+.\d+)\%/'
