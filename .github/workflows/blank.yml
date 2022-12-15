@@ -56,8 +56,7 @@ jobs:
 
 
       - name: Lint
-        with:
-          run: |
+        run: |
            set -e
            apk add --update --no-cache make
            make setup_alpine && make setup && make generate
