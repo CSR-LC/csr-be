@@ -61,13 +61,16 @@ jobs:
           image: registry.gitlab.com/gitlab-org/gitlab-build-images:golangci-lint-alpine
           options: -v ${{ github.workspace }}:/data
           run: |
-           set -x
+           set -e
            cd /data
            apk add --update --no-cache make
            make setup_alpine && make setup && make generate
            '[ -e .golangci.yml ] || cp /golangci/.golangci.yml .'
            make lint
            ls
+           echo "---"
+           cat report.txt
+           echo "---"
       - name: 'Upload Artifact'
         uses: actions/upload-artifact@v3
         with:
