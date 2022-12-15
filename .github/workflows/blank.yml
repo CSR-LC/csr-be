@@ -31,6 +31,7 @@ jobs:
       name: stage
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
+    container: registry.gitlab.com/gitlab-org/gitlab-build-images:golangci-lint-alpine
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
