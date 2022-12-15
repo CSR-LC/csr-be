@@ -53,8 +53,6 @@ jobs:
 #             make setup_alpine && make setup && make generate && make test
 #             make coverage && coverage_total=$(make coverage_total | tail -n1) && echo $coverage_total
 
-
-
       - name: Lint
         run: |
            set -e
