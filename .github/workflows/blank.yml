@@ -80,9 +80,9 @@ jobs:
            echo "2.6"
            go run -mod=mod entgo.io/ent/cmd/ent generate --target ./internal/generated/ent ./internal/ent/schema
            echo "2.7"
-           mockery --all --case snake --dir ./pkg/domain --output ./internal/generated/mocks
-           echo "2.8"
            find ./internal/generated/mocks/* -exec rm -rf {} \; || true
+           echo "2.8"
+           mockery --all --case snake --dir ./pkg/domain --output ./internal/generated/mocks
            echo "3"
            golangci-lint run --out-format tab > report.txt
            echo "4"
