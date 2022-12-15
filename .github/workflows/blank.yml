@@ -50,18 +50,23 @@ jobs:
            if [ $min_coverage -gt $coverage_total ]; then exit 1; else echo "unit tests OK"; fi
   lint:
     runs-on: ubuntu-latest
+    
     container: registry.gitlab.com/gitlab-org/gitlab-build-images:golangci-lint-alpine
+    steps:
     - uses: actions/checkout@v3
+      
     - name: Lint
       run: |
-          set -e
-          apk add --update --no-cache make
-          make setup_alpine && make setup && make generate
-          make lint
-          ls
-          echo "---"
-          cat report.txt
-          echo "---"
+            set -e
+            apk add --update --no-cache make
+            make setup_alpine && make setup && make generate
+            make lint
+            ls
+            echo "---"
+            cat report.txt
+            echo "---"
+    - name: 'Upload Artifact'
+      uses: actions/upload-artifact@v3
       with:
         name: lint-report
         path: report.txt
@@ -69,6 +74,8 @@ jobs:
   build:
     runs-on: ubuntu-latest
     container: golang:1.19-alpine
+    needs: [test, lint]
+    steps:
     - uses: actions/checkout@v3
     - name: Build
       run: |
@@ -82,6 +89,8 @@ jobs:
          retention-days: 5
   deploy:
     runs-on: ubuntu-latest
+    needs: [build]
+    steps:
     - uses: actions/download-artifact@v3
       with:
         name: artifact
