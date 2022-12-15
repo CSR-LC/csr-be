@@ -65,7 +65,6 @@ jobs:
            cd /data
            apk add --update --no-cache make
            make setup_alpine && make setup && make generate
-           '[ -e .golangci.yml ] || cp /golangci/.golangci.yml .'
            make lint
            ls
            echo "---"
