@@ -74,7 +74,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     container: golang:1.19-alpine
-    needs: [test, lint]
+#     needs: [test, lint]
     steps:
     - uses: actions/checkout@v3
     - name: Build
@@ -88,6 +88,7 @@ jobs:
          path: csr
          retention-days: 5
   deploy:
+    if: ${{ github.event.inputs.deploy }}
     runs-on: ubuntu-latest
     needs: [build]
     steps:
@@ -95,7 +96,6 @@ jobs:
       with:
         name: artifact
     - name: Uploady csr
-      if: ${{ github.event.inputs.deploy }}
       uses: appleboy/scp-action@master
       with:
         host: ${{ secrets.DEPLOY_SSH_HOST }}
@@ -105,7 +105,6 @@ jobs:
         source: csr
         target: ~/
     - name: Deploy
-      if: ${{ github.event.inputs.deploy }}
       uses: appleboy/ssh-action@master
       with:
         host: ${{ secrets.DEPLOY_SSH_HOST }}
