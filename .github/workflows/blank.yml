@@ -30,7 +30,7 @@ jobs:
     environment:
       name: stage
     # The type of runner that the job will run on
-    runs-on: golangci/golangci-lint
+    runs-on: ubuntu-latest
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
@@ -73,14 +73,17 @@ jobs:
 #            echo "---"
       - name: Lint
         run: |
-               set -e
-               apk add --update --no-cache make
-               make setup_alpine && make setup && make generate
-               make lint
-               ls
-               echo "---"
-               cat report.txt
-               echo "---"
+            set -e
+            sudo add-apt-repository ppa:longsleep/golang-backports
+            sudo apt update
+            sudo apt install golang-go
+            apk add --update --no-cache make
+            make setup_alpine && make setup && make generate
+            make lint
+            ls
+            echo "---"
+            cat report.txt
+            echo "---"
         
 #       - name: 'Upload Artifact'
 #         uses: actions/upload-artifact@v3
