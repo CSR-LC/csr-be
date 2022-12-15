@@ -74,7 +74,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     container: golang:1.19-alpine
-#     needs: [test, lint]
+    needs: [test, lint]
     steps:
     - uses: actions/checkout@v3
     - name: Build
