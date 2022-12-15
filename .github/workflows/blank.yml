@@ -13,30 +13,17 @@ on:
         type: boolean
         description: 'Deploy'
         default: false
-  # Triggers the workflow on push or pull request events but only for the "main" branch
   push:
     branches: [ "main","EPMUII-7055" ]
   pull_request:
     branches: [ "main" ]
 
-  # Allows you to run this workflow manually from the Actions tab
-
-
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  # This workflow contains a single job called "build"
-
   test:
-    # The type of runner that the job will run on
     runs-on: ubuntu-latest
     container: golang:1.19-alpine
-
-    # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v3
-
-      # Runs a single command using the runners shell
       - name: Test
         env:
            min_coverage: '70'
@@ -50,11 +37,9 @@ jobs:
            if [ $min_coverage -gt $coverage_total ]; then exit 1; else echo "unit tests OK"; fi
   lint:
     runs-on: ubuntu-latest
-    
     container: registry.gitlab.com/gitlab-org/gitlab-build-images:golangci-lint-alpine
     steps:
     - uses: actions/checkout@v3
-      
     - name: Lint
       run: |
             set -e
@@ -119,140 +104,3 @@ jobs:
           sudo systemctl daemon-reload && sudo service ${{ github.event.inputs.environment }}.csr stop  
           cp ~/tmp_csr /var/www/csr/${{ github.event.inputs.environment }}/server 
           sudo service ${{ github.event.inputs.environment }}.csr start
-
-
-
-#           "echo \"$coverage_total<$min_coverage\" | bc | grep 0 || (echo \"coverage below requirement: $min_coverage\" && exit 1)"
-#         uses: addnab/docker-run-action@v3
-#         with:
-#           image:
-#           options: -v ${{ github.workspace }}:/data
-
-   
-#       - uses: actions/setup-go@v3
-#         with:
-#           go-version: 1.17
-#       - uses: actions/checkout@v3
-#       - name: golangci-lint
-#         uses: golangci/golangci-lint-action@v3
-#         with:
-#           # Optional: version of golangci-lint to use in form of v1.2 or v1.2.3 or `latest` to use the latest version
-#           version: v1.29
-#           run: |
-#            set -e
-#            apk add --update --no-cache make
-#            make setup_alpine && make setup && make generate
-#            make lint
-#            ls
-#            echo "---"
-#            cat report.txt
-#            echo "---"
-#      - name: Lint
-#        run: |
-#            set -e
-#            apk add --update --no-cache make
-#            make setup_alpine && make setup && make generate
-#            make lint
-#            ls
-#            echo "---"
-#            cat report.txt
-#            echo "---"
-        
-#       - name: 'Upload Artifact'
-#         uses: actions/upload-artifact@v3
-#         with:
-#             name: lint-report
-#             path: report.txt
-#             retention-days: 5
-
- #       - name: Build
-#         uses: addnab/docker-run-action@v3
-#         with:
-#           image: golang:1.19-alpine
-#           options: -v ${{ github.workspace }}:/data
-#           run: |
-#             cd /data
-#             apk add --update --no-cache make
-#             make setup_alpine && make setup && make generate && make build
-#       - name: 'Upload Artifact'
-#         uses: actions/upload-artifact@v3
-#         with:
-#             name: my-artifact
-#             path: csr
-#             retention-days: 5
-#       - name: copy file via ssh password
-#         if: ${{ github.event.inputs.deploy }}
-#         uses: appleboy/scp-action@master
-#         with:
-#           host: ${{ secrets.DEPLOY_SSH_HOST }}
-#           username: ${{ secrets.DEPLOY_SSH_USER }}
-#           key: ${{ secrets.DEPLOY_SSH_PRIVATE_KEY }}
-#           port: ${{ secrets.DEPLOY_SSH_PORT }}
-#           source: csr
-#           target: ~/
-            
-#       - name: Upload artifact to server
-# #         if: ${{ github.event.inputs.deploy }} 
-#         uses: easingthemes/ssh-deploy@main
-#         env:
-#           SSH_PRIVATE_KEY: ${{ secrets.DEPLOY_SSH_PRIVATE_KEY }}
-#           REMOTE_HOST: 185.105.91.56 # ${{ secrets.DEPLOY_SSH_HOST }}
-#           REMOTE_PORT: 6984 #${{ secrets.DEPLOY_SSH_PORT }}
-#           REMOTE_USER: csr #${{ secrets.DEPLOY_SSH_USER }}
-#           SOURCE: Makefile
-#           TARGET: ~/tmp_csr1
-#           EXCLUDE: "/dist/, /node_modules/"
-
-
-#       - name: Deploy
-#         if: ${{ github.event.inputs.deploy }} 
-#         uses: appleboy/ssh-action@master
-#         with:
-#           host: ${{ secrets.DEPLOY_SSH_HOST }}
-#           username: ${{ secrets.DEPLOY_SSH_USER }}
-#           key: ${{ secrets.DEPLOY_SSH_PRIVATE_KEY }}
-#           port: ${{ secrets.DEPLOY_SSH_PORT }}
-#           script: |
-#            mkdir -p /var/www/csr/${{ github.event.inputs.environment }}/
-#            echo "${{ secrets.DEPLOY_CONFIG }}" > /var/www/csr/${env}/config.json
-#            sudo systemctl daemon-reload && sudo service ${{ github.event.inputs.environment }}.csr stop  
-#            cp ~/tmp_csr /var/www/csr/${{ github.event.inputs.environment }}/server 
-#            sudo service ${{ github.event.inputs.environment }}.csr start
-           
-          #  mkdir -p /var/www/csr/${env}/  echo "${{ secrets.DEPLOY_CONFIG }}" > config.json
-           # sudo systemctl daemon-reload && sudo service ${env}.csr stop && cp ~/tmp_csr /var/www/csr/${env}/server && sudo service ${env}.csr start
-          
-
-#       - name: Deploy
-       
-#         uses: addnab/docker-run-action@v3
-#         with:
-#           image: kroniak/ssh-client
-#           options:
-#             -v ${{ github.workspace }}:/data
-#             -e ENV=stage 
-#             -e DEPLOY_SSH_PORT=${{ secrets.DEPLOY_SSH_PORT }}
-#             -e DEPLOY_SSH_USER=${{ secrets.DEPLOY_SSH_USER }}
-#             -e DEPLOY_SSH_HOST=
-#             -e DEPLOY_SSH_PRIVATE_KEY=
-# #             -e DEPLOY_CONFIG=${{ secrets.DEPLOY_CONFIG }}
-            
-# #             -
-# #             -
-# #             -
-# #
-            
-#           run: |
-#             cd /data
-#             apk add --update --no-cache make
-#             echo "$ENV"
-#             echo "$DEPLOY_CONFIG"
-#             make setup_alpine
-#             mkdir -p ~/.ssh
-#             echo "$DEPLOY_SSH_PRIVATE_KEY" > ~/.ssh/ssh_deploy
-#             chmod -R 700 ~/.ssh
-#             echo "$DEPLOY_CONFIG" > ./config.json
-#             make deploy_ssh
-
-
-
