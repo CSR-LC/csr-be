@@ -31,7 +31,7 @@ jobs:
       name: stage
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
-    container: registry.gitlab.com/gitlab-org/gitlab-build-images:golangci-lint-alpine
+    container: golang:1.19-alpine
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
@@ -39,20 +39,21 @@ jobs:
       - uses: actions/checkout@v3
 
       # Runs a single command using the runners shell
-#       - name: Test
-#         env:
-#           min_coverage: '70'
-#           coverage_result: '/total:\s+\(statements\)\s+(\d+.\d+)\%/'
+       - name: Test
+         env:
+           min_coverage: '70'
+           coverage_result: '/total:\s+\(statements\)\s+(\d+.\d+)\%/'
+         run: |
+           cd /data
+           set -e
+           apk add --update --no-cache make
+           make setup_alpine && make setup && make generate && make test
+           make coverage && coverage_total=$(make coverage_total | tail -n1) && echo $coverage_total
 #         uses: addnab/docker-run-action@v3
 #         with:
-#           image: golang:1.19-alpine
+#           image:
 #           options: -v ${{ github.workspace }}:/data
-#           run: |
-#             cd /data
-#             set -e
-#             apk add --update --no-cache make
-#             make setup_alpine && make setup && make generate && make test
-#             make coverage && coverage_total=$(make coverage_total | tail -n1) && echo $coverage_total
+
    
 #       - uses: actions/setup-go@v3
 #         with:
@@ -72,16 +73,16 @@ jobs:
 #            echo "---"
 #            cat report.txt
 #            echo "---"
-      - name: Lint
-        run: |
-            set -e
-            apk add --update --no-cache make
-            make setup_alpine && make setup && make generate
-            make lint
-            ls
-            echo "---"
-            cat report.txt
-            echo "---"
+#      - name: Lint
+#        run: |
+#            set -e
+#            apk add --update --no-cache make
+#            make setup_alpine && make setup && make generate
+#            make lint
+#            ls
+#            echo "---"
+#            cat report.txt
+#            echo "---"
         
 #       - name: 'Upload Artifact'
 #         uses: actions/upload-artifact@v3
