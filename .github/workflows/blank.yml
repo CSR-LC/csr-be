@@ -30,7 +30,7 @@ jobs:
     environment:
       name: stage
     # The type of runner that the job will run on
-    runs-on: ubuntu-latest
+    runs-on: registry.gitlab.com/gitlab-org/gitlab-build-images:golangci-lint-alpine
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
@@ -56,13 +56,10 @@ jobs:
 
 
       - name: Lint
-        uses: addnab/docker-run-action@v3
+
         with:
-          image: registry.gitlab.com/gitlab-org/gitlab-build-images:golangci-lint-alpine
-          options: -v ${{ github.workspace }}:/data
           run: |
            set -e
-           cd /data
            apk add --update --no-cache make
            make setup_alpine && make setup && make generate
            make lint
