@@ -10,7 +10,7 @@ setup:
 	go install github.com/vektra/mockery/v2@v2.15.0
 
 setup_alpine:
-	sudo apt install  git  -y
+	apk add --update --no-cache git build-base && rm -rf /var/cache/apk/*
 
 run:
 	go run ./cmd/swagger/
