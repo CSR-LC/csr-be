@@ -84,10 +84,11 @@ jobs:
            echo "2.8"
            mockery --all --case snake --dir ./pkg/domain --output ./internal/generated/mocks
            echo "3"
-           golangci-lint run --out-format tab > report.txt
+           golangci-lint run --out-format tab 
            echo "4"
            cat report.txt
            echo "5"
+           ls
       - name: 'Upload Artifact'
         uses: actions/upload-artifact@v3
         with:
