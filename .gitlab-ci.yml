@@ -27,7 +27,7 @@ int_test:
     DOCKER_DRIVER: overlay2
     DOCKER_TLS_CERTDIR: ""
   services:
-    - name: docker:20-dind
+    - name: 23.0.0-beta.1-alpine3.17
       alias: docker
       command: [ "--tls=false", "--mtu=1300" ]
       entrypoint: [ "dockerd-entrypoint.sh", "--tls=false" ]
