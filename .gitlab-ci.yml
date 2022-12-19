@@ -32,8 +32,8 @@ int_test:
       command: [ "--tls=false", "--mtu=1300" ]
       entrypoint: [ "dockerd-entrypoint.sh", "--tls=false" ]
   script:
-    - apk update && apk add --update --no-cache git build-base docker openrc docker-compose
-    - make setup_alpine && make setup && make generate && make int-test
+    - apk add --update --no-cache git build-base docker openrc docker-cli-compose && mv /usr/libexec/docker/cli-plugins/docker-compose /bin/
+    - make setup && make generate && make int-test
 
 lint:
   image: registry.gitlab.com/gitlab-org/gitlab-build-images:golangci-lint-alpine
