@@ -13,9 +13,7 @@ services:
         condition: service_healthy
     healthcheck:
       test: [ "CMD-SHELL", "wget http://localhost:8089/api/health -q -O - > /dev/null 2>&1" ]
-      interval: 5s
-      timeout: 2s
-      retries: 15
+      retries: 10
   postgres:
     image: "postgres:14-alpine"
     container_name: db
@@ -28,9 +26,7 @@ services:
       - go-network
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -U postgres -p 9432" ]
-      interval: 2s
-      timeout: 1s
-      retries: 5
+      retries: 10
 
 networks:
   go-network:
