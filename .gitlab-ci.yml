@@ -1,10 +1,13 @@
+variables:
+  go_image: golang:1.19.2-alpine
+
 stages:
   - test
   - build
   - deploy
 
-test:
-  image: golang:1.19-alpine
+unit_test:
+  image: $go_image
   stage: test
   coverage: '/total:\s+\(statements\)\s+(\d+.\d+\%)/'
   variables:
@@ -16,6 +19,21 @@ test:
     - make setup_alpine && make setup && make generate && make test
     - make coverage && coverage_total=$(make coverage_total | tail -n1) && echo $coverage_total
     - 'echo "$coverage_total<$min_coverage" | bc | grep 0 || (echo "coverage below requirement: $min_coverage" && exit 1)'
+
+int_test:
+  image: $go_image
+  variables:
+    DOCKER_HOST: tcp://docker:2375
+    DOCKER_DRIVER: overlay2
+    DOCKER_TLS_CERTDIR: ""
+  services:
+    - name: docker:20-dind
+      alias: docker
+      command: [ "--tls=false", "--mtu=1300" ]
+      entrypoint: [ "dockerd-entrypoint.sh", "--tls=false" ]
+  script:
+    - apk add --update --no-cache git build-base docker openrc docker-compose
+    - make setup_alpine && make setup && make generate && make int-test
 
 lint:
   image: registry.gitlab.com/gitlab-org/gitlab-build-images:golangci-lint-alpine
@@ -31,7 +49,7 @@ lint:
       - report.txt
 
 build:
-  image: golang:1.19-alpine
+  image: $go_image
   stage: build
   script:
     - apk add --update --no-cache make
