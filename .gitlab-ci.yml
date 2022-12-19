@@ -27,12 +27,12 @@ int_test:
     DOCKER_DRIVER: overlay2
     DOCKER_TLS_CERTDIR: ""
   services:
-    - name: 23.0.0-beta.1-alpine3.17
+    - name: docker:20-dind
       alias: docker
       command: [ "--tls=false", "--mtu=1300" ]
       entrypoint: [ "dockerd-entrypoint.sh", "--tls=false" ]
   script:
-    - apk add --update --no-cache git build-base docker openrc docker-compose
+    - apk update && apk add --update --no-cache git build-base docker openrc docker-compose
     - make setup_alpine && make setup && make generate && make int-test
 
 lint:
