@@ -1,23 +1,10 @@
-# This is a basic workflow to help you get started with Actions
-
 name: CI
-
-# Controls when the workflow will run
 on:
-  workflow_dispatch:
-    inputs:
-      environment:
-        description: 'Environment to run tests against'
-        type: environment
-      deploy:
-        type: boolean
-        description: 'Deploy'
-        default: false
   push:
-    branches: [ "main","EPMUII-7055" ]
+    branches: [ "main","master"]
   pull_request:
-    branches: [ "main" ]
-
+    branches: ["main"]
+    
 jobs:
   test:
     runs-on: ubuntu-22.04
@@ -73,7 +60,7 @@ jobs:
          path: csr
          retention-days: 5
   deploy:
-    if: ${{ github.GITHUB_REF_NAME == 'EPMUII-70551' }} #github.event.inputs.deploy }}
+    if: ${{ github.GITHUB_REF_NAME == 'master' }}
     environment: 
       ${{ github.event.inputs.environment }}
     runs-on: ubuntu-latest
