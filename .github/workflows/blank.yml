@@ -1,6 +1,10 @@
 #test
 name: CI
 on:
+  workflow_dispatch:
+    inputs:
+      parameter:
+        description: My Parameter
   push:
     branches: ["main","master"]
   pull_request:
