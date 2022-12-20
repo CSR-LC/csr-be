@@ -4,7 +4,7 @@ services:
     image: csr:int-test
     container_name: csr
     ports:
-      - 8089:8089
+      - "8089:8089"
     networks:
       - go-network
     depends_on:
