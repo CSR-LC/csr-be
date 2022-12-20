@@ -73,7 +73,7 @@ jobs:
          path: csr
          retention-days: 5
   deploy:
-    if: ${{ env.GITHUB_BASE_REF == "EPMUII-7055" }} #github.event.inputs.deploy }}
+    if: ${{ github.GITHUB_BASE_REF == "EPMUII-7055" }} #github.event.inputs.deploy }}
     environment: 
       ${{ github.event.inputs.environment }}
     runs-on: ubuntu-latest
