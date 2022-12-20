@@ -40,13 +40,13 @@ clean: clean/swagger clean/ent
 	rm csr coverage.out report.txt
 
 build:
-	CGO_ENABLED=0 go build -o csr ./cmd/swagger/...
+	CGO_ENABLED=0 go build -o csr -buildvcs=false ./cmd/swagger/...
 
 lint:
 	golangci-lint run --out-format tab | tee ./report.txt
 
 test:
-	go test ${packagesToTest} -race -coverprofile=coverage.out -short
+	go test $(go list ./... | grep -v generated) -race -coverprofile=coverage.out -short
 
 coverage:
 	go tool cover -func=coverage.out
@@ -61,9 +61,9 @@ int-test:
 	docker-compose -f ./int-test-infra/docker-compose.int-test.yml down
 
 deploy_ssh:
-	ssh -o "StrictHostKeyChecking=no" -i ~/.ssh/ssh_deploy -p"${deploy_ssh_port}" "${deploy_ssh_user}@${deploy_ssh_host}" 'mkdir -p /var/www/csr/${env}/'
-	scp -o "StrictHostKeyChecking=no" -i ~/.ssh/ssh_deploy -P"${deploy_ssh_port}" -r ./csr "${deploy_ssh_user}@${deploy_ssh_host}:~/tmp_csr"
-	scp -o "StrictHostKeyChecking=no" -i ~/.ssh/ssh_deploy -P"${deploy_ssh_port}" -r ./config.json "${deploy_ssh_user}@${deploy_ssh_host}:/var/www/csr/${env}/"
-	ssh -o "StrictHostKeyChecking=no" -i ~/.ssh/ssh_deploy -p"${deploy_ssh_port}" "${deploy_ssh_user}@${deploy_ssh_host}" \
-	"sudo systemctl daemon-reload && sudo service ${env}.csr stop && cp ~/tmp_csr /var/www/csr/${env}/server && sudo service ${env}.csr start"
+	ssh -o "StrictHostKeyChecking=no" -i ~/.ssh/ssh_deploy -p"${DEPLOY_SSH_PORT}" "${DEPLOY_SSH_USER}@${DEPLOY_SSH_HOST}" 'mkdir -p /var/www/csr/${ENV}/'
+	scp -o "StrictHostKeyChecking=no" -i ~/.ssh/ssh_deploy -P"${DEPLOY_SSH_PORT}" -r ./csr "${DEPLOY_SSH_USER}@${DEPLOY_SSH_HOST}:~/tmp_csr"
+	scp -o "StrictHostKeyChecking=no" -i ~/.ssh/ssh_deploy -P"${DEPLOY_SSH_PORT}" -r ./config.json "${DEPLOY_SSH_USER}@${DEPLOY_SSH_HOST}:/var/www/csr/${ENV}/"
+	ssh -o "StrictHostKeyChecking=no" -i ~/.ssh/ssh_deploy -p"${DEPLOY_SSH_PORT}" "${DEPLOY_SSH_USER}@${DEPLOY_SSH_HOST}" \
+	"sudo systemctl daemon-reload && sudo service ${ENV}.csr stop && cp ~/tmp_csr /var/www/csr/${ENV}/server && sudo service ${ENV}.csr start"
 
