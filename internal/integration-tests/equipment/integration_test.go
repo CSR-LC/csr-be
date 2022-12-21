@@ -5,6 +5,7 @@ import (
 	"os"
 	"testing"
 
+	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/swagger/client/subcategories"
 	"github.com/go-openapi/runtime"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -452,7 +453,10 @@ func setParameters(ctx context.Context, client *client.Be, auth runtime.ClientAu
 	if err != nil {
 		return nil, err
 	}
-
+	subCategory, err := client.Subcategories.GetSubcategoryByID(subcategories.NewGetSubcategoryByIDParamsWithContext(ctx).WithSubcategoryID(1), auth)
+	if err != nil {
+		return nil, err
+	}
 	location := int64(71)
 	amount := int64(1)
 	mdays := int64(10)
@@ -510,6 +514,7 @@ func setParameters(ctx context.Context, client *client.Be, auth runtime.ClientAu
 		Supplier:         &supp,
 		TechnicalIssues:  &techIss,
 		Title:            &title,
+		Subcategory:      *subCategory.Payload.Data.ID,
 	}, nil
 }
 

@@ -2350,7 +2350,7 @@ definitions:
         example: "This is a dog harness.\nWARNING: do not put on cats!"
       photoID:
         type: string
-        example: ""
+        example: "ee4b4b77562411eda7b4027ce06a1c5d"
       petKinds:
         type: array
         items:

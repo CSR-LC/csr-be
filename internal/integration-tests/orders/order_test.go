@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/swagger/client/subcategories"
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/strfmt"
 	"github.com/stretchr/testify/assert"
@@ -64,41 +65,25 @@ func TestIntegration_CreateOrder(t *testing.T) {
 
 	t.Run("Create Order failed: quantity more than category.MaxReservationUnits", func(t *testing.T) {
 		params := orders.NewCreateOrderParamsWithContext(ctx)
-		desc := "test description"
+		model, err := setOrderParams(ctx, client, auth)
+		require.NoError(t, err)
+
+		//set big number for quantity
 		quantity := int64(20)
-		//equipment := eq.ID
-		rentStart := strfmt.DateTime(time.Now())
-		rentEnd := strfmt.DateTime(time.Now().Add(time.Hour * 24))
-		params.Data = &models.OrderCreateRequest{
-			//Equipment:   equipment,
-			Description: &desc,
-			Quantity:    &quantity,
-			RentStart:   &rentStart,
-			RentEnd:     &rentEnd,
-		}
+		model.Quantity = &quantity
+		params.Data = model
 
 		_, gotErr := client.Orders.CreateOrder(params, auth)
 		require.Error(t, gotErr)
 
 		wantErr := orders.NewCreateOrderDefault(http.StatusInternalServerError)
-		wantErr.Payload = &models.Error{Data: &models.ErrorData{Message: "at most 10 allowed"}}
+		wantErr.Payload = &models.Error{Data: &models.ErrorData{Message: "there is not so much free equipment"}}
 		assert.Equal(t, wantErr, gotErr)
 	})
 
 	t.Run("Create Order failed: access", func(t *testing.T) {
 		params := orders.NewCreateOrderParamsWithContext(ctx)
-		desc := "test description"
-		quantity := int64(1)
-		//equipment := eq.ID
-		rentStart := strfmt.DateTime(time.Now())
-		rentEnd := strfmt.DateTime(time.Now().Add(time.Hour * 24))
-		params.Data = &models.OrderCreateRequest{
-			//Equipment:   equipment,
-			Description: &desc,
-			Quantity:    &quantity,
-			RentStart:   &rentStart,
-			RentEnd:     &rentEnd,
-		}
+
 		incorrectToken := common.TokenNotExist
 		_, gotErr := client.Orders.CreateOrder(params, common.AuthInfoFunc(&incorrectToken))
 		require.Error(t, gotErr)
@@ -110,18 +95,16 @@ func TestIntegration_CreateOrder(t *testing.T) {
 
 	t.Run("Create Order failed: start date should be before end date", func(t *testing.T) {
 		params := orders.NewCreateOrderParamsWithContext(ctx)
-		desc := "test description"
-		quantity := int64(1)
-		//equipment := eq.ID
+		model, err := setOrderParams(ctx, client, auth)
+		require.NoError(t, err)
+
+		//set wrong dates
 		rentEnd := strfmt.DateTime(time.Now())
 		rentStart := strfmt.DateTime(time.Now().Add(time.Hour * 24))
-		params.Data = &models.OrderCreateRequest{
-			//Equipment:   equipment,
-			Description: &desc,
-			Quantity:    &quantity,
-			RentStart:   &rentStart,
-			RentEnd:     &rentEnd,
-		}
+		model.RentStart = &rentStart
+		model.RentEnd = &rentEnd
+
+		params.Data = model
 		_, gotErr := client.Orders.CreateOrder(params, auth)
 		require.Error(t, gotErr)
 
@@ -132,18 +115,13 @@ func TestIntegration_CreateOrder(t *testing.T) {
 
 	t.Run("Create Order failed: small rent period", func(t *testing.T) {
 		params := orders.NewCreateOrderParamsWithContext(ctx)
-		desc := "test description"
-		quantity := int64(1)
-		//equipment := eq.ID
-		rentStart := strfmt.DateTime(time.Now())
+		model, err := setOrderParams(ctx, client, auth)
+		require.NoError(t, err)
+
 		rentEnd := strfmt.DateTime(time.Now().Add(time.Hour))
-		params.Data = &models.OrderCreateRequest{
-			//Equipment:   equipment,
-			Description: &desc,
-			Quantity:    &quantity,
-			RentStart:   &rentStart,
-			RentEnd:     &rentEnd,
-		}
+		model.RentEnd = &rentEnd
+		params.Data = model
+
 		_, gotErr := client.Orders.CreateOrder(params, auth)
 		require.Error(t, gotErr)
 
@@ -154,18 +132,12 @@ func TestIntegration_CreateOrder(t *testing.T) {
 
 	t.Run("Create Order failed: too big reservation period", func(t *testing.T) {
 		params := orders.NewCreateOrderParamsWithContext(ctx)
-		desc := "test description"
-		quantity := int64(1)
-		//equipment := eq.ID
-		rentStart := strfmt.DateTime(time.Now())
+		model, err := setOrderParams(ctx, client, auth)
+		require.NoError(t, err)
+
 		rentEnd := strfmt.DateTime(time.Now().Add(time.Hour * 1000000))
-		params.Data = &models.OrderCreateRequest{
-			//Equipment:   equipment,
-			Description: &desc,
-			Quantity:    &quantity,
-			RentStart:   &rentStart,
-			RentEnd:     &rentEnd,
-		}
+		model.RentEnd = &rentEnd
+		params.Data = model
 		_, gotErr := client.Orders.CreateOrder(params, auth)
 		require.Error(t, gotErr)
 
@@ -197,26 +169,18 @@ func TestIntegration_CreateOrder(t *testing.T) {
 
 	t.Run("Create Order", func(t *testing.T) {
 		params := orders.NewCreateOrderParamsWithContext(ctx)
-		desc := "test description"
-		quantity := int64(1)
-		//equipment := eq.ID
-		rentStart := strfmt.DateTime(time.Now())
-		rentEnd := strfmt.DateTime(time.Now().Add(time.Hour * 24))
-		params.Data = &models.OrderCreateRequest{
-			//Equipment:   equipment,
-			Description: &desc,
-			Quantity:    &quantity,
-			RentStart:   &rentStart,
-			RentEnd:     &rentEnd,
-		}
+		model, err := setOrderParams(ctx, client, auth)
+		require.NoError(t, err)
+
+		params.Data = model
 		res, err := client.Orders.CreateOrder(params, auth)
 		require.NoError(t, err)
 
 		//assert.Equal(t, equipment, res.Payload.Equipments[0].ID)
-		assert.Equal(t, desc, *res.Payload.Description)
-		assert.Equal(t, quantity, *res.Payload.Quantity)
-		rentEnd.Equal(*res.Payload.RentEnd)
-		rentStart.Equal(*res.Payload.RentStart)
+		assert.EqualValues(t, *model.Description, *res.Payload.Description)
+		assert.EqualValues(t, *model.Quantity, *res.Payload.Quantity)
+		model.RentEnd.Equal(*res.Payload.RentEnd)
+		model.RentStart.Equal(*res.Payload.RentStart)
 	})
 
 	t.Run("Create Order failed: duplicate order", func(t *testing.T) {
@@ -261,17 +225,10 @@ func TestIntegration_GetAllOrders(t *testing.T) {
 		//require.NoError(t, err)
 
 		createParams := orders.NewCreateOrderParamsWithContext(ctx)
-		desc := "test description"
-		quantity := int64(1)
-		rentStart := strfmt.DateTime(time.Now())
-		rentEnd := strfmt.DateTime(time.Now().Add(time.Hour * 24))
-		createParams.Data = &models.OrderCreateRequest{
-			//Equipment:   eq2.ID,
-			Description: &desc,
-			Quantity:    &quantity,
-			RentStart:   &rentStart,
-			RentEnd:     &rentEnd,
-		}
+		model, err := setOrderParams(ctx, client, auth)
+		require.NoError(t, err)
+
+		createParams.Data = model
 		_, err = client.Orders.CreateOrder(createParams, auth)
 		require.NoError(t, err)
 
@@ -281,6 +238,7 @@ func TestIntegration_GetAllOrders(t *testing.T) {
 		require.NoError(t, err)
 
 		assert.Equal(t, wantOrders, len(res.GetPayload().Items))
+		// clean up
 	})
 
 	t.Run("Get All Orders Ok limit", func(t *testing.T) {
@@ -290,19 +248,19 @@ func TestIntegration_GetAllOrders(t *testing.T) {
 		//eq3, err := createEquipment(ctx, client, auth)
 		//require.NoError(t, err)
 
-		createParams := orders.NewCreateOrderParamsWithContext(ctx)
-		desc := "test description"
-		quantity := int64(1)
-		//equipment := eq2.ID
-		rentStart := strfmt.DateTime(time.Now())
-		rentEnd := strfmt.DateTime(time.Now().Add(time.Hour * 24))
-		createParams.Data = &models.OrderCreateRequest{
-			//Equipment:   equipment,
-			Description: &desc,
-			Quantity:    &quantity,
-			RentStart:   &rentStart,
-			RentEnd:     &rentEnd,
-		}
+		//createParams := orders.NewCreateOrderParamsWithContext(ctx)
+		//desc := "test description"
+		//quantity := int64(1)
+		////equipment := eq2.ID
+		//rentStart := strfmt.DateTime(time.Now())
+		//rentEnd := strfmt.DateTime(time.Now().Add(time.Hour * 24))
+		//createParams.Data = &models.OrderCreateRequest{
+		//	//Equipment:   equipment,
+		//	Description: &desc,
+		//	Quantity:    &quantity,
+		//	RentStart:   &rentStart,
+		//	RentEnd:     &rentEnd,
+		//}
 		//_, err = client.Orders.CreateOrder(createParams, auth)
 		//require.NoError(t, err)
 		//
@@ -386,17 +344,12 @@ func TestIntegration_UpdateOrder(t *testing.T) {
 	//require.NoError(t, err)
 
 	createParams := orders.NewCreateOrderParamsWithContext(ctx)
-	desc := "test description"
-	quantity := int64(1)
-	rentStart := strfmt.DateTime(time.Now())
-	rentEnd := strfmt.DateTime(time.Now().Add(time.Hour * 24))
-	createParams.Data = &models.OrderCreateRequest{
-		//Equipment:   eq4.ID,
-		Description: &desc,
-		Quantity:    &quantity,
-		RentStart:   &rentStart,
-		RentEnd:     &rentEnd,
-	}
+	model, err := setOrderParams(ctx, client, auth)
+	require.NoError(t, err)
+	_, err = createEquipment(ctx, client, auth)
+	require.NoError(t, err)
+
+	createParams.Data = model
 	order, err := client.Orders.CreateOrder(createParams, auth)
 	require.NoError(t, err)
 
@@ -404,21 +357,21 @@ func TestIntegration_UpdateOrder(t *testing.T) {
 	t.Run("Update Order", func(t *testing.T) {
 		params := orders.NewUpdateOrderParamsWithContext(ctx)
 		params.OrderID = *orderID
-		desc = "new"
+		desc := "new"
 		params.Data = &models.OrderUpdateRequest{
 			Description: &desc,
-			Quantity:    &quantity,
-			RentStart:   &rentStart,
-			RentEnd:     &rentEnd,
+			Quantity:    model.Quantity,
+			RentStart:   model.RentStart,
+			RentEnd:     model.RentEnd,
 		}
 
 		res, err := client.Orders.UpdateOrder(params, auth)
 		require.NoError(t, err)
 
 		assert.Equal(t, desc, *res.Payload.Description)
-		assert.Equal(t, quantity, *res.Payload.Quantity)
-		rentEnd.Equal(*res.Payload.RentEnd)
-		rentStart.Equal(*res.Payload.RentStart)
+		assert.Equal(t, *model.Quantity, *res.Payload.Quantity)
+		model.RentEnd.Equal(*res.Payload.RentEnd)
+		model.RentStart.Equal(*res.Payload.RentStart)
 	})
 }
 
@@ -449,7 +402,10 @@ func setParameters(ctx context.Context, client *client.Be, auth runtime.ClientAu
 	if err != nil {
 		return nil, err
 	}
-
+	subCategory, err := client.Subcategories.GetSubcategoryByID(subcategories.NewGetSubcategoryByIDParamsWithContext(ctx).WithSubcategoryID(1), auth)
+	if err != nil {
+		return nil, err
+	}
 	location := int64(71)
 	amount := int64(1)
 	mdays := int64(10)
@@ -507,5 +463,31 @@ func setParameters(ctx context.Context, client *client.Be, auth runtime.ClientAu
 		Supplier:         &supp,
 		TechnicalIssues:  &techIss,
 		Title:            &title,
+		Subcategory:      *subCategory.Payload.Data.ID,
+	}, nil
+}
+
+func setOrderParams(ctx context.Context, client *client.Be, auth runtime.ClientAuthInfoWriterFunc) (*models.OrderCreateRequest, error) {
+	desc := "test description"
+	quantity := int64(1)
+	//equipment := eq.ID
+	rentStart := strfmt.DateTime(time.Now())
+	rentEnd := strfmt.DateTime(time.Now().Add(time.Hour * 24))
+	category, err := client.Categories.GetCategoryByID(categories.NewGetCategoryByIDParamsWithContext(ctx).WithCategoryID(1), auth)
+	if err != nil {
+		return nil, err
+	}
+	subCategory, err := client.Subcategories.GetSubcategoryByID(subcategories.NewGetSubcategoryByIDParamsWithContext(ctx).WithSubcategoryID(1), auth)
+	if err != nil {
+		return nil, err
+	}
+	return &models.OrderCreateRequest{
+		//Equipment:   equipment,c
+		Category:    category.Payload.Data.ID,
+		Subcategory: *subCategory.Payload.Data.ID,
+		Description: &desc,
+		Quantity:    &quantity,
+		RentStart:   &rentStart,
+		RentEnd:     &rentEnd,
 	}, nil
 }
