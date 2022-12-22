@@ -9,7 +9,10 @@ services:
       - go-network
     healthcheck:
       test: [ "CMD-SHELL", "wget http://localhost:8089/api/health -q -O - > /dev/null 2>&1" ]
-      retries: 10
+      interval: 2s
+      timeout: 2s
+      retries: 15
+
   db:
     image: "postgres:14-alpine"
     container_name: db
