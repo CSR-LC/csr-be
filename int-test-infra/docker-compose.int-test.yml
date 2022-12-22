@@ -8,8 +8,7 @@ services:
     networks:
       - go-network
     depends_on:
-      postgres:
-        condition: service_healthy
+      - postgres
     healthcheck:
       test: [ "CMD-SHELL", "wget http://localhost:8089/api/health -q -O - > /dev/null 2>&1" ]
       interval: 2s

@@ -44,6 +44,10 @@ func (db DB) GetConnectionString() string {
 	return s
 }
 
+func (db DB) GetHostPort() string {
+	return fmt.Sprintf("%s:%d", db.Host, db.Port)
+}
+
 type Email struct {
 	ServerHost        string `validate:"required"`
 	ServerPort        string `validate:"required"`

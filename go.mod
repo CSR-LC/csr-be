@@ -89,7 +89,10 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
-require github.com/google/uuid v1.3.0
+require (
+	github.com/antelman107/net-wait-go v0.0.0-20220211074630-12d8a944b87d
+	github.com/google/uuid v1.3.0
+)
 
 require (
 	github.com/agext/levenshtein v1.2.3 // indirect
