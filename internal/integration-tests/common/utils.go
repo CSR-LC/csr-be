@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/antelman107/net-wait-go/wait"
 	httptransport "github.com/go-openapi/runtime/client"
 	"go.uber.org/zap"
 
@@ -113,6 +114,10 @@ func SetupClient() *client.Be {
 	host := "localhost"
 	schemes := []string{"http"}
 	apiURL := fmt.Sprintf("%s:%v", host, serverConfig.Server.Port)
+
+	if !wait.New(wait.WithDebug(true)).Do([]string{apiURL}) {
+		log.Fatal("failed to wait for service", zap.String("host:port", apiURL))
+	}
 
 	swaggerClient, err := NewAPIClient(apiURL, schemes)
 	if err != nil {
