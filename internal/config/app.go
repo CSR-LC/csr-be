@@ -45,7 +45,7 @@ func (db DB) GetConnectionString() string {
 }
 
 func (db DB) GetHostPort() string {
-	return fmt.Sprintf("%s:%d", db.Host, db.Port)
+	return fmt.Sprintf("%s:%s", db.Host, db.Port)
 }
 
 type Email struct {
