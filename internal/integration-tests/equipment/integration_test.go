@@ -5,10 +5,11 @@ import (
 	"os"
 	"testing"
 
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/swagger/client/subcategories"
 	"github.com/go-openapi/runtime"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/swagger/client/subcategories"
 
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/swagger/client"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/swagger/client/categories"
@@ -268,7 +269,7 @@ func TestIntegration_FindEquipment(t *testing.T) {
 
 		assert.NotZero(t, *res.Payload.Total)
 		for _, item := range res.Payload.Items {
-			assert.Equal(t, model.Category, item.Category)
+			assert.Equal(t, *model.Category, *item.Category)
 		}
 	})
 

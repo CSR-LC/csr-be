@@ -55,10 +55,10 @@ coverage_total:
 	go tool cover -func=coverage.out | tail -n1 | awk '{print $3}' | grep -Eo '\d+(.\d+)?'
 
 int-test:
-	DOCKER_BUILDKIT=1  docker build -f ./int-test-infra/Dockerfile.int-test --network host --no-cache -t csr:int-test --target run .
 	$(MAKE) int-infra-down
 	$(MAKE) int-infra-up || (docker logs csr && docker logs db && $(MAKE) int-infra-down)
 	go test -v -timeout 10m ./... -run Integration || (docker logs csr && docker logs db && $(MAKE) int-infra-down)
+	$(MAKE) int-infra-down
 
 int-infra-up:
 	docker-compose -f ./int-test-infra/docker-compose.int-test.yml up -d --wait

@@ -5,7 +5,6 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/antelman107/net-wait-go/wait"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 	_ "github.com/jackc/pgx/v4/stdlib"
 	"go.uber.org/zap"
@@ -30,11 +29,7 @@ func main() {
 		lg.Fatal("fail to setup app config", zap.Error(err))
 	}
 
-	if !wait.New(wait.WithDebug(true)).Do([]string{conf.DB.GetHostPort()}) {
-		lg.Fatal("failed to wait for DB", zap.String("host:port", conf.DB.GetHostPort()))
-	}
-
-	entClient, db, err := internalDB.GetDB(conf.DB.GetConnectionString())
+	entClient, db, err := internalDB.GetDB(ctx, conf.DB.GetConnectionString(), lg)
 	if err != nil {
 		lg.Fatal("failed to db connection", zap.Error(err))
 	}

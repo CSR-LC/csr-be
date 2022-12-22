@@ -115,7 +115,7 @@ func SetupClient() *client.Be {
 	schemes := []string{"http"}
 	apiURL := fmt.Sprintf("%s:%v", host, serverConfig.Server.Port)
 
-	if !wait.New(wait.WithDebug(true)).Do([]string{apiURL}) {
+	if !wait.New().Do([]string{apiURL}) {
 		log.Fatal("failed to wait for service", zap.String("host:port", apiURL))
 	}
 

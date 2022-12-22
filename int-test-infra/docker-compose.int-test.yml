@@ -1,16 +1,26 @@
 version: '3'
 services:
   csr:
-    image: csr:int-test
+    build:
+      context: ..
+      dockerfile: ./int-test-infra/Dockerfile.int-test
     container_name: csr
     ports:
       - "8089:8089"
+    expose:
+      - 8089
+    depends_on:
+      - db
     networks:
       - go-network
 
   db:
     image: "postgres:14-alpine"
     container_name: db
+    ports:
+      - "9432:9432"
+    expose:
+      - 9432
     environment:
       - POSTGRES_USER=csr
       - POSTGRES_DB=csr
