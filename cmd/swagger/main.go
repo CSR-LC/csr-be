@@ -30,7 +30,7 @@ func main() {
 		lg.Fatal("fail to setup app config", zap.Error(err))
 	}
 
-	if !wait.New().Do([]string{conf.DB.GetHostPort()}) {
+	if !wait.New(wait.WithDebug(true)).Do([]string{conf.DB.GetHostPort()}) {
 		lg.Fatal("failed to wait for DB", zap.String("host:port", conf.DB.GetHostPort()))
 	}
 
