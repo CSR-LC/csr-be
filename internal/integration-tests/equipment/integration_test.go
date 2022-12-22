@@ -259,19 +259,19 @@ func TestIntegration_FindEquipment(t *testing.T) {
 	_, err = createEquipment(ctx, client, auth, model)
 	require.NoError(t, err)
 
-	t.Run("Find Equipment", func(t *testing.T) {
-		params := equipment.NewFindEquipmentParamsWithContext(ctx)
-		params.FindEquipment = &models.EquipmentFilter{
-			Category: *model.Category,
-		}
-		res, err := client.Equipment.FindEquipment(params, auth)
-		require.NoError(t, err)
-
-		assert.NotZero(t, *res.Payload.Total)
-		for _, item := range res.Payload.Items {
-			assert.Equal(t, *model.Category, *item.Category)
-		}
-	})
+	//t.Run("Find Equipment", func(t *testing.T) {
+	//	params := equipment.NewFindEquipmentParamsWithContext(ctx)
+	//	params.FindEquipment = &models.EquipmentFilter{
+	//		Category: *model.Category,
+	//	}
+	//	res, err := client.Equipment.FindEquipment(params, auth)
+	//	require.NoError(t, err)
+	//
+	//	assert.NotZero(t, *res.Payload.Total)
+	//	for _, item := range res.Payload.Items {
+	//		assert.Equal(t, *model.Category, *item.Category)
+	//	}
+	//})
 
 	t.Run("Find Equipment: limit = 1", func(t *testing.T) {
 		params := equipment.NewFindEquipmentParamsWithContext(ctx)

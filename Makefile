@@ -61,7 +61,7 @@ int-test:
 	$(MAKE) int-infra-down
 
 int-infra-up:
-	docker-compose -f ./int-test-infra/docker-compose.int-test.yml up -d --wait
+	docker-compose -f ./int-test-infra/docker-compose.int-test.yml up -d --wait --build
 int-infra-down:
 	docker-compose -f ./int-test-infra/docker-compose.int-test.yml down
 

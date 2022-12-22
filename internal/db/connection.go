@@ -31,6 +31,7 @@ forloop:
 		default:
 			if err := db.Ping(); err != nil {
 				lg.Warn("failed to ping db connection", zap.Error(err))
+				continue forloop
 			}
 
 			break forloop
