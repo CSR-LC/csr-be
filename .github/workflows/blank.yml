@@ -64,7 +64,8 @@ jobs:
   deploy:
     if: github.ref == 'refs/heads/master'
     environment: 
-      ${{ github.event.inputs.environment }}
+      stage
+    #  //${{ github.event.inputs.environment }}
     runs-on: ubuntu-latest
     needs: [build]
     steps:
