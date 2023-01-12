@@ -92,7 +92,7 @@ jobs:
           port: ${{ secrets.DEPLOY_SSH_PORT }}
           script: |
             mkdir -p /var/www/csr/stage/
-            echo "${{ secrets.DEPLOY_CONFIG }}" > /var/www/csr/stage/config.json
+            echo '${{ secrets.DEPLOY_CONFIG }}' > /var/www/csr/stage/config.json
             sudo systemctl daemon-reload && sudo service stage.csr stop  
             cp ~/csr /var/www/csr/stage/server 
             sudo service stage.csr start
