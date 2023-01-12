@@ -3,54 +3,51 @@ name: CI
 on:
   workflow_dispatch:
   push:
-    branches: ["main","master"]
+    branches: ["master"]
   pull_request:
-    branches: ["main","master"]
-
+    branches: ["master"]
 jobs:
-#  test:
-#    runs-on: ubuntu-22.04
-#    container: golang:1.19-alpine
-#    needs: [deploy]
-#    steps:
-#      - uses: actions/checkout@v3
-#      - name: Test
-#        env:
-#          min_coverage: '70'
-#          coverage_result: '/total:\s+\(statements\)\s+(\d+.\d+)\%/'
-#        run: |
-#          set -e
-#          apk add --update --no-cache make
-#          make setup_alpine && make setup && make generate
-#          go test $(go list ./... | grep -v generated) -race -coverprofile=coverage.out -short
-#          make coverage && coverage_total=$(make coverage_total | tail -n1) && echo $coverage_total
-#          if [ $min_coverage -gt $coverage_total ]; then exit 1; else echo "unit tests OK"; fi
-#  lint:
-#    runs-on: ubuntu-latest
-#    container: registry.gitlab.com/gitlab-org/gitlab-build-images:golangci-lint-alpine
-#    needs: [deploy]
-#    steps:
-#      - uses: actions/checkout@v3
-#      - name: Lint
-#        run: |
-#          set -e
-#          apk add --update --no-cache make
-#          make setup_alpine && make setup && make generate
-#          make lint
-#          ls
-#          echo "---"
-#          cat report.txt
-#          echo "---"
-#      - name: 'Upload Artifact'
-#        uses: actions/upload-artifact@v3
-#        with:
-#          name: lint-report
-#          path: report.txt
-#          retention-days: 5
-  build:
+ test:
+   runs-on: ubuntu-22.04
+   container: golang:1.19-alpine
+   steps:
+     - uses: actions/checkout@v3
+     - name: Test
+       env:
+         min_coverage: '70'
+         coverage_result: '/total:\s+\(statements\)\s+(\d+.\d+)\%/'
+       run: |
+         set -e
+         apk add --update --no-cache make
+         make setup_alpine && make setup && make generate
+         go test $(go list ./... | grep -v generated) -race -coverprofile=coverage.out -short
+         make coverage && coverage_total=$(make coverage_total | tail -n1) && echo $coverage_total
+         if [ $min_coverage -gt $coverage_total ]; then exit 1; else echo "unit tests OK"; fi
+ lint:
+   runs-on: ubuntu-latest
+   container: registry.gitlab.com/gitlab-org/gitlab-build-images:golangci-lint-alpine
+   steps:
+     - uses: actions/checkout@v3
+     - name: Lint
+       run: |
+         set -e
+         apk add --update --no-cache make
+         make setup_alpine && make setup && make generate
+         make lint
+         ls
+         echo "---"
+         cat report.txt
+         echo "---"
+     - name: 'Upload Artifact'
+       uses: actions/upload-artifact@v3
+       with:
+         name: lint-report
+         path: report.txt
+         retention-days: 5
+ build:
     runs-on: ubuntu-latest
     container: golang:1.19-alpine
-
+    needs: [lint,test]
     steps:
       - uses: actions/checkout@v3
       - name: Build
@@ -63,11 +60,10 @@ jobs:
           name: artifact
           path: csr
           retention-days: 5
-  deploy:
-#    if: github.ref == 'refs/heads/master'
+ deploy:
+    if: github.ref == 'refs/heads/master'
     environment:
       stage
-    #  //${{ github.event.inputs.environment }}
     runs-on: ubuntu-latest
     needs: [build]
     steps:
