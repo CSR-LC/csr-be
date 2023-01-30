@@ -325,6 +325,37 @@ paths:
             $ref: "#/definitions/Error"
 
 
+  /equipmentstatus/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: equipment status id
+        type: integer
+    put:
+      summary: Edit equipment status by id.
+      security:
+        - Bearer: [ ]
+      tags:
+        - EquipmentStatus
+      operationId: UpdateEquipmentStatus
+      parameters:
+        - name: name
+          in: body
+          description: "Update equipment status"
+          required: true
+          schema:
+            $ref: "#/definitions/EquipmentStatusUpdateRequest"
+      responses:
+        200:
+          description: Equipment updated
+          schema:
+            $ref: "#/definitions/EquipmentStatusUpdateResponse"
+        default:
+          description: Unexpected error.
+          schema:
+            $ref: "#/definitions/Error"
+
   /equipment/status_names:
     post:
       summary: Creating a new equipment status.
@@ -2017,6 +2048,41 @@ definitions:
     properties:
       name:
         type: string
+  #EquipmentStatusUpdateRequest
+  EquipmentStatusUpdateRequest:
+    type: object
+    required:
+      - status_name
+      - start_date
+      - end_date
+    properties:
+      status_name:
+        type: string
+      start_date:
+        type: string
+        format: date-time
+      end_date:
+        type: string
+        format: date-time
+  #EquipmentStatusUpdateResponse
+  EquipmentStatusUpdateResponse:
+    type: object
+    required:
+      - id
+      - status_name
+      - start_date
+      - end_date
+    properties:
+      id:
+        type: integer
+      status_name:
+        type: string
+      start_date:
+        type: string
+        format: date-time
+      end_date:
+        type: string
+        format: date-time
   #EquipmentStatus
   EquipmentStatus:
     type: object
