@@ -3,7 +3,6 @@ package handlers
 import (
 	"net/http"
 
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/ent"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/swagger/models"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/swagger/restapi/operations"
 	eqStatus "git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/swagger/restapi/operations/equipment_status"
@@ -51,24 +50,13 @@ func (c EquipmentStatus) PutEquipmentStatusFunc(eqStatusRepository domain.Equipm
 		id := int64(updatedEqStatus.ID)
 		endTime := strfmt.DateTime(updatedEqStatus.EndDate)
 		startTime := strfmt.DateTime(updatedEqStatus.StartDate)
-
 		return eqStatus.NewUpdateEquipmentStatusOK().WithPayload(&models.EquipmentStatusUpdateResponse{
-			ID:         &id,
-			EndDate:    &endTime,
-			StartDate:  &startTime,
-			StatusName: statusName,
+			Data: &models.EquipmentStatusUpdate{
+				ID:         &id,
+				EndDate:    &endTime,
+				StartDate:  &startTime,
+				StatusName: statusName,
+			},
 		})
-	}
-}
-
-func mapEquipmentStatus(eqStatus *ent.EquipmentStatus) *models.EquipmentStatusUpdateResponse {
-	id := int64(eqStatus.ID)
-	endTime := strfmt.DateTime(eqStatus.EndDate)
-	startTime := strfmt.DateTime(eqStatus.StartDate)
-	return &models.EquipmentStatusUpdateResponse{
-		ID:         &id,
-		EndDate:    &endTime,
-		StartDate:  &startTime,
-		StatusName: &eqStatus.Edges.EquipmentStatusName.Name,
 	}
 }

@@ -2068,6 +2068,14 @@ definitions:
   EquipmentStatusUpdateResponse:
     type: object
     required:
+      - data
+    properties:
+      data:
+        $ref: "#/definitions/EquipmentStatusUpdate"
+  #EquipmentStatusUpdate
+  EquipmentStatusUpdate:
+    type: object
+    required:
       - id
       - status_name
       - start_date
@@ -2081,6 +2089,11 @@ definitions:
         type: string
         format: date-time
       end_date:
+        type: string
+        format: date-time
+      comment:
+        type: string
+      created_at:
         type: string
         format: date-time
   #EquipmentStatus
