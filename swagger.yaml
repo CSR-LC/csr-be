@@ -355,7 +355,29 @@ paths:
           description: Unexpected error.
           schema:
             $ref: "#/definitions/Error"
-
+    get:
+      summary: Check that equipment status has orders on provided dates.
+      security:
+        - Bearer: [ ]
+      tags:
+        - EquipmentStatus
+      operationId: CheckEquipmentStatus
+      parameters:
+        - name: name
+          in: body
+          description: "Check equipment status"
+          required: true
+          schema:
+            $ref: "#/definitions/EquipmentStatusUpdateRequest"
+      responses:
+        200:
+          description: Equipment checked
+          schema:
+            $ref: "#/definitions/EquipmentStatusUpdateConfirmationResponse"
+        default:
+          description: Unexpected error.
+          schema:
+            $ref: "#/definitions/Error"
   /equipment/status_names:
     post:
       summary: Creating a new equipment status.
@@ -2072,6 +2094,39 @@ definitions:
     properties:
       data:
         $ref: "#/definitions/EquipmentStatusUpdate"
+  #EquipmentStatusUpdateConfirmationResponse
+  EquipmentStatusUpdateConfirmationResponse:
+    type: object
+    required:
+      - data
+    properties:
+      data:
+        $ref: "#/definitions/EquipmentStatusUpdateConfirmation"
+  #EquipmentStatusUpdateConfirmation
+  EquipmentStatusUpdateConfirmation:
+    type: object
+    required:
+      - equipment_status_id
+      - status_name
+      - start_date
+      - end_date
+      - user_email
+      - order_id
+    properties:
+      equipment_status_id:
+        type: integer
+      status_name:
+        type: string
+      start_date:
+        type: string
+        format: date-time
+      end_date:
+        type: string
+        format: date-time
+      user_email:
+        type: string
+      order_id:
+        type: integer
   #EquipmentStatusUpdate
   EquipmentStatusUpdate:
     type: object
@@ -2091,8 +2146,6 @@ definitions:
       end_date:
         type: string
         format: date-time
-      comment:
-        type: string
       created_at:
         type: string
         format: date-time

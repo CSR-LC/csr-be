@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"net/http"
+	"time"
 
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/authentication"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/swagger/models"
@@ -20,6 +21,7 @@ func SetEquipmentStatusHandler(logger *zap.Logger, api *operations.BeAPI) {
 	statusHandler := NewEquipmentStatus(logger)
 
 	api.EquipmentStatusUpdateEquipmentStatusHandler = statusHandler.PutEquipmentStatusFunc(equipmentStatusRepo)
+	api.EquipmentStatusCheckEquipmentStatusHandler = statusHandler.CheckEquipmentStatusFunc(equipmentStatusRepo)
 }
 
 type EquipmentStatus struct {
@@ -32,7 +34,66 @@ func NewEquipmentStatus(logger *zap.Logger) *EquipmentStatus {
 	}
 }
 
-func (c EquipmentStatus) PutEquipmentStatusFunc(eqStatusRepository domain.EquipmentStatusRepository) eqStatus.UpdateEquipmentStatusHandlerFunc {
+func (c EquipmentStatus) CheckEquipmentStatusFunc(
+	eqStatusRepository domain.EquipmentStatusRepository) eqStatus.CheckEquipmentStatusHandlerFunc {
+	return func(s eqStatus.CheckEquipmentStatusParams, access interface{}) middleware.Responder {
+		ctx := s.HTTPRequest.Context()
+		newStatus := s.Name.StatusName
+
+		ok, err := equipmentStatusAccessRights(access)
+		if err != nil {
+			c.logger.Error("Error while getting authorization", zap.Error(err))
+			return orders.NewAddNewOrderStatusDefault(http.StatusInternalServerError).
+				WithPayload(&models.Error{Data: &models.ErrorData{Message: "Can't get authorization"}})
+		}
+
+		if !ok {
+			c.logger.Error("User have no right to check that equipment status has orders for provided dates",
+				zap.Any("access", access))
+			return orders.NewAddNewOrderStatusDefault(http.StatusForbidden).
+				WithPayload(&models.Error{Data: &models.ErrorData{
+					Message: "You don't have rights to update equipment status"}},
+				)
+		}
+
+		if !checkStatus(*newStatus) {
+			c.logger.Error("Wrong new equipment status, status should be only 'not available'", zap.Any("access", access))
+			return orders.NewAddNewOrderStatusDefault(http.StatusForbidden).
+				WithPayload(&models.Error{Data: &models.ErrorData{Message: "Wrong new equipment status, status should be only 'not available'"}})
+		}
+
+		data := models.EquipmentStatus{
+			EndDate:    s.Name.EndDate,
+			StartDate:  s.Name.StartDate,
+			StatusName: newStatus,
+			ID:         &s.ID,
+		}
+
+		order, user, err := eqStatusRepository.GetOrderAndUserByDates(
+			ctx, int(*data.ID), time.Time(*data.StartDate), time.Time(*data.EndDate))
+		if err != nil {
+			c.logger.Error("check equipment status by dates failed", zap.Error(err))
+			return eqStatus.NewUpdateEquipmentStatusDefault(http.StatusInternalServerError).
+				WithPayload(buildStringPayload("can't check equipment status by provided start date and end date"))
+		}
+
+		orderID := int64(order.ID)
+		return eqStatus.NewCheckEquipmentStatusOK().WithPayload(
+			&models.EquipmentStatusUpdateConfirmationResponse{
+				Data: &models.EquipmentStatusUpdateConfirmation{
+					EquipmentStatusID: data.ID,
+					EndDate:           data.EndDate,
+					StartDate:         data.StartDate,
+					StatusName:        newStatus,
+					OrderID:           &orderID,
+					UserEmail:         &user.Email,
+				},
+			})
+	}
+}
+
+func (c EquipmentStatus) PutEquipmentStatusFunc(
+	eqStatusRepository domain.EquipmentStatusRepository) eqStatus.UpdateEquipmentStatusHandlerFunc {
 	return func(s eqStatus.UpdateEquipmentStatusParams, access interface{}) middleware.Responder {
 		ctx := s.HTTPRequest.Context()
 		newStatus := s.Name.StatusName
@@ -91,6 +152,13 @@ func equipmentStatusAccessRights(access interface{}) (bool, error) {
 	if err != nil {
 		return false, err
 	}
+
+	// should be removed! for test purpouse
+	// isOperator, err := authentication.IsOperator(access)
+	// if err != nil {
+	// 	return false, err
+	// }
+	// return isManager || isOperator, nil
 
 	return isManager, nil
 }

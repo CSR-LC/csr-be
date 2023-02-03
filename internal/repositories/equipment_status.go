@@ -9,6 +9,7 @@ import (
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/ent/equipmentstatus"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/ent/equipmentstatusname"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/ent/order"
+	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/ent/user"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/swagger/models"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/middlewares"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/pkg/domain"
@@ -77,6 +78,39 @@ func (r *equipmentStatusRepository) GetEquipmentsStatusesByOrder(ctx context.Con
 		QueryOrder().Where(order.IDEQ(orderID)).QueryEquipmentStatus().
 		WithEquipmentStatusName().
 		All(ctx)
+}
+
+func (r *equipmentStatusRepository) GetOrderAndUserByDates(
+	ctx context.Context, id int, startDate, endDate time.Time) (*ent.Order, *ent.User, error) {
+	tx, err := middlewares.TxFromContext(ctx)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	eqStatusResult, err := tx.EquipmentStatus.Query().Where(equipmentstatus.ID(id)).
+		Only(ctx)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	if !eqStatusResult.EndDate.After(startDate) && eqStatusResult.StartDate.Before(endDate) {
+		return nil, nil, nil
+	}
+
+	orderResult, err := tx.Order.Query().
+		Where(order.HasEquipmentStatusWith(equipmentstatus.IDEQ(id))).
+		Only(ctx)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	userResult, err := tx.User.Query().Where(user.HasOrderWith(order.IDEQ(id))).
+		Only(ctx)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return orderResult, userResult, nil
 }
 
 func (r *equipmentStatusRepository) HasStatusByPeriod(ctx context.Context, status string, eqID int,
