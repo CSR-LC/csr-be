@@ -89,6 +89,7 @@ jobs:
             mkdir -p /var/www/csr/stage/
             echo '${{ secrets.DEPLOY_CONF }}' | sudo tee /var/www/csr/stage/config.json
             echo '${{ vars.NGINX_CONF }}' | sudo tee /etc/nginx/conf.d/stage.csr.conf
+            echo '${{ vars.DEFAULT_NGINX_CONF }}' | sudo tee /etc/systemd/nginx.conf
             echo '${{ vars.SYSTEMD_CONF }}' | sudo tee /etc/systemd/system/stage.csr.service
             sudo systemctl daemon-reload && sudo service stage.csr stop  
             cp ~/csr /var/www/csr/stage/server
