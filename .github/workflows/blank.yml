@@ -87,8 +87,9 @@ jobs:
           port: ${{ secrets.DEPLOY_SSH_PORT }}
           script: |
             mkdir -p /var/www/csr/stage/
-            sudo echo '${{ secrets.DEPLOY_CONFIG }}' > /var/www/csr/stage/config.json
+            echo '${{ env.DEPLOY_CONF }}' > /var/www/csr/stage/config.json
             sudo echo '${{ env.NGINX_CONF }}' > /etc/nginx/conf.d/stage.csr.conf
+            sudo echo '${{ env.SYSTEMD_CONF }}' > /etc/systemd/system/stage.csr.service
             sudo systemctl daemon-reload && sudo service stage.csr stop  
             cp ~/csr /var/www/csr/stage/server
             sudo nginx -s reload
