@@ -18,9 +18,11 @@ import (
 
 func SetEquipmentStatusHandler(logger *zap.Logger, api *operations.BeAPI) {
 	equipmentStatusRepo := repositories.NewEquipmentStatusRepository()
+	orderStatusRepo := repositories.NewOrderStatusRepository()
+
 	statusHandler := NewEquipmentStatus(logger)
 
-	api.EquipmentStatusUpdateEquipmentStatusHandler = statusHandler.PutEquipmentStatusFunc(equipmentStatusRepo)
+	api.EquipmentStatusUpdateEquipmentStatusHandler = statusHandler.PutEquipmentStatusFunc(equipmentStatusRepo, orderStatusRepo)
 	api.EquipmentStatusCheckEquipmentStatusHandler = statusHandler.GetEquipmentStatusFunc(equipmentStatusRepo)
 }
 
@@ -56,7 +58,7 @@ func (c EquipmentStatus) GetEquipmentStatusFunc(
 				)
 		}
 
-		if !checkStatus(*newStatus) {
+		if !newStatusIsUnavailable(*newStatus) {
 			c.logger.Error("Wrong new equipment status, status should be only 'not available'", zap.Any("access", access))
 			return orders.NewAddNewOrderStatusDefault(http.StatusForbidden).
 				WithPayload(&models.Error{Data: &models.ErrorData{Message: "Wrong new equipment status, status should be only 'not available'"}})
@@ -98,7 +100,8 @@ func (c EquipmentStatus) GetEquipmentStatusFunc(
 }
 
 func (c EquipmentStatus) PutEquipmentStatusFunc(
-	eqStatusRepository domain.EquipmentStatusRepository) eqStatus.UpdateEquipmentStatusHandlerFunc {
+	eqStatusRepository domain.EquipmentStatusRepository,
+	orderStatusRepo domain.OrderStatusRepository) eqStatus.UpdateEquipmentStatusHandlerFunc {
 	return func(s eqStatus.UpdateEquipmentStatusParams, access interface{}) middleware.Responder {
 		ctx := s.HTTPRequest.Context()
 		newStatus := s.Name.StatusName
@@ -116,15 +119,23 @@ func (c EquipmentStatus) PutEquipmentStatusFunc(
 				WithPayload(&models.Error{Data: &models.ErrorData{Message: "You don't have rights to update equipment status"}})
 		}
 
-		if !checkStatus(*newStatus) {
+		if !newStatusIsUnavailable(*newStatus) {
 			c.logger.Error("Wrong new equipment status, status should be only 'not available'", zap.Any("access", access))
 			return orders.NewAddNewOrderStatusDefault(http.StatusForbidden).
 				WithPayload(&models.Error{Data: &models.ErrorData{Message: "Wrong new equipment status, status should be only 'not available'"}})
 		}
 
+		reduceOneDayFromCurrentStartDate := strfmt.DateTime(
+			time.Time(*s.Name.StartDate).AddDate(0, 0, -1),
+		)
+
+		addOneDayToCurrentEndDate := strfmt.DateTime(
+			time.Time(*s.Name.EndDate).AddDate(0, 0, 1),
+		)
+
 		data := models.EquipmentStatus{
-			EndDate:    s.Name.EndDate,
-			StartDate:  s.Name.StartDate,
+			StartDate:  &reduceOneDayFromCurrentStartDate,
+			EndDate:    &addOneDayToCurrentEndDate,
 			StatusName: newStatus,
 			ID:         &s.ID,
 		}
@@ -136,22 +147,38 @@ func (c EquipmentStatus) PutEquipmentStatusFunc(
 				WithPayload(buildStringPayload("can't update equipment status"))
 		}
 
-		id := int64(updatedEqStatus.ID)
-		endDate := strfmt.DateTime(updatedEqStatus.EndDate)
-		startDate := strfmt.DateTime(updatedEqStatus.StartDate)
-		addOneDayToCurrentEndDate := strfmt.DateTime(
-			time.Time(endDate).AddDate(0, 0, 1),
-		)
-		reduceOneDayFromCurrentStartDate := strfmt.DateTime(
-			time.Time(startDate).AddDate(0, 0, -1),
-		)
+		_, orderResult, userResult, err := eqStatusRepository.GetOrderAndUserByDates(
+			ctx, int(*data.ID), time.Time(*data.StartDate), time.Time(*data.EndDate))
+		if err != nil {
+			c.logger.Error("receiving user and order status by provided dates failed", zap.Error(err))
+			return eqStatus.NewUpdateEquipmentStatusDefault(http.StatusInternalServerError).
+				WithPayload(buildStringPayload("can't receive order and user by provided start/end dates for updating equipment status"))
+		}
 
+		comment := "equipment in repair"
+		timeNow := time.Now()
+		orderID := int64(orderResult.ID)
+		model := models.NewOrderStatus{
+			Comment:   &comment,
+			CreatedAt: (*strfmt.DateTime)(&timeNow),
+			OrderID:   &orderID,
+			Status:    &domain.OrderStatusRejected,
+		}
+
+		err = orderStatusRepo.UpdateStatus(ctx, userResult.ID, model)
+		if err != nil {
+			c.logger.Error("Update order status error", zap.Error(err))
+			return orders.NewAddNewOrderStatusDefault(http.StatusInternalServerError).
+				WithPayload(buildStringPayload("Can't update order status"))
+		}
+
+		id := int64(updatedEqStatus.ID)
 		return eqStatus.NewUpdateEquipmentStatusOK().WithPayload(
 			&models.EquipmentStatusUpdateResponse{
 				Data: &models.EquipmentStatusUpdate{
 					ID:         &id,
-					EndDate:    &addOneDayToCurrentEndDate,
-					StartDate:  &reduceOneDayFromCurrentStartDate,
+					EndDate:    (*strfmt.DateTime)(&updatedEqStatus.EndDate),
+					StartDate:  (*strfmt.DateTime)(&updatedEqStatus.StartDate),
 					StatusName: newStatus,
 				},
 			})
@@ -167,11 +194,10 @@ func equipmentStatusAccessRights(access interface{}) (bool, error) {
 	return isManager, nil
 }
 
-func checkStatus(status string) bool {
-	if status == domain.EquipmentStatusAvailable ||
-		status == domain.EquipmentStatusNotAvailable {
-		return true
-	}
-
-	return false
+func newStatusIsUnavailable(status string) bool {
+	return status == domain.EquipmentStatusNotAvailable
 }
+
+// func newStatusIsAvailable(status string) bool {
+// 	return status == domain.EquipmentStatusAvailable
+// }
