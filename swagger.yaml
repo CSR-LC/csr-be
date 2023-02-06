@@ -2146,9 +2146,6 @@ definitions:
       end_date:
         type: string
         format: date-time
-      created_at:
-        type: string
-        format: date-time
   #EquipmentStatus
   EquipmentStatus:
     type: object

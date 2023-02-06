@@ -21,7 +21,7 @@ func SetEquipmentStatusHandler(logger *zap.Logger, api *operations.BeAPI) {
 	statusHandler := NewEquipmentStatus(logger)
 
 	api.EquipmentStatusUpdateEquipmentStatusHandler = statusHandler.PutEquipmentStatusFunc(equipmentStatusRepo)
-	api.EquipmentStatusCheckEquipmentStatusHandler = statusHandler.CheckEquipmentStatusFunc(equipmentStatusRepo)
+	api.EquipmentStatusCheckEquipmentStatusHandler = statusHandler.GetEquipmentStatusFunc(equipmentStatusRepo)
 }
 
 type EquipmentStatus struct {
@@ -34,7 +34,7 @@ func NewEquipmentStatus(logger *zap.Logger) *EquipmentStatus {
 	}
 }
 
-func (c EquipmentStatus) CheckEquipmentStatusFunc(
+func (c EquipmentStatus) GetEquipmentStatusFunc(
 	eqStatusRepository domain.EquipmentStatusRepository) eqStatus.CheckEquipmentStatusHandlerFunc {
 	return func(s eqStatus.CheckEquipmentStatusParams, access interface{}) middleware.Responder {
 		ctx := s.HTTPRequest.Context()
@@ -69,7 +69,7 @@ func (c EquipmentStatus) CheckEquipmentStatusFunc(
 			ID:         &s.ID,
 		}
 
-		order, user, err := eqStatusRepository.GetOrderAndUserByDates(
+		statusResult, orderResult, userResult, err := eqStatusRepository.GetOrderAndUserByDates(
 			ctx, int(*data.ID), time.Time(*data.StartDate), time.Time(*data.EndDate))
 		if err != nil {
 			c.logger.Error("check equipment status by dates failed", zap.Error(err))
@@ -77,16 +77,21 @@ func (c EquipmentStatus) CheckEquipmentStatusFunc(
 				WithPayload(buildStringPayload("can't check equipment status by provided start date and end date"))
 		}
 
-		orderID := int64(order.ID)
+		if orderResult == nil && userResult == nil {
+			return eqStatus.NewCheckEquipmentStatusOK().WithPayload(
+				&models.EquipmentStatusUpdateConfirmationResponse{})
+		}
+
+		orderID := int64(orderResult.ID)
 		return eqStatus.NewCheckEquipmentStatusOK().WithPayload(
 			&models.EquipmentStatusUpdateConfirmationResponse{
 				Data: &models.EquipmentStatusUpdateConfirmation{
 					EquipmentStatusID: data.ID,
-					EndDate:           data.EndDate,
-					StartDate:         data.StartDate,
-					StatusName:        newStatus,
+					EndDate:           (*strfmt.DateTime)(&statusResult.EndDate),
+					StartDate:         (*strfmt.DateTime)(&statusResult.StartDate),
+					StatusName:        &statusResult.Edges.EquipmentStatusName.Name,
 					OrderID:           &orderID,
-					UserEmail:         &user.Email,
+					UserEmail:         &userResult.Email,
 				},
 			})
 	}
@@ -132,15 +137,21 @@ func (c EquipmentStatus) PutEquipmentStatusFunc(
 		}
 
 		id := int64(updatedEqStatus.ID)
-		endTime := strfmt.DateTime(updatedEqStatus.EndDate)
-		startTime := strfmt.DateTime(updatedEqStatus.StartDate)
+		endDate := strfmt.DateTime(updatedEqStatus.EndDate)
+		startDate := strfmt.DateTime(updatedEqStatus.StartDate)
+		addOneDayToCurrentEndDate := strfmt.DateTime(
+			time.Time(endDate).AddDate(0, 0, 1),
+		)
+		reduceOneDayFromCurrentStartDate := strfmt.DateTime(
+			time.Time(startDate).AddDate(0, 0, -1),
+		)
 
 		return eqStatus.NewUpdateEquipmentStatusOK().WithPayload(
 			&models.EquipmentStatusUpdateResponse{
 				Data: &models.EquipmentStatusUpdate{
 					ID:         &id,
-					EndDate:    &endTime,
-					StartDate:  &startTime,
+					EndDate:    &addOneDayToCurrentEndDate,
+					StartDate:  &reduceOneDayFromCurrentStartDate,
 					StatusName: newStatus,
 				},
 			})

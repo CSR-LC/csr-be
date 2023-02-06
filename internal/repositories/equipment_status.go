@@ -81,36 +81,41 @@ func (r *equipmentStatusRepository) GetEquipmentsStatusesByOrder(ctx context.Con
 }
 
 func (r *equipmentStatusRepository) GetOrderAndUserByDates(
-	ctx context.Context, id int, startDate, endDate time.Time) (*ent.Order, *ent.User, error) {
+	ctx context.Context,
+	id int,
+	startDate,
+	endDate time.Time) (*ent.EquipmentStatus, *ent.Order, *ent.User, error) {
 	tx, err := middlewares.TxFromContext(ctx)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, nil, err
 	}
 
 	eqStatusResult, err := tx.EquipmentStatus.Query().Where(equipmentstatus.ID(id)).
+		WithEquipmentStatusName().
 		Only(ctx)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, nil, err
 	}
 
-	if !eqStatusResult.EndDate.After(startDate) && eqStatusResult.StartDate.Before(endDate) {
-		return nil, nil, nil
+	if !eqStatusResult.EndDate.After(startDate) &&
+		eqStatusResult.StartDate.Before(endDate) {
+		return nil, nil, nil, nil
 	}
 
 	orderResult, err := tx.Order.Query().
 		Where(order.HasEquipmentStatusWith(equipmentstatus.IDEQ(id))).
 		Only(ctx)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, nil, err
 	}
 
 	userResult, err := tx.User.Query().Where(user.HasOrderWith(order.IDEQ(id))).
 		Only(ctx)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, nil, err
 	}
 
-	return orderResult, userResult, nil
+	return eqStatusResult, orderResult, userResult, nil
 }
 
 func (r *equipmentStatusRepository) HasStatusByPeriod(ctx context.Context, status string, eqID int,
