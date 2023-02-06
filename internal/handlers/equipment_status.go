@@ -164,16 +164,14 @@ func equipmentStatusAccessRights(access interface{}) (bool, error) {
 		return false, err
 	}
 
-	// should be removed! for test purpouse
-	// isOperator, err := authentication.IsOperator(access)
-	// if err != nil {
-	// 	return false, err
-	// }
-	// return isManager || isOperator, nil
-
 	return isManager, nil
 }
 
 func checkStatus(status string) bool {
-	return status == domain.EquipmentStatusNotAvailable
+	if status == domain.EquipmentStatusAvailable ||
+		status == domain.EquipmentStatusNotAvailable {
+		return true
+	}
+
+	return false
 }
