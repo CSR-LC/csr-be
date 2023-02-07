@@ -16,14 +16,19 @@ import (
 	"go.uber.org/zap"
 )
 
+const (
+	EQUIPMENT_UNDER_REPAIR_COMMENT_FOR_ORDER = "Equipment under repair"
+)
+
 func SetEquipmentStatusHandler(logger *zap.Logger, api *operations.BeAPI) {
 	equipmentStatusRepo := repositories.NewEquipmentStatusRepository()
 	orderStatusRepo := repositories.NewOrderStatusRepository()
 
 	statusHandler := NewEquipmentStatus(logger)
 
-	api.EquipmentStatusUpdateEquipmentStatusHandler = statusHandler.PutEquipmentStatusFunc(equipmentStatusRepo, orderStatusRepo)
-	api.EquipmentStatusCheckEquipmentStatusHandler = statusHandler.GetEquipmentStatusFunc(equipmentStatusRepo)
+	api.EquipmentStatusUpdateEquipmentStatusOnUnavailableHandler = statusHandler.PutEquipmentStatusInRepairFunc(equipmentStatusRepo, orderStatusRepo)
+	api.EquipmentStatusUpdateEquipmentStatusOnAvailableHandler = statusHandler.PutEquipmentStatusRemoveFromRepairFunc(equipmentStatusRepo, orderStatusRepo)
+	api.EquipmentStatusCheckEquipmentStatusHandler = statusHandler.GetEquipmentStatusRepairFunc(equipmentStatusRepo)
 }
 
 type EquipmentStatus struct {
@@ -36,7 +41,7 @@ func NewEquipmentStatus(logger *zap.Logger) *EquipmentStatus {
 	}
 }
 
-func (c EquipmentStatus) GetEquipmentStatusFunc(
+func (c EquipmentStatus) GetEquipmentStatusRepairFunc(
 	eqStatusRepository domain.EquipmentStatusRepository) eqStatus.CheckEquipmentStatusHandlerFunc {
 	return func(s eqStatus.CheckEquipmentStatusParams, access interface{}) middleware.Responder {
 		ctx := s.HTTPRequest.Context()
@@ -68,26 +73,26 @@ func (c EquipmentStatus) GetEquipmentStatusFunc(
 			EndDate:    s.Name.EndDate,
 			StartDate:  s.Name.StartDate,
 			StatusName: newStatus,
-			ID:         &s.ID,
+			ID:         &s.EquipmentstatusID,
 		}
 
 		statusResult, orderResult, userResult, err := eqStatusRepository.GetOrderAndUserByDates(
 			ctx, int(*data.ID), time.Time(*data.StartDate), time.Time(*data.EndDate))
 		if err != nil {
 			c.logger.Error("check equipment status by dates failed", zap.Error(err))
-			return eqStatus.NewUpdateEquipmentStatusDefault(http.StatusInternalServerError).
+			return eqStatus.NewCheckEquipmentStatusDefault(http.StatusInternalServerError).
 				WithPayload(buildStringPayload("can't check equipment status by provided start date and end date"))
 		}
 
 		if orderResult == nil && userResult == nil {
 			return eqStatus.NewCheckEquipmentStatusOK().WithPayload(
-				&models.EquipmentStatusUpdateConfirmationResponse{})
+				&models.EquipmentStatusRepairConfirmationResponse{})
 		}
 
 		orderID := int64(orderResult.ID)
 		return eqStatus.NewCheckEquipmentStatusOK().WithPayload(
-			&models.EquipmentStatusUpdateConfirmationResponse{
-				Data: &models.EquipmentStatusUpdateConfirmation{
+			&models.EquipmentStatusRepairConfirmationResponse{
+				Data: &models.EquipmentStatusRepairConfirmation{
 					EquipmentStatusID: data.ID,
 					EndDate:           (*strfmt.DateTime)(&statusResult.EndDate),
 					StartDate:         (*strfmt.DateTime)(&statusResult.StartDate),
@@ -99,10 +104,10 @@ func (c EquipmentStatus) GetEquipmentStatusFunc(
 	}
 }
 
-func (c EquipmentStatus) PutEquipmentStatusFunc(
+func (c EquipmentStatus) PutEquipmentStatusInRepairFunc(
 	eqStatusRepository domain.EquipmentStatusRepository,
-	orderStatusRepo domain.OrderStatusRepository) eqStatus.UpdateEquipmentStatusHandlerFunc {
-	return func(s eqStatus.UpdateEquipmentStatusParams, access interface{}) middleware.Responder {
+	orderStatusRepo domain.OrderStatusRepository) eqStatus.UpdateEquipmentStatusOnUnavailableHandlerFunc {
+	return func(s eqStatus.UpdateEquipmentStatusOnUnavailableParams, access interface{}) middleware.Responder {
 		ctx := s.HTTPRequest.Context()
 		newStatus := s.Name.StatusName
 
@@ -137,13 +142,13 @@ func (c EquipmentStatus) PutEquipmentStatusFunc(
 			StartDate:  &reduceOneDayFromCurrentStartDate,
 			EndDate:    &addOneDayToCurrentEndDate,
 			StatusName: newStatus,
-			ID:         &s.ID,
+			ID:         &s.EquipmentstatusID,
 		}
 
 		updatedEqStatus, err := eqStatusRepository.Update(ctx, &data)
 		if err != nil {
 			c.logger.Error("update equipment status failed", zap.Error(err))
-			return eqStatus.NewUpdateEquipmentStatusDefault(http.StatusInternalServerError).
+			return eqStatus.NewUpdateEquipmentStatusOnUnavailableDefault(http.StatusInternalServerError).
 				WithPayload(buildStringPayload("can't update equipment status"))
 		}
 
@@ -151,11 +156,11 @@ func (c EquipmentStatus) PutEquipmentStatusFunc(
 			ctx, int(*data.ID), time.Time(*data.StartDate), time.Time(*data.EndDate))
 		if err != nil {
 			c.logger.Error("receiving user and order status by provided dates failed", zap.Error(err))
-			return eqStatus.NewUpdateEquipmentStatusDefault(http.StatusInternalServerError).
+			return eqStatus.NewUpdateEquipmentStatusOnUnavailableDefault(http.StatusInternalServerError).
 				WithPayload(buildStringPayload("can't receive order and user by provided start/end dates for updating equipment status"))
 		}
 
-		comment := "equipment in repair"
+		comment := EQUIPMENT_UNDER_REPAIR_COMMENT_FOR_ORDER
 		timeNow := time.Now()
 		orderID := int64(orderResult.ID)
 		model := models.NewOrderStatus{
@@ -173,13 +178,66 @@ func (c EquipmentStatus) PutEquipmentStatusFunc(
 		}
 
 		id := int64(updatedEqStatus.ID)
-		return eqStatus.NewUpdateEquipmentStatusOK().WithPayload(
-			&models.EquipmentStatusUpdateResponse{
-				Data: &models.EquipmentStatusUpdate{
-					ID:         &id,
-					EndDate:    (*strfmt.DateTime)(&updatedEqStatus.EndDate),
-					StartDate:  (*strfmt.DateTime)(&updatedEqStatus.StartDate),
-					StatusName: newStatus,
+		return eqStatus.NewUpdateEquipmentStatusOnUnavailableOK().WithPayload(
+			&models.EquipmentStatusRepairResponse{
+				Data: &models.EquipmentStatusRepair{
+					EquipmentStatusID: &id,
+					EndDate:           (*strfmt.DateTime)(&updatedEqStatus.EndDate),
+					StartDate:         (*strfmt.DateTime)(&updatedEqStatus.StartDate),
+					StatusName:        newStatus,
+				},
+			})
+	}
+}
+
+func (c EquipmentStatus) PutEquipmentStatusRemoveFromRepairFunc(
+	eqStatusRepository domain.EquipmentStatusRepository,
+	orderStatusRepo domain.OrderStatusRepository) eqStatus.UpdateEquipmentStatusOnAvailableHandlerFunc {
+	return func(s eqStatus.UpdateEquipmentStatusOnAvailableParams, access interface{}) middleware.Responder {
+		ctx := s.HTTPRequest.Context()
+		newStatus := s.Name.StatusName
+
+		ok, err := equipmentStatusAccessRights(access)
+		if err != nil {
+			c.logger.Error("Error while getting authorization", zap.Error(err))
+			return orders.NewAddNewOrderStatusDefault(http.StatusInternalServerError).
+				WithPayload(&models.Error{Data: &models.ErrorData{Message: "Can't get authorization"}})
+		}
+
+		if !ok {
+			c.logger.Error("User have no right to update equipment status on available", zap.Any("access", access))
+			return orders.NewAddNewOrderStatusDefault(http.StatusForbidden).
+				WithPayload(&models.Error{Data: &models.ErrorData{Message: "You don't have rights to update equipment status"}})
+		}
+
+		if !newStatusIsAvailable(*newStatus) {
+			c.logger.Error("Wrong new equipment status, status should be only 'available'", zap.Any("access", access))
+			return orders.NewAddNewOrderStatusDefault(http.StatusForbidden).
+				WithPayload(&models.Error{Data: &models.ErrorData{Message: "Wrong new equipment status, status should be only 'not available'"}})
+		}
+
+		timeNow := time.Now()
+		data := models.EquipmentStatus{
+			EndDate:    (*strfmt.DateTime)(&timeNow),
+			StatusName: newStatus,
+			ID:         &s.EquipmentstatusID,
+		}
+
+		updatedEqStatus, err := eqStatusRepository.Update(ctx, &data)
+		if err != nil {
+			c.logger.Error("update equipment on available status failed", zap.Error(err))
+			return eqStatus.NewUpdateEquipmentStatusOnAvailableDefault(http.StatusInternalServerError).
+				WithPayload(buildStringPayload("can't update equipment status on available status"))
+		}
+
+		id := int64(updatedEqStatus.ID)
+		return eqStatus.NewUpdateEquipmentStatusOnAvailableOK().WithPayload(
+			&models.EquipmentStatusRepairResponse{
+				Data: &models.EquipmentStatusRepair{
+					EquipmentStatusID: &id,
+					EndDate:           (*strfmt.DateTime)(&updatedEqStatus.EndDate),
+					StartDate:         (*strfmt.DateTime)(&updatedEqStatus.StartDate),
+					StatusName:        newStatus,
 				},
 			})
 	}
@@ -198,6 +256,6 @@ func newStatusIsUnavailable(status string) bool {
 	return status == domain.EquipmentStatusNotAvailable
 }
 
-// func newStatusIsAvailable(status string) bool {
-// 	return status == domain.EquipmentStatusAvailable
-// }
+func newStatusIsAvailable(status string) bool {
+	return status == domain.EquipmentStatusAvailable
+}

@@ -324,33 +324,62 @@ paths:
           schema:
             $ref: "#/definitions/Error"
 
-
-  /equipmentstatus/{id}:
+  /equipmentstatus/remove_from_repair/{equipmentstatusId}:
     parameters:
-      - name: id
+      - name: equipmentstatusId
         in: path
         required: true
         description: equipment status id
         type: integer
     put:
-      summary: Edit equipment status by id.
+      summary: Change equipment status on available by id.
       security:
         - Bearer: [ ]
       tags:
         - EquipmentStatus
-      operationId: UpdateEquipmentStatus
+      operationId: UpdateEquipmentStatusOnAvailable
       parameters:
         - name: name
           in: body
-          description: "Update equipment status"
+          description: "Change equipment status on available"
           required: true
           schema:
-            $ref: "#/definitions/EquipmentStatusUpdateRequest"
+            $ref: "#/definitions/EquipmentStatusRemoveFromRepairRequest"
       responses:
         200:
-          description: Equipment updated
+          description: Equipment status updated on available
           schema:
-            $ref: "#/definitions/EquipmentStatusUpdateResponse"
+            $ref: "#/definitions/EquipmentStatusRepairResponse"
+        default:
+          description: Unexpected error.
+          schema:
+            $ref: "#/definitions/Error"
+  /equipmentstatus/in_repair/{equipmentstatusId}:
+    parameters:
+      - name: equipmentstatusId
+        in: path
+        required: true
+        description: equipment status id
+        type: integer
+    put:
+      summary: Change equipment status on unavailable with start/end dates by id.
+      security:
+        - Bearer: [ ]
+      tags:
+        - EquipmentStatus
+      operationId: UpdateEquipmentStatusOnUnavailable
+      parameters:
+        - name: name
+          in: body
+          description: "Update equipment status on unavailable"
+          required: true
+          schema:
+            $ref: "#/definitions/EquipmentStatusInRepairRequest"
+      responses:
+        200:
+          description: Equipment status updated on unavailable
+          schema:
+            $ref: "#/definitions/EquipmentStatusRepairResponse"
         default:
           description: Unexpected error.
           schema:
@@ -368,12 +397,12 @@ paths:
           description: "Check equipment status"
           required: true
           schema:
-            $ref: "#/definitions/EquipmentStatusUpdateRequest"
+            $ref: "#/definitions/EquipmentStatusInRepairRequest"
       responses:
         200:
           description: Equipment checked
           schema:
-            $ref: "#/definitions/EquipmentStatusUpdateConfirmationResponse"
+            $ref: "#/definitions/EquipmentStatusRepairConfirmationResponse"
         default:
           description: Unexpected error.
           schema:
@@ -2070,8 +2099,8 @@ definitions:
     properties:
       name:
         type: string
-  #EquipmentStatusUpdateRequest
-  EquipmentStatusUpdateRequest:
+  #EquipmentStatusInRepairRequest
+  EquipmentStatusInRepairRequest:
     type: object
     required:
       - status_name
@@ -2086,24 +2115,32 @@ definitions:
       end_date:
         type: string
         format: date-time
-  #EquipmentStatusUpdateResponse
-  EquipmentStatusUpdateResponse:
+  #EquipmentStatusRemoveFromRepairRequest
+  EquipmentStatusRemoveFromRepairRequest:
+    type: object
+    required:
+      - status_name
+    properties:
+      status_name:
+        type: string
+  #EquipmentStatusRepairResponse
+  EquipmentStatusRepairResponse:
     type: object
     required:
       - data
     properties:
       data:
-        $ref: "#/definitions/EquipmentStatusUpdate"
-  #EquipmentStatusUpdateConfirmationResponse
-  EquipmentStatusUpdateConfirmationResponse:
+        $ref: "#/definitions/EquipmentStatusRepair"
+  #EquipmentStatusRepairConfirmationResponse
+  EquipmentStatusRepairConfirmationResponse:
     type: object
     required:
       - data
     properties:
       data:
-        $ref: "#/definitions/EquipmentStatusUpdateConfirmation"
-  #EquipmentStatusUpdateConfirmation
-  EquipmentStatusUpdateConfirmation:
+        $ref: "#/definitions/EquipmentStatusRepairConfirmation"
+  #EquipmentStatusRepairConfirmation
+  EquipmentStatusRepairConfirmation:
     type: object
     required:
       - equipment_status_id
@@ -2127,16 +2164,16 @@ definitions:
         type: string
       order_id:
         type: integer
-  #EquipmentStatusUpdate
-  EquipmentStatusUpdate:
+  #EquipmentStatusRepair
+  EquipmentStatusRepair:
     type: object
     required:
-      - id
+      - equipment_status_id
       - status_name
       - start_date
       - end_date
     properties:
-      id:
+      equipment_status_id:
         type: integer
       status_name:
         type: string
