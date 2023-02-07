@@ -29,6 +29,7 @@ func SetEquipmentStatusHandler(logger *zap.Logger, api *operations.BeAPI) {
 	api.EquipmentStatusUpdateEquipmentStatusOnUnavailableHandler = statusHandler.PutEquipmentStatusInRepairFunc(equipmentStatusRepo, orderStatusRepo)
 	api.EquipmentStatusUpdateEquipmentStatusOnAvailableHandler = statusHandler.PutEquipmentStatusRemoveFromRepairFunc(equipmentStatusRepo, orderStatusRepo)
 	api.EquipmentStatusCheckEquipmentStatusHandler = statusHandler.GetEquipmentStatusRepairFunc(equipmentStatusRepo)
+	api.EquipmentStatusUpdateRepairedEquipmentStatusDatesHandler = statusHandler.PutEquipmentStatusEditDatesFunc(equipmentStatusRepo)
 }
 
 type EquipmentStatus struct {
@@ -238,6 +239,58 @@ func (c EquipmentStatus) PutEquipmentStatusRemoveFromRepairFunc(
 					EndDate:           (*strfmt.DateTime)(&updatedEqStatus.EndDate),
 					StartDate:         (*strfmt.DateTime)(&updatedEqStatus.StartDate),
 					StatusName:        newStatus,
+				},
+			})
+	}
+}
+
+func (c EquipmentStatus) PutEquipmentStatusEditDatesFunc(
+	eqStatusRepository domain.EquipmentStatusRepository,
+) eqStatus.UpdateRepairedEquipmentStatusDatesHandlerFunc {
+	return func(s eqStatus.UpdateRepairedEquipmentStatusDatesParams, access interface{}) middleware.Responder {
+		ctx := s.HTTPRequest.Context()
+
+		ok, err := equipmentStatusAccessRights(access)
+		if err != nil {
+			c.logger.Error("Error while getting authorization", zap.Error(err))
+			return orders.NewAddNewOrderStatusDefault(http.StatusInternalServerError).
+				WithPayload(&models.Error{Data: &models.ErrorData{Message: "Can't get authorization"}})
+		}
+
+		if !ok {
+			c.logger.Error("User have no right to update equipment status on available", zap.Any("access", access))
+			return orders.NewAddNewOrderStatusDefault(http.StatusForbidden).
+				WithPayload(&models.Error{Data: &models.ErrorData{Message: "You don't have rights to update equipment status"}})
+		}
+
+		reduceOneDayFromCurrentStartDate := strfmt.DateTime(
+			time.Time(*s.Name.StartDate).AddDate(0, 0, -1),
+		)
+
+		addOneDayToCurrentEndDate := strfmt.DateTime(
+			time.Time(*s.Name.EndDate).AddDate(0, 0, 1),
+		)
+
+		data := models.EquipmentStatus{
+			StartDate: &reduceOneDayFromCurrentStartDate,
+			EndDate:   &addOneDayToCurrentEndDate,
+			ID:        &s.EquipmentstatusID,
+		}
+
+		updatedEqStatus, err := eqStatusRepository.Update(ctx, &data)
+		if err != nil {
+			c.logger.Error("update equipment on available status failed", zap.Error(err))
+			return eqStatus.NewUpdateRepairedEquipmentStatusDatesDefault(http.StatusInternalServerError).
+				WithPayload(buildStringPayload("can't update equipment status on available status"))
+		}
+
+		id := int64(updatedEqStatus.ID)
+		return eqStatus.NewUpdateRepairedEquipmentStatusDatesOK().WithPayload(
+			&models.EquipmentStatusRepairResponse{
+				Data: &models.EquipmentStatusRepair{
+					EquipmentStatusID: &id,
+					EndDate:           (*strfmt.DateTime)(&updatedEqStatus.EndDate),
+					StartDate:         (*strfmt.DateTime)(&updatedEqStatus.StartDate),
 				},
 			})
 	}

@@ -407,6 +407,36 @@ paths:
           description: Unexpected error.
           schema:
             $ref: "#/definitions/Error"
+  /equipmentstatus/edit_repaired/{equipmentstatusId}:
+      parameters:
+        - name: equipmentstatusId
+          in: path
+          required: true
+          description: equipment status id
+          type: integer
+      put:
+        summary: Change repaired equipment status dates by id.
+        security:
+          - Bearer: [ ]
+        tags:
+          - EquipmentStatus
+        operationId: UpdateRepairedEquipmentStatusDates
+        parameters:
+          - name: name
+            in: body
+            description: "Update repaired equipment status start/end dates"
+            required: true
+            schema:
+              $ref: "#/definitions/EquipmentStatusEditDatesRequest"
+        responses:
+          200:
+            description: Repaired equipment status dates updated
+            schema:
+              $ref: "#/definitions/EquipmentStatusRepairResponse"
+          default:
+            description: Unexpected error.
+            schema:
+              $ref: "#/definitions/Error"
   /equipment/status_names:
     post:
       summary: Creating a new equipment status.
@@ -2099,6 +2129,19 @@ definitions:
     properties:
       name:
         type: string
+  #EquipmentStatusEditDatesRequest
+  EquipmentStatusEditDatesRequest:
+    type: object
+    required:
+      - start_date
+      - end_date
+    properties:
+      start_date:
+        type: string
+        format: date-time
+      end_date:
+        type: string
+        format: date-time
   #EquipmentStatusInRepairRequest
   EquipmentStatusInRepairRequest:
     type: object
