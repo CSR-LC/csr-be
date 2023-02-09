@@ -238,8 +238,11 @@ func (c EquipmentStatus) PutEquipmentStatusRemoveFromRepairFunc(
 		}
 
 		timeNow := time.Now()
+		addOneDayToCurrentDate := strfmt.DateTime(
+			time.Time(timeNow).AddDate(0, 0, 1),
+		)
 		data := models.EquipmentStatus{
-			EndDate:    (*strfmt.DateTime)(&timeNow),
+			EndDate:    (*strfmt.DateTime)(&addOneDayToCurrentDate),
 			StatusName: newStatus,
 			ID:         &s.EquipmentstatusID,
 		}
