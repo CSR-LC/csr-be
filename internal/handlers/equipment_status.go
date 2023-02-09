@@ -28,7 +28,7 @@ func SetEquipmentStatusHandler(logger *zap.Logger, api *operations.BeAPI) {
 
 	api.EquipmentStatusUpdateEquipmentStatusOnUnavailableHandler = statusHandler.PutEquipmentStatusInRepairFunc(equipmentStatusRepo, orderStatusRepo)
 	api.EquipmentStatusUpdateEquipmentStatusOnAvailableHandler = statusHandler.PutEquipmentStatusRemoveFromRepairFunc(equipmentStatusRepo, orderStatusRepo)
-	api.EquipmentStatusCheckEquipmentStatusHandler = statusHandler.GetEquipmentStatusRepairFunc(equipmentStatusRepo)
+	api.EquipmentStatusCheckEquipmentStatusHandler = statusHandler.GetEquipmentStatusCheckDatesFunc(equipmentStatusRepo)
 	api.EquipmentStatusUpdateRepairedEquipmentStatusDatesHandler = statusHandler.PutEquipmentStatusEditDatesFunc(equipmentStatusRepo)
 }
 
@@ -42,7 +42,7 @@ func NewEquipmentStatus(logger *zap.Logger) *EquipmentStatus {
 	}
 }
 
-func (c EquipmentStatus) GetEquipmentStatusRepairFunc(
+func (c EquipmentStatus) GetEquipmentStatusCheckDatesFunc(
 	eqStatusRepository domain.EquipmentStatusRepository) eqStatus.CheckEquipmentStatusHandlerFunc {
 	return func(s eqStatus.CheckEquipmentStatusParams, access interface{}) middleware.Responder {
 		ctx := s.HTTPRequest.Context()
@@ -77,7 +77,7 @@ func (c EquipmentStatus) GetEquipmentStatusRepairFunc(
 			ID:         &s.EquipmentstatusID,
 		}
 
-		statusResult, orderResult, userResult, err := eqStatusRepository.GetOrderAndUserByDates(
+		orderResult, userResult, err := eqStatusRepository.GetOrderAndUserByDates(
 			ctx, int(*data.ID), time.Time(*data.StartDate), time.Time(*data.EndDate))
 		if err != nil {
 			c.logger.Error("check equipment status by dates failed", zap.Error(err))
@@ -90,16 +90,26 @@ func (c EquipmentStatus) GetEquipmentStatusRepairFunc(
 				&models.EquipmentStatusRepairConfirmationResponse{})
 		}
 
+		eqStatusResult, err := eqStatusRepository.GetEquipmentStatusByID(
+			ctx, int(*data.ID))
+		if err != nil {
+			c.logger.Error("receiving equipment status by id failed", zap.Error(err))
+			return eqStatus.NewCheckEquipmentStatusDefault(http.StatusInternalServerError).
+				WithPayload(buildStringPayload("can't find equipment status by provided id"))
+		}
+
 		orderID := int64(orderResult.ID)
+		equipmentID := int64(eqStatusResult.Edges.Equipments.ID)
 		return eqStatus.NewCheckEquipmentStatusOK().WithPayload(
 			&models.EquipmentStatusRepairConfirmationResponse{
 				Data: &models.EquipmentStatusRepairConfirmation{
 					EquipmentStatusID: data.ID,
-					EndDate:           (*strfmt.DateTime)(&statusResult.EndDate),
-					StartDate:         (*strfmt.DateTime)(&statusResult.StartDate),
-					StatusName:        &statusResult.Edges.EquipmentStatusName.Name,
+					EndDate:           (*strfmt.DateTime)(&eqStatusResult.EndDate),
+					StartDate:         (*strfmt.DateTime)(&eqStatusResult.StartDate),
+					StatusName:        &eqStatusResult.Edges.EquipmentStatusName.Name,
 					OrderID:           &orderID,
 					UserEmail:         &userResult.Email,
+					EquipmentID:       &equipmentID,
 				},
 			})
 	}
@@ -153,7 +163,7 @@ func (c EquipmentStatus) PutEquipmentStatusInRepairFunc(
 				WithPayload(buildStringPayload("can't update equipment status"))
 		}
 
-		_, orderResult, userResult, err := eqStatusRepository.GetOrderAndUserByDates(
+		orderResult, userResult, err := eqStatusRepository.GetOrderAndUserByDates(
 			ctx, int(*data.ID), time.Time(*data.StartDate), time.Time(*data.EndDate))
 		if err != nil {
 			c.logger.Error("receiving user and order status by provided dates failed", zap.Error(err))

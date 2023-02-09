@@ -2187,6 +2187,7 @@ definitions:
     type: object
     required:
       - equipment_status_id
+      - equipment_id
       - status_name
       - start_date
       - end_date
@@ -2194,6 +2195,8 @@ definitions:
       - order_id
     properties:
       equipment_status_id:
+        type: integer
+      equipment_id:
         type: integer
       status_name:
         type: string

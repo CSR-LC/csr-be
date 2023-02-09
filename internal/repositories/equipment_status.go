@@ -80,42 +80,54 @@ func (r *equipmentStatusRepository) GetEquipmentsStatusesByOrder(ctx context.Con
 		All(ctx)
 }
 
-func (r *equipmentStatusRepository) GetOrderAndUserByDates(
-	ctx context.Context,
-	id int,
-	startDate,
-	endDate time.Time) (*ent.EquipmentStatus, *ent.Order, *ent.User, error) {
+func (r *equipmentStatusRepository) GetEquipmentStatusByID(
+	ctx context.Context, equipmentStatusID int) (*ent.EquipmentStatus, error) {
 	tx, err := middlewares.TxFromContext(ctx)
 	if err != nil {
-		return nil, nil, nil, err
+		return nil, err
 	}
 
-	eqStatusResult, err := tx.EquipmentStatus.Query().Where(equipmentstatus.ID(id)).
+	return tx.EquipmentStatus.Query().Where(equipmentstatus.ID(equipmentStatusID)).
+		WithEquipmentStatusName().WithEquipments().
+		Only(ctx)
+}
+
+func (r *equipmentStatusRepository) GetOrderAndUserByDates(
+	ctx context.Context,
+	equipmentStatusID int,
+	startDate,
+	endDate time.Time) (*ent.Order, *ent.User, error) {
+	tx, err := middlewares.TxFromContext(ctx)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	eqStatusResult, err := tx.EquipmentStatus.Query().Where(equipmentstatus.ID(equipmentStatusID)).
 		WithEquipmentStatusName().
 		Only(ctx)
 	if err != nil {
-		return nil, nil, nil, err
+		return nil, nil, err
 	}
 
 	if !eqStatusResult.EndDate.After(startDate) &&
 		eqStatusResult.StartDate.Before(endDate) {
-		return nil, nil, nil, nil
+		return nil, nil, nil
 	}
 
 	orderResult, err := tx.Order.Query().
-		Where(order.HasEquipmentStatusWith(equipmentstatus.IDEQ(id))).
+		Where(order.HasEquipmentStatusWith(equipmentstatus.IDEQ(equipmentStatusID))).
 		Only(ctx)
 	if err != nil {
-		return nil, nil, nil, err
+		return nil, nil, err
 	}
 
-	userResult, err := tx.User.Query().Where(user.HasOrderWith(order.IDEQ(id))).
+	userResult, err := tx.User.Query().Where(user.HasOrderWith(order.IDEQ(equipmentStatusID))).
 		Only(ctx)
 	if err != nil {
-		return nil, nil, nil, err
+		return nil, nil, err
 	}
 
-	return eqStatusResult, orderResult, userResult, nil
+	return orderResult, userResult, nil
 }
 
 func (r *equipmentStatusRepository) HasStatusByPeriod(ctx context.Context, status string, eqID int,
