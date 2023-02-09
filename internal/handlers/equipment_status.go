@@ -93,7 +93,7 @@ func (c EquipmentStatus) GetEquipmentStatusCheckDatesFunc(
 		eqStatusResult, err := eqStatusRepository.GetEquipmentStatusByID(
 			ctx, int(*data.ID))
 		if err != nil {
-			c.logger.Error("receiving equipment status by id failed", zap.Error(err))
+			c.logger.Error("receiving equipment status by id failed during checking start/end dates", zap.Error(err))
 			return eqStatus.NewCheckEquipmentStatusDefault(http.StatusInternalServerError).
 				WithPayload(buildStringPayload("can't find equipment status by provided id"))
 		}
@@ -188,14 +188,24 @@ func (c EquipmentStatus) PutEquipmentStatusInRepairFunc(
 				WithPayload(buildStringPayload("Can't update order status"))
 		}
 
-		id := int64(updatedEqStatus.ID)
+		eqStatusResult, err := eqStatusRepository.GetEquipmentStatusByID(
+			ctx, int(*data.ID))
+		if err != nil {
+			c.logger.Error("receiving equipment status by id failed during changing status to unavailable", zap.Error(err))
+			return eqStatus.NewCheckEquipmentStatusDefault(http.StatusInternalServerError).
+				WithPayload(buildStringPayload("can't find equipment status by provided id"))
+		}
+
+		equipmentStatusID := int64(updatedEqStatus.ID)
+		equipmentID := int64(eqStatusResult.Edges.Equipments.ID)
 		return eqStatus.NewUpdateEquipmentStatusOnUnavailableOK().WithPayload(
 			&models.EquipmentStatusRepairResponse{
-				Data: &models.EquipmentStatusRepair{
-					EquipmentStatusID: &id,
-					EndDate:           (*strfmt.DateTime)(&updatedEqStatus.EndDate),
-					StartDate:         (*strfmt.DateTime)(&updatedEqStatus.StartDate),
-					StatusName:        newStatus,
+				Data: &models.EquipmentStatus{
+					ID:          &equipmentStatusID,
+					EndDate:     (*strfmt.DateTime)(&updatedEqStatus.EndDate),
+					StartDate:   (*strfmt.DateTime)(&updatedEqStatus.StartDate),
+					StatusName:  &eqStatusResult.Edges.EquipmentStatusName.Name,
+					EquipmentID: &equipmentID,
 				},
 			})
 	}
@@ -241,14 +251,24 @@ func (c EquipmentStatus) PutEquipmentStatusRemoveFromRepairFunc(
 				WithPayload(buildStringPayload("can't update equipment status on available status"))
 		}
 
-		id := int64(updatedEqStatus.ID)
+		eqStatusResult, err := eqStatusRepository.GetEquipmentStatusByID(
+			ctx, int(*data.ID))
+		if err != nil {
+			c.logger.Error("receiving equipment status by id failed during changing status to available", zap.Error(err))
+			return eqStatus.NewCheckEquipmentStatusDefault(http.StatusInternalServerError).
+				WithPayload(buildStringPayload("can't find equipment status by provided id"))
+		}
+
+		equipmentStatusID := int64(updatedEqStatus.ID)
+		equipmentID := int64(eqStatusResult.Edges.Equipments.ID)
 		return eqStatus.NewUpdateEquipmentStatusOnAvailableOK().WithPayload(
 			&models.EquipmentStatusRepairResponse{
-				Data: &models.EquipmentStatusRepair{
-					EquipmentStatusID: &id,
-					EndDate:           (*strfmt.DateTime)(&updatedEqStatus.EndDate),
-					StartDate:         (*strfmt.DateTime)(&updatedEqStatus.StartDate),
-					StatusName:        newStatus,
+				Data: &models.EquipmentStatus{
+					ID:          &equipmentStatusID,
+					EndDate:     (*strfmt.DateTime)(&updatedEqStatus.EndDate),
+					StartDate:   (*strfmt.DateTime)(&updatedEqStatus.StartDate),
+					StatusName:  &eqStatusResult.Edges.EquipmentStatusName.Name,
+					EquipmentID: &equipmentID,
 				},
 			})
 	}
@@ -294,13 +314,25 @@ func (c EquipmentStatus) PutEquipmentStatusEditDatesFunc(
 				WithPayload(buildStringPayload("can't update equipment status on available status"))
 		}
 
-		id := int64(updatedEqStatus.ID)
+		eqStatusResult, err := eqStatusRepository.GetEquipmentStatusByID(
+			ctx, int(*data.ID))
+		if err != nil {
+			c.logger.Error("receiving equipment status by id failed during editing dates", zap.Error(err))
+			return eqStatus.NewCheckEquipmentStatusDefault(http.StatusInternalServerError).
+				WithPayload(buildStringPayload("can't find equipment status by provided id"))
+		}
+
+		equipmentStatusID := int64(updatedEqStatus.ID)
+		equipmentID := int64(eqStatusResult.Edges.Equipments.ID)
+
 		return eqStatus.NewUpdateRepairedEquipmentStatusDatesOK().WithPayload(
 			&models.EquipmentStatusRepairResponse{
-				Data: &models.EquipmentStatusRepair{
-					EquipmentStatusID: &id,
-					EndDate:           (*strfmt.DateTime)(&updatedEqStatus.EndDate),
-					StartDate:         (*strfmt.DateTime)(&updatedEqStatus.StartDate),
+				Data: &models.EquipmentStatus{
+					ID:          &equipmentStatusID,
+					EndDate:     (*strfmt.DateTime)(&updatedEqStatus.EndDate),
+					StartDate:   (*strfmt.DateTime)(&updatedEqStatus.StartDate),
+					StatusName:  &eqStatusResult.Edges.EquipmentStatusName.Name,
+					EquipmentID: &equipmentID,
 				},
 			})
 	}

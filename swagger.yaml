@@ -2173,7 +2173,7 @@ definitions:
       - data
     properties:
       data:
-        $ref: "#/definitions/EquipmentStatusRepair"
+        $ref: "#/definitions/EquipmentStatus"
   #EquipmentStatusRepairConfirmationResponse
   EquipmentStatusRepairConfirmationResponse:
     type: object
@@ -2210,25 +2210,6 @@ definitions:
         type: string
       order_id:
         type: integer
-  #EquipmentStatusRepair
-  EquipmentStatusRepair:
-    type: object
-    required:
-      - equipment_status_id
-      - status_name
-      - start_date
-      - end_date
-    properties:
-      equipment_status_id:
-        type: integer
-      status_name:
-        type: string
-      start_date:
-        type: string
-        format: date-time
-      end_date:
-        type: string
-        format: date-time
   #EquipmentStatus
   EquipmentStatus:
     type: object
