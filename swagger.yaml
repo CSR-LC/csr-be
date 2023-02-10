@@ -2132,9 +2132,6 @@ definitions:
   #EquipmentStatusEditDatesRequest
   EquipmentStatusEditDatesRequest:
     type: object
-    required:
-      - start_date
-      - end_date
     properties:
       start_date:
         type: string
