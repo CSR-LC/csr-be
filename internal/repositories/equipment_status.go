@@ -102,18 +102,6 @@ func (r *equipmentStatusRepository) GetOrderAndUserByDates(
 		return nil, nil, err
 	}
 
-	eqStatusResult, err := tx.EquipmentStatus.Query().Where(equipmentstatus.ID(equipmentStatusID)).
-		WithEquipmentStatusName().
-		Only(ctx)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	if !eqStatusResult.EndDate.After(startDate) &&
-		eqStatusResult.StartDate.Before(endDate) {
-		return nil, nil, nil
-	}
-
 	orderResult, err := tx.Order.Query().
 		Where(order.HasEquipmentStatusWith(equipmentstatus.IDEQ(equipmentStatusID))).
 		Only(ctx)
