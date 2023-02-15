@@ -16,6 +16,8 @@ import (
 	"go.uber.org/zap"
 )
 
+var timeNow = time.Now
+
 const (
 	EQUIPMENT_UNDER_REPAIR_COMMENT_FOR_ORDER = "Equipment under repair"
 )
@@ -178,7 +180,7 @@ func (c EquipmentStatus) PutEquipmentStatusInRepairFunc(
 		}
 
 		comment := EQUIPMENT_UNDER_REPAIR_COMMENT_FOR_ORDER
-		timeNow := time.Now()
+		timeNow := timeNow()
 		orderID := int64(orderResult.ID)
 		model := models.NewOrderStatus{
 			Comment:   &comment,

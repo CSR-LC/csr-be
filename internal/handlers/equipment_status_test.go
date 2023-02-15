@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/authentication"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/ent"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/swagger/models"
 	eqStatus "git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/swagger/restapi/operations/equipment_status"
@@ -67,8 +68,7 @@ func (s *EquipmentStatusTestSuite) Test_Put_EquipmentStatusInRepairFunc_OK() {
 	request := http.Request{}
 	ctx := request.Context()
 
-	statusName := "statusName"
-	timeNow := time.Now()
+	statusName := domain.EquipmentStatusNotAvailable
 	startDate := time.Date(2023, time.February, 14, 12, 34, 56, 0, time.UTC)
 	endDate := startDate.AddDate(0, 0, 10)
 
@@ -82,19 +82,32 @@ func (s *EquipmentStatusTestSuite) Test_Put_EquipmentStatusInRepairFunc_OK() {
 		},
 	}
 
-	// err := errors.New("test")
+	reduceOneDayFromCurrentStartDate := strfmt.DateTime(
+		time.Time(startDate).AddDate(0, 0, -1),
+	)
+
+	addOneDayToCurrentEndDate := strfmt.DateTime(
+		time.Time(endDate).AddDate(0, 0, 1),
+	)
 
 	eqStatusModel := models.EquipmentStatus{
-		StartDate:  (*strfmt.DateTime)(&startDate),
-		EndDate:    (*strfmt.DateTime)(&endDate),
+		StartDate:  &reduceOneDayFromCurrentStartDate,
+		EndDate:    &addOneDayToCurrentEndDate,
 		StatusName: &statusName,
 		ID:         &data.EquipmentstatusID,
 	}
+
+	timeNow = func() time.Time {
+		return time.Date(2022, 01, 15, 13, 0, 0, 0, time.UTC)
+	}
+
+	timeNow := timeNow()
 
 	eqStatusResponseModel := ent.EquipmentStatus{
 		ID:        int(data.EquipmentstatusID),
 		StartDate: startDate,
 		EndDate:   endDate,
+		CreatedAt: timeNow,
 	}
 
 	s.equipmentStatusRepository.On("Update", ctx, &eqStatusModel).Return(&eqStatusResponseModel, nil)
@@ -122,6 +135,8 @@ func (s *EquipmentStatusTestSuite) Test_Put_EquipmentStatusInRepairFunc_OK() {
 
 	s.orderStatusRepository.On("UpdateStatus", ctx, userResult.ID, orderModel).Return(nil)
 
+	eqStatusResponseModel.Edges = ent.EquipmentStatusEdges{Equipments: &ent.Equipment{ID: 1},
+		EquipmentStatusName: &ent.EquipmentStatusName{Name: "testStatusName"}}
 	s.equipmentStatusRepository.On(
 		"GetEquipmentStatusByID",
 		ctx,
@@ -132,18 +147,47 @@ func (s *EquipmentStatusTestSuite) Test_Put_EquipmentStatusInRepairFunc_OK() {
 		s.equipmentStatusRepository, s.orderStatusRepository,
 	)
 
-	access := "dummy access"
+	access := authentication.Auth{
+		Role: &authentication.Role{
+			Slug: authentication.ManagerSlug,
+		},
+	}
+
 	resp := handlerFunc(data, access)
 	responseRecorder := httptest.NewRecorder()
 	producer := runtime.JSONProducer()
 	resp.WriteResponse(responseRecorder, producer)
-	assert.Equal(t, http.StatusCreated, responseRecorder.Code)
-	s.equipmentStatusRepository.AssertExpectations(t)
 
-	actualEquipment := &models.EquipmentStatusRepairResponse{}
-	err := json.Unmarshal(responseRecorder.Body.Bytes(), actualEquipment)
+	assert.Equal(t, http.StatusOK, responseRecorder.Code)
+
+	s.equipmentStatusRepository.AssertExpectations(t)
+	s.orderStatusRepository.AssertExpectations(t)
+
+	actualEquipmentStatusResponse := &models.EquipmentStatusRepairResponse{}
+	err := json.Unmarshal(responseRecorder.Body.Bytes(), actualEquipmentStatusResponse)
 	if err != nil {
 		t.Errorf("unable to unmarshal response body: %v", err)
 	}
-	// assert.Equal(t, equipmentToReturn.Name, *actualEquipment.Name)
+
+	assert.Equal(t, eqStatusModel.ID, actualEquipmentStatusResponse.Data.ID)
+	assert.Equal(
+		t, int64(eqStatusResponseModel.Edges.Equipments.ID),
+		*actualEquipmentStatusResponse.Data.EquipmentID,
+	)
+	assert.Equal(
+		t, (*strfmt.DateTime)(&endDate),
+		actualEquipmentStatusResponse.Data.EndDate,
+	)
+	assert.Equal(
+		t, (*strfmt.DateTime)(&startDate),
+		actualEquipmentStatusResponse.Data.StartDate,
+	)
+	assert.Equal(
+		t, (strfmt.DateTime)(timeNow),
+		actualEquipmentStatusResponse.Data.CreatedAt,
+	)
+	assert.Equal(
+		t, eqStatusResponseModel.Edges.EquipmentStatusName.Name,
+		*actualEquipmentStatusResponse.Data.StatusName,
+	)
 }
