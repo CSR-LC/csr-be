@@ -324,14 +324,14 @@ paths:
           schema:
             $ref: "#/definitions/Error"
 
-  /equipmentstatus/remove_from_repair/{equipmentstatusId}:
+  /equipmentstatus/repaired/{equipmentstatusId}:
     parameters:
       - name: equipmentstatusId
         in: path
         required: true
         description: equipment status id
         type: integer
-    put:
+    delete:
       summary: Change equipment status on available by id.
       security:
         - Bearer: [ ]
@@ -354,13 +354,6 @@ paths:
           description: Unexpected error.
           schema:
             $ref: "#/definitions/Error"
-  /equipmentstatus/in_repair/{equipmentstatusId}:
-    parameters:
-      - name: equipmentstatusId
-        in: path
-        required: true
-        description: equipment status id
-        type: integer
     put:
       summary: Change equipment status on unavailable with start/end dates by id.
       security:
@@ -407,36 +400,29 @@ paths:
           description: Unexpected error.
           schema:
             $ref: "#/definitions/Error"
-  /equipmentstatus/edit_repaired/{equipmentstatusId}:
+    patch:
+      summary: Change repaired equipment status dates by id.
+      security:
+        - Bearer: [ ]
+      tags:
+        - EquipmentStatus
+      operationId: UpdateRepairedEquipmentStatusDates
       parameters:
-        - name: equipmentstatusId
-          in: path
+        - name: name
+          in: body
+          description: "Update repaired equipment status start/end dates"
           required: true
-          description: equipment status id
-          type: integer
-      put:
-        summary: Change repaired equipment status dates by id.
-        security:
-          - Bearer: [ ]
-        tags:
-          - EquipmentStatus
-        operationId: UpdateRepairedEquipmentStatusDates
-        parameters:
-          - name: name
-            in: body
-            description: "Update repaired equipment status start/end dates"
-            required: true
-            schema:
-              $ref: "#/definitions/EquipmentStatusEditDatesRequest"
-        responses:
-          200:
-            description: Repaired equipment status dates updated
-            schema:
-              $ref: "#/definitions/EquipmentStatusRepairResponse"
-          default:
-            description: Unexpected error.
-            schema:
-              $ref: "#/definitions/Error"
+          schema:
+            $ref: "#/definitions/EquipmentStatusEditDatesRequest"
+      responses:
+        200:
+          description: Repaired equipment status dates updated
+          schema:
+            $ref: "#/definitions/EquipmentStatusRepairResponse"
+        default:
+          description: Unexpected error.
+          schema:
+            $ref: "#/definitions/Error"
   /equipment/status_names:
     post:
       summary: Creating a new equipment status.

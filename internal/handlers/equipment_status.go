@@ -29,9 +29,9 @@ func SetEquipmentStatusHandler(logger *zap.Logger, api *operations.BeAPI) {
 	statusHandler := NewEquipmentStatus(logger)
 
 	api.EquipmentStatusUpdateEquipmentStatusOnUnavailableHandler = statusHandler.PutEquipmentStatusInRepairFunc(equipmentStatusRepo, orderStatusRepo)
-	api.EquipmentStatusUpdateEquipmentStatusOnAvailableHandler = statusHandler.PutEquipmentStatusRemoveFromRepairFunc(equipmentStatusRepo, orderStatusRepo)
+	api.EquipmentStatusUpdateEquipmentStatusOnAvailableHandler = statusHandler.DeleteEquipmentStatusRemoveFromRepairFunc(equipmentStatusRepo, orderStatusRepo)
 	api.EquipmentStatusCheckEquipmentStatusHandler = statusHandler.GetEquipmentStatusCheckDatesFunc(equipmentStatusRepo)
-	api.EquipmentStatusUpdateRepairedEquipmentStatusDatesHandler = statusHandler.PutEquipmentStatusEditDatesFunc(equipmentStatusRepo)
+	api.EquipmentStatusUpdateRepairedEquipmentStatusDatesHandler = statusHandler.PatchEquipmentStatusEditDatesFunc(equipmentStatusRepo)
 }
 
 type EquipmentStatus struct {
@@ -220,7 +220,7 @@ func (c EquipmentStatus) PutEquipmentStatusInRepairFunc(
 	}
 }
 
-func (c EquipmentStatus) PutEquipmentStatusRemoveFromRepairFunc(
+func (c EquipmentStatus) DeleteEquipmentStatusRemoveFromRepairFunc(
 	eqStatusRepository domain.EquipmentStatusRepository,
 	orderStatusRepo domain.OrderStatusRepository) eqStatus.UpdateEquipmentStatusOnAvailableHandlerFunc {
 	return func(s eqStatus.UpdateEquipmentStatusOnAvailableParams, access interface{}) middleware.Responder {
@@ -287,7 +287,7 @@ func (c EquipmentStatus) PutEquipmentStatusRemoveFromRepairFunc(
 	}
 }
 
-func (c EquipmentStatus) PutEquipmentStatusEditDatesFunc(
+func (c EquipmentStatus) PatchEquipmentStatusEditDatesFunc(
 	eqStatusRepository domain.EquipmentStatusRepository,
 ) eqStatus.UpdateRepairedEquipmentStatusDatesHandlerFunc {
 	return func(s eqStatus.UpdateRepairedEquipmentStatusDatesParams, access interface{}) middleware.Responder {
