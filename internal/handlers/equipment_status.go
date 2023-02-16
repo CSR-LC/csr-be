@@ -88,7 +88,8 @@ func (c EquipmentStatus) GetEquipmentStatusCheckDatesFunc(
 		}
 
 		if !eqStatusResult.EndDate.After(time.Time(*data.StartDate)) &&
-			eqStatusResult.StartDate.Before(time.Time(*data.EndDate)) {
+			eqStatusResult.StartDate.Before(time.Time(*data.EndDate)) ||
+			!eqStatusResult.StartDate.Before(time.Time(*data.EndDate)) {
 			return eqStatus.NewCheckEquipmentStatusOK().WithPayload(
 				&models.EquipmentStatusRepairConfirmationResponse{})
 		}

@@ -269,7 +269,6 @@ func (s *EquipmentStatusTestSuite) Test_Get_EquipmentStatusCheckDates_OK() {
 	producer := runtime.JSONProducer()
 	resp.WriteResponse(responseRecorder, producer)
 	assert.Equal(t, http.StatusOK, responseRecorder.Code)
-
 	s.equipmentStatusRepository.AssertExpectations(t)
 
 	actualEquipmentStatusResponse := &models.EquipmentStatusRepairConfirmationResponse{}
@@ -303,4 +302,124 @@ func (s *EquipmentStatusTestSuite) Test_Get_EquipmentStatusCheckDates_OK() {
 		t, userResult.Email,
 		*actualEquipmentStatusResponse.Data.UserEmail,
 	)
+
+	// add many dates to end dates, in order for the dates to go out of range
+	newEndDate := endDate.AddDate(0, 0, 20)
+	newStartDate := startDate.AddDate(0, 0, 20)
+	data.Name.EndDate = (*strfmt.DateTime)(&newEndDate)
+	data.Name.StartDate = (*strfmt.DateTime)(&newStartDate)
+	resp = handlerFunc(data, access)
+	responseRecorder = httptest.NewRecorder()
+	producer = runtime.JSONProducer()
+	resp.WriteResponse(responseRecorder, producer)
+	assert.Equal(t, http.StatusOK, responseRecorder.Code)
+	s.equipmentStatusRepository.AssertExpectations(t)
+
+	actualEquipmentStatusResponse = &models.EquipmentStatusRepairConfirmationResponse{}
+	err = json.Unmarshal(responseRecorder.Body.Bytes(), actualEquipmentStatusResponse)
+	if err != nil {
+		t.Errorf("unable to unmarshal response body: %v", err)
+	}
+
+	assert.Empty(t, actualEquipmentStatusResponse.Data)
+
+	// subtract many dates from start and end dates
+	newStartDate = startDate.AddDate(0, 0, -20)
+	newEndDate = endDate.AddDate(0, 0, -20)
+	data.Name.EndDate = (*strfmt.DateTime)(&newEndDate)
+	data.Name.StartDate = (*strfmt.DateTime)(&newStartDate)
+
+	resp = handlerFunc(data, access)
+	responseRecorder = httptest.NewRecorder()
+	producer = runtime.JSONProducer()
+	resp.WriteResponse(responseRecorder, producer)
+	assert.Equal(t, http.StatusOK, responseRecorder.Code)
+	s.equipmentStatusRepository.AssertExpectations(t)
+
+	actualEquipmentStatusResponse = &models.EquipmentStatusRepairConfirmationResponse{}
+	err = json.Unmarshal(responseRecorder.Body.Bytes(), actualEquipmentStatusResponse)
+	if err != nil {
+		t.Errorf("unable to unmarshal response body: %v", err)
+	}
+	assert.Empty(t, actualEquipmentStatusResponse.Data)
+
+	// add one date to end date, the start date does not change
+	newEndDate = endDate.AddDate(0, 0, 1)
+	newStartDate = startDate
+	data.Name.EndDate = (*strfmt.DateTime)(&newEndDate)
+	data.Name.StartDate = (*strfmt.DateTime)(&newStartDate)
+
+	resp = handlerFunc(data, access)
+	responseRecorder = httptest.NewRecorder()
+	producer = runtime.JSONProducer()
+	resp.WriteResponse(responseRecorder, producer)
+	assert.Equal(t, http.StatusOK, responseRecorder.Code)
+	s.equipmentStatusRepository.AssertExpectations(t)
+
+	actualEquipmentStatusResponse = &models.EquipmentStatusRepairConfirmationResponse{}
+	err = json.Unmarshal(responseRecorder.Body.Bytes(), actualEquipmentStatusResponse)
+	if err != nil {
+		t.Errorf("unable to unmarshal response body: %v", err)
+	}
+	assert.NotEmpty(t, actualEquipmentStatusResponse.Data)
+
+	// subtract one date from start date, the end date does not change
+	newStartDate = startDate.AddDate(0, 0, -1)
+	newEndDate = endDate
+	data.Name.EndDate = (*strfmt.DateTime)(&newEndDate)
+	data.Name.StartDate = (*strfmt.DateTime)(&newStartDate)
+
+	resp = handlerFunc(data, access)
+	responseRecorder = httptest.NewRecorder()
+	producer = runtime.JSONProducer()
+	resp.WriteResponse(responseRecorder, producer)
+	assert.Equal(t, http.StatusOK, responseRecorder.Code)
+	s.equipmentStatusRepository.AssertExpectations(t)
+
+	actualEquipmentStatusResponse = &models.EquipmentStatusRepairConfirmationResponse{}
+	err = json.Unmarshal(responseRecorder.Body.Bytes(), actualEquipmentStatusResponse)
+	if err != nil {
+		t.Errorf("unable to unmarshal response body: %v", err)
+	}
+	assert.NotEmpty(t, actualEquipmentStatusResponse)
+
+	// add one date to start and end dates
+	newStartDate = startDate.AddDate(0, 0, 1)
+	newEndDate = endDate.AddDate(0, 0, 1)
+	data.Name.EndDate = (*strfmt.DateTime)(&newEndDate)
+	data.Name.StartDate = (*strfmt.DateTime)(&newStartDate)
+
+	resp = handlerFunc(data, access)
+	responseRecorder = httptest.NewRecorder()
+	producer = runtime.JSONProducer()
+	resp.WriteResponse(responseRecorder, producer)
+	assert.Equal(t, http.StatusOK, responseRecorder.Code)
+	s.equipmentStatusRepository.AssertExpectations(t)
+
+	actualEquipmentStatusResponse = &models.EquipmentStatusRepairConfirmationResponse{}
+	err = json.Unmarshal(responseRecorder.Body.Bytes(), actualEquipmentStatusResponse)
+	if err != nil {
+		t.Errorf("unable to unmarshal response body: %v", err)
+	}
+	assert.NotEmpty(t, actualEquipmentStatusResponse)
+
+	// subtract one date to start and end dates
+	newStartDate = startDate.AddDate(0, 0, -1)
+	newEndDate = endDate.AddDate(0, 0, -1)
+	data.Name.EndDate = (*strfmt.DateTime)(&newEndDate)
+	data.Name.StartDate = (*strfmt.DateTime)(&newStartDate)
+
+	resp = handlerFunc(data, access)
+	responseRecorder = httptest.NewRecorder()
+	producer = runtime.JSONProducer()
+	resp.WriteResponse(responseRecorder, producer)
+	assert.Equal(t, http.StatusOK, responseRecorder.Code)
+	s.equipmentStatusRepository.AssertExpectations(t)
+
+	actualEquipmentStatusResponse = &models.EquipmentStatusRepairConfirmationResponse{}
+	err = json.Unmarshal(responseRecorder.Body.Bytes(), actualEquipmentStatusResponse)
+	if err != nil {
+		t.Errorf("unable to unmarshal response body: %v", err)
+	}
+	assert.NotEmpty(t, actualEquipmentStatusResponse)
 }
