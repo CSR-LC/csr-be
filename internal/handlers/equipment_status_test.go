@@ -116,11 +116,9 @@ func (s *EquipmentStatusTestSuite) Test_Put_EquipmentStatusInRepairFunc_OK() {
 	userResult := ent.User{ID: 1}
 
 	s.equipmentStatusRepository.On(
-		"GetOrderAndUserByDates",
+		"GetOrderAndUserByEquipmentStatusID",
 		ctx,
 		int(*eqStatusModel.ID),
-		time.Time(*eqStatusModel.StartDate),
-		time.Time(*eqStatusModel.EndDate),
 	).Return(&orderResult, &userResult, nil)
 
 	comment := EQUIPMENT_UNDER_REPAIR_COMMENT_FOR_ORDER

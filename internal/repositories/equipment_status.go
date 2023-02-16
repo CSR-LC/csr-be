@@ -92,11 +92,9 @@ func (r *equipmentStatusRepository) GetEquipmentStatusByID(
 		Only(ctx)
 }
 
-func (r *equipmentStatusRepository) GetOrderAndUserByDates(
+func (r *equipmentStatusRepository) GetOrderAndUserByEquipmentStatusID(
 	ctx context.Context,
-	equipmentStatusID int,
-	startDate,
-	endDate time.Time) (*ent.Order, *ent.User, error) {
+	equipmentStatusID int) (*ent.Order, *ent.User, error) {
 	tx, err := middlewares.TxFromContext(ctx)
 	if err != nil {
 		return nil, nil, err

@@ -93,12 +93,12 @@ func (c EquipmentStatus) GetEquipmentStatusCheckDatesFunc(
 				&models.EquipmentStatusRepairConfirmationResponse{})
 		}
 
-		orderResult, userResult, err := eqStatusRepository.GetOrderAndUserByDates(
-			ctx, int(*data.ID), time.Time(*data.StartDate), time.Time(*data.EndDate))
+		orderResult, userResult, err := eqStatusRepository.GetOrderAndUserByEquipmentStatusID(
+			ctx, int(*data.ID))
 		if err != nil {
-			c.logger.Error("check equipment status by dates failed", zap.Error(err))
+			c.logger.Error("receiving order and user data failed", zap.Error(err))
 			return eqStatus.NewCheckEquipmentStatusDefault(http.StatusInternalServerError).
-				WithPayload(buildStringPayload("can't check equipment status by provided start date and end date"))
+				WithPayload(buildStringPayload("can't receive order and user data during checking equipment status"))
 		}
 
 		if orderResult == nil && userResult == nil {
@@ -164,19 +164,19 @@ func (c EquipmentStatus) PutEquipmentStatusInRepairFunc(
 			ID:         &s.EquipmentstatusID,
 		}
 
+		orderResult, userResult, err := eqStatusRepository.GetOrderAndUserByEquipmentStatusID(
+			ctx, int(*data.ID))
+		if err != nil {
+			c.logger.Error("receiving user and order status failed", zap.Error(err))
+			return eqStatus.NewUpdateEquipmentStatusOnUnavailableDefault(http.StatusInternalServerError).
+				WithPayload(buildStringPayload("can't receive order and user for updating equipment status on unavailable"))
+		}
+
 		updatedEqStatus, err := eqStatusRepository.Update(ctx, &data)
 		if err != nil {
 			c.logger.Error("update equipment status failed", zap.Error(err))
 			return eqStatus.NewUpdateEquipmentStatusOnUnavailableDefault(http.StatusInternalServerError).
 				WithPayload(buildStringPayload("can't update equipment status"))
-		}
-
-		orderResult, userResult, err := eqStatusRepository.GetOrderAndUserByDates(
-			ctx, int(*data.ID), time.Time(*data.StartDate), time.Time(*data.EndDate))
-		if err != nil {
-			c.logger.Error("receiving user and order status by provided dates failed", zap.Error(err))
-			return eqStatus.NewUpdateEquipmentStatusOnUnavailableDefault(http.StatusInternalServerError).
-				WithPayload(buildStringPayload("can't receive order and user by provided start/end dates for updating equipment status"))
 		}
 
 		comment := EQUIPMENT_UNDER_REPAIR_COMMENT_FOR_ORDER

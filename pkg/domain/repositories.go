@@ -54,7 +54,7 @@ type EquipmentStatusRepository interface {
 	GetEquipmentsStatusesByOrder(ctx context.Context, orderID int) ([]*ent.EquipmentStatus, error)
 	HasStatusByPeriod(ctx context.Context, status string, eqID int, startDate, endDate time.Time) (bool, error)
 	Update(ctx context.Context, data *models.EquipmentStatus) (*ent.EquipmentStatus, error)
-	GetOrderAndUserByDates(ctx context.Context, id int, startDate, endDate time.Time) (*ent.Order, *ent.User, error)
+	GetOrderAndUserByEquipmentStatusID(ctx context.Context, id int) (*ent.Order, *ent.User, error)
 	GetEquipmentStatusByID(ctx context.Context, equipmentStatusID int) (*ent.EquipmentStatus, error)
 }
 
