@@ -515,3 +515,95 @@ func (s *EquipmentStatusTestSuite) Test_Delete_EquipmentStatusFromRepairFunc_OK(
 		*actualEquipmentStatusResponse.Data.StatusName,
 	)
 }
+
+func (s *EquipmentStatusTestSuite) Test_Patch_EquipmentStatusEditDatesFunc_OK() {
+	t := s.T()
+	request := http.Request{}
+	ctx := request.Context()
+
+	startDate := time.Date(2023, time.February, 14, 12, 34, 56, 0, time.UTC)
+	endDate := startDate.AddDate(0, 0, 10)
+
+	data := eqStatus.UpdateRepairedEquipmentStatusDatesParams{
+		HTTPRequest:       &request,
+		EquipmentstatusID: 11,
+		Name: &models.EquipmentStatusEditDatesRequest{
+			EndDate:   strfmt.DateTime(endDate),
+			StartDate: strfmt.DateTime(startDate),
+		},
+	}
+
+	reduceOneDayFromCurrentStartDate := strfmt.DateTime(
+		time.Time(startDate).AddDate(0, 0, -1),
+	)
+
+	addOneDayToCurrentEndDate := strfmt.DateTime(
+		time.Time(endDate).AddDate(0, 0, 1),
+	)
+
+	eqStatusModel := models.EquipmentStatus{
+		StartDate: &reduceOneDayFromCurrentStartDate,
+		EndDate:   &addOneDayToCurrentEndDate,
+		ID:        &data.EquipmentstatusID,
+	}
+
+	updatedEqStatus := ent.EquipmentStatus{
+		ID:        int(data.EquipmentstatusID),
+		StartDate: time.Time(reduceOneDayFromCurrentStartDate),
+		EndDate:   time.Time(addOneDayToCurrentEndDate),
+	}
+
+	updatedEqStatus.Edges = ent.EquipmentStatusEdges{Equipments: &ent.Equipment{ID: 1},
+		EquipmentStatusName: &ent.EquipmentStatusName{Name: "testStatusName"}}
+	s.equipmentStatusRepository.On("Update", ctx, &eqStatusModel).Return(&updatedEqStatus, nil)
+
+	s.equipmentStatusRepository.On(
+		"GetEquipmentStatusByID",
+		ctx,
+		int(*eqStatusModel.ID),
+	).Return(&updatedEqStatus, nil)
+
+	handlerFunc := s.handler.PatchEquipmentStatusEditDatesFunc(
+		s.equipmentStatusRepository,
+	)
+
+	access := authentication.Auth{
+		Role: &authentication.Role{
+			Slug: authentication.ManagerSlug,
+		},
+	}
+
+	resp := handlerFunc(data, access)
+	responseRecorder := httptest.NewRecorder()
+	producer := runtime.JSONProducer()
+	resp.WriteResponse(responseRecorder, producer)
+
+	assert.Equal(t, http.StatusOK, responseRecorder.Code)
+
+	s.equipmentStatusRepository.AssertExpectations(t)
+	s.orderStatusRepository.AssertExpectations(t)
+
+	actualEquipmentStatusResponse := &models.EquipmentStatusRepairResponse{}
+	err := json.Unmarshal(responseRecorder.Body.Bytes(), actualEquipmentStatusResponse)
+	if err != nil {
+		t.Errorf("unable to unmarshal response body: %v", err)
+	}
+
+	assert.Equal(t, eqStatusModel.ID, actualEquipmentStatusResponse.Data.ID)
+	assert.Equal(
+		t, int64(updatedEqStatus.Edges.Equipments.ID),
+		*actualEquipmentStatusResponse.Data.EquipmentID,
+	)
+	assert.Equal(
+		t, (*strfmt.DateTime)(&updatedEqStatus.EndDate),
+		actualEquipmentStatusResponse.Data.EndDate,
+	)
+	assert.Equal(
+		t, (*strfmt.DateTime)(&updatedEqStatus.StartDate),
+		actualEquipmentStatusResponse.Data.StartDate,
+	)
+	assert.Equal(
+		t, updatedEqStatus.Edges.EquipmentStatusName.Name,
+		*actualEquipmentStatusResponse.Data.StatusName,
+	)
+}
