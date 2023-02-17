@@ -185,6 +185,18 @@ func (s *EquipmentStatusTestSuite) Test_Put_EquipmentStatusInRepairFunc_OK() {
 		t, eqStatusResponseModel.Edges.EquipmentStatusName.Name,
 		*actualEquipmentStatusResponse.Data.StatusName,
 	)
+
+	// authentication successfully works only for manager, for operator should return 403 error
+	access = authentication.Auth{
+		Role: &authentication.Role{
+			Slug: authentication.OperatorSlug,
+		},
+	}
+	resp = handlerFunc(data, access)
+	responseRecorder = httptest.NewRecorder()
+	producer = runtime.JSONProducer()
+	resp.WriteResponse(responseRecorder, producer)
+	assert.Equal(t, http.StatusForbidden, responseRecorder.Code)
 }
 
 func (s *EquipmentStatusTestSuite) Test_Get_EquipmentStatusCheckDates_OK() {
@@ -419,6 +431,18 @@ func (s *EquipmentStatusTestSuite) Test_Get_EquipmentStatusCheckDates_OK() {
 		t.Errorf("unable to unmarshal response body: %v", err)
 	}
 	assert.NotEmpty(t, actualEquipmentStatusResponse)
+
+	// authentication successfully works only for manager, for operator should return 403 error
+	access = authentication.Auth{
+		Role: &authentication.Role{
+			Slug: authentication.OperatorSlug,
+		},
+	}
+	resp = handlerFunc(data, access)
+	responseRecorder = httptest.NewRecorder()
+	producer = runtime.JSONProducer()
+	resp.WriteResponse(responseRecorder, producer)
+	assert.Equal(t, http.StatusForbidden, responseRecorder.Code)
 }
 
 func (s *EquipmentStatusTestSuite) Test_Delete_EquipmentStatusFromRepairFunc_OK() {
@@ -514,6 +538,18 @@ func (s *EquipmentStatusTestSuite) Test_Delete_EquipmentStatusFromRepairFunc_OK(
 		t, eqStatusResponseModel.Edges.EquipmentStatusName.Name,
 		*actualEquipmentStatusResponse.Data.StatusName,
 	)
+
+	// authentication successfully works only for manager, for operator should return 403 error
+	access = authentication.Auth{
+		Role: &authentication.Role{
+			Slug: authentication.OperatorSlug,
+		},
+	}
+	resp = handlerFunc(data, access)
+	responseRecorder = httptest.NewRecorder()
+	producer = runtime.JSONProducer()
+	resp.WriteResponse(responseRecorder, producer)
+	assert.Equal(t, http.StatusForbidden, responseRecorder.Code)
 }
 
 func (s *EquipmentStatusTestSuite) Test_Patch_EquipmentStatusEditDatesFunc_OK() {
@@ -606,4 +642,16 @@ func (s *EquipmentStatusTestSuite) Test_Patch_EquipmentStatusEditDatesFunc_OK() 
 		t, updatedEqStatus.Edges.EquipmentStatusName.Name,
 		*actualEquipmentStatusResponse.Data.StatusName,
 	)
+
+	// authentication successfully works only for manager, for operator should return 403 error
+	access = authentication.Auth{
+		Role: &authentication.Role{
+			Slug: authentication.OperatorSlug,
+		},
+	}
+	resp = handlerFunc(data, access)
+	responseRecorder = httptest.NewRecorder()
+	producer = runtime.JSONProducer()
+	resp.WriteResponse(responseRecorder, producer)
+	assert.Equal(t, http.StatusForbidden, responseRecorder.Code)
 }
