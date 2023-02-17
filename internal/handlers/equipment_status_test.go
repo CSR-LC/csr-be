@@ -74,7 +74,7 @@ func (s *EquipmentStatusTestSuite) Test_Put_EquipmentStatusInRepairFunc_OK() {
 
 	data := eqStatus.UpdateEquipmentStatusOnUnavailableParams{
 		HTTPRequest:       &request,
-		EquipmentstatusID: 1,
+		EquipmentstatusID: 11,
 		Name: &models.EquipmentStatusInRepairRequest{
 			EndDate:    (*strfmt.DateTime)(&endDate),
 			StartDate:  (*strfmt.DateTime)(&startDate),
@@ -97,11 +97,10 @@ func (s *EquipmentStatusTestSuite) Test_Put_EquipmentStatusInRepairFunc_OK() {
 		ID:         &data.EquipmentstatusID,
 	}
 
-	timeNow = func() time.Time {
-		return time.Date(2022, 01, 15, 13, 0, 0, 0, time.UTC)
+	timeNowEquipmentStatus = func() time.Time {
+		return time.Date(2023, 02, 15, 13, 0, 0, 0, time.UTC)
 	}
-
-	timeNow := timeNow()
+	timeNow := timeNowEquipmentStatus()
 
 	eqStatusResponseModel := ent.EquipmentStatus{
 		ID:        int(data.EquipmentstatusID),
@@ -112,9 +111,8 @@ func (s *EquipmentStatusTestSuite) Test_Put_EquipmentStatusInRepairFunc_OK() {
 
 	s.equipmentStatusRepository.On("Update", ctx, &eqStatusModel).Return(&eqStatusResponseModel, nil)
 
-	orderResult := ent.Order{ID: 1}
-	userResult := ent.User{ID: 1}
-
+	orderResult := ent.Order{ID: 22}
+	userResult := ent.User{ID: 33}
 	s.equipmentStatusRepository.On(
 		"GetOrderAndUserByEquipmentStatusID",
 		ctx,
@@ -123,7 +121,6 @@ func (s *EquipmentStatusTestSuite) Test_Put_EquipmentStatusInRepairFunc_OK() {
 
 	comment := EQUIPMENT_UNDER_REPAIR_COMMENT_FOR_ORDER
 	orderID := int64(orderResult.ID)
-
 	orderModel := models.NewOrderStatus{
 		Comment:   &comment,
 		CreatedAt: (*strfmt.DateTime)(&timeNow),
@@ -201,7 +198,7 @@ func (s *EquipmentStatusTestSuite) Test_Get_EquipmentStatusCheckDates_OK() {
 
 	data := eqStatus.CheckEquipmentStatusParams{
 		HTTPRequest:       &request,
-		EquipmentstatusID: 1,
+		EquipmentstatusID: 11,
 		Name: &models.EquipmentStatusInRepairRequest{
 			EndDate:    (*strfmt.DateTime)(&endDate),
 			StartDate:  (*strfmt.DateTime)(&startDate),
@@ -224,11 +221,11 @@ func (s *EquipmentStatusTestSuite) Test_Get_EquipmentStatusCheckDates_OK() {
 		ID:         &data.EquipmentstatusID,
 	}
 
-	timeNow = func() time.Time {
+	timeNowEquipmentStatus = func() time.Time {
 		return time.Date(2022, 01, 15, 13, 0, 0, 0, time.UTC)
 	}
 
-	timeNow := timeNow()
+	timeNow := timeNowEquipmentStatus()
 
 	eqStatusResponseModel := ent.EquipmentStatus{
 		ID:        int(data.EquipmentstatusID),
@@ -245,8 +242,8 @@ func (s *EquipmentStatusTestSuite) Test_Get_EquipmentStatusCheckDates_OK() {
 		int(*eqStatusModel.ID),
 	).Return(&eqStatusResponseModel, nil)
 
-	orderResult := ent.Order{ID: 1}
-	userResult := ent.User{ID: 1, Email: "user@email"}
+	orderResult := ent.Order{ID: 22}
+	userResult := ent.User{ID: 33, Email: "user@email"}
 
 	s.equipmentStatusRepository.On(
 		"GetOrderAndUserByEquipmentStatusID",
@@ -422,4 +419,99 @@ func (s *EquipmentStatusTestSuite) Test_Get_EquipmentStatusCheckDates_OK() {
 		t.Errorf("unable to unmarshal response body: %v", err)
 	}
 	assert.NotEmpty(t, actualEquipmentStatusResponse)
+}
+
+func (s *EquipmentStatusTestSuite) Test_Delete_EquipmentStatusFromRepairFunc_OK() {
+	t := s.T()
+	request := http.Request{}
+	ctx := request.Context()
+
+	statusName := domain.EquipmentStatusAvailable
+	data := eqStatus.UpdateEquipmentStatusOnAvailableParams{
+		HTTPRequest:       &request,
+		EquipmentstatusID: 1,
+		Name: &models.EquipmentStatusRemoveFromRepairRequest{
+			StatusName: &statusName,
+		},
+	}
+
+	timeNowEquipmentStatus = func() time.Time {
+		return time.Date(2023, 02, 15, 13, 0, 0, 0, time.UTC)
+	}
+	timeNow := timeNowEquipmentStatus()
+
+	addOneDayToCurrentEndDate := strfmt.DateTime(
+		time.Time(timeNow).AddDate(0, 0, 1),
+	)
+
+	eqStatusModel := models.EquipmentStatus{
+		EndDate:    &addOneDayToCurrentEndDate,
+		StatusName: &statusName,
+		ID:         &data.EquipmentstatusID,
+	}
+
+	eqStatusResponseModel := ent.EquipmentStatus{
+		ID:        int(data.EquipmentstatusID),
+		StartDate: timeNow,
+		EndDate:   time.Time(addOneDayToCurrentEndDate),
+		CreatedAt: timeNow,
+	}
+
+	s.equipmentStatusRepository.On("Update", ctx, &eqStatusModel).Return(&eqStatusResponseModel, nil)
+
+	eqStatusResponseModel.Edges = ent.EquipmentStatusEdges{Equipments: &ent.Equipment{ID: 1},
+		EquipmentStatusName: &ent.EquipmentStatusName{Name: "testStatusName"}}
+	s.equipmentStatusRepository.On(
+		"GetEquipmentStatusByID",
+		ctx,
+		int(*eqStatusModel.ID),
+	).Return(&eqStatusResponseModel, nil)
+
+	handlerFunc := s.handler.DeleteEquipmentStatusFromRepairFunc(
+		s.equipmentStatusRepository, s.orderStatusRepository,
+	)
+
+	access := authentication.Auth{
+		Role: &authentication.Role{
+			Slug: authentication.ManagerSlug,
+		},
+	}
+
+	resp := handlerFunc(data, access)
+	responseRecorder := httptest.NewRecorder()
+	producer := runtime.JSONProducer()
+	resp.WriteResponse(responseRecorder, producer)
+
+	assert.Equal(t, http.StatusOK, responseRecorder.Code)
+
+	s.equipmentStatusRepository.AssertExpectations(t)
+	s.orderStatusRepository.AssertExpectations(t)
+
+	actualEquipmentStatusResponse := &models.EquipmentStatusRepairResponse{}
+	err := json.Unmarshal(responseRecorder.Body.Bytes(), actualEquipmentStatusResponse)
+	if err != nil {
+		t.Errorf("unable to unmarshal response body: %v", err)
+	}
+
+	assert.Equal(t, eqStatusModel.ID, actualEquipmentStatusResponse.Data.ID)
+	assert.Equal(
+		t, int64(eqStatusResponseModel.Edges.Equipments.ID),
+		*actualEquipmentStatusResponse.Data.EquipmentID,
+	)
+	assert.Equal(
+		t, (*strfmt.DateTime)(&addOneDayToCurrentEndDate),
+		actualEquipmentStatusResponse.Data.EndDate,
+	)
+	assert.Equal(
+		t, (*strfmt.DateTime)(&timeNow),
+		actualEquipmentStatusResponse.Data.StartDate,
+	)
+	assert.Equal(
+		t, (strfmt.DateTime)(timeNow),
+		actualEquipmentStatusResponse.Data.CreatedAt,
+	)
+	assert.Equal(
+		t, eqStatusResponseModel.Edges.EquipmentStatusName.Name,
+		*actualEquipmentStatusResponse.Data.StatusName,
+	)
 }

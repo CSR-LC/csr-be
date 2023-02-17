@@ -16,7 +16,8 @@ import (
 	"go.uber.org/zap"
 )
 
-var timeNow = time.Now
+// timeNowEquipmentStatus necessary for mock time in tests
+var timeNowEquipmentStatus = time.Now
 
 const (
 	EQUIPMENT_UNDER_REPAIR_COMMENT_FOR_ORDER = "Equipment under repair"
@@ -29,7 +30,7 @@ func SetEquipmentStatusHandler(logger *zap.Logger, api *operations.BeAPI) {
 	statusHandler := NewEquipmentStatus(logger)
 
 	api.EquipmentStatusUpdateEquipmentStatusOnUnavailableHandler = statusHandler.PutEquipmentStatusInRepairFunc(equipmentStatusRepo, orderStatusRepo)
-	api.EquipmentStatusUpdateEquipmentStatusOnAvailableHandler = statusHandler.DeleteEquipmentStatusRemoveFromRepairFunc(equipmentStatusRepo, orderStatusRepo)
+	api.EquipmentStatusUpdateEquipmentStatusOnAvailableHandler = statusHandler.DeleteEquipmentStatusFromRepairFunc(equipmentStatusRepo, orderStatusRepo)
 	api.EquipmentStatusCheckEquipmentStatusHandler = statusHandler.GetEquipmentStatusCheckDatesFunc(equipmentStatusRepo)
 	api.EquipmentStatusUpdateRepairedEquipmentStatusDatesHandler = statusHandler.PatchEquipmentStatusEditDatesFunc(equipmentStatusRepo)
 }
@@ -162,7 +163,7 @@ func (c EquipmentStatus) PutEquipmentStatusInRepairFunc(
 		}
 
 		comment := EQUIPMENT_UNDER_REPAIR_COMMENT_FOR_ORDER
-		timeNow := timeNow()
+		timeNow := timeNowEquipmentStatus()
 		orderID := int64(orderResult.ID)
 		model := models.NewOrderStatus{
 			Comment:   &comment,
@@ -202,7 +203,7 @@ func (c EquipmentStatus) PutEquipmentStatusInRepairFunc(
 	}
 }
 
-func (c EquipmentStatus) DeleteEquipmentStatusRemoveFromRepairFunc(
+func (c EquipmentStatus) DeleteEquipmentStatusFromRepairFunc(
 	eqStatusRepository domain.EquipmentStatusRepository,
 	orderStatusRepo domain.OrderStatusRepository) eqStatus.UpdateEquipmentStatusOnAvailableHandlerFunc {
 	return func(s eqStatus.UpdateEquipmentStatusOnAvailableParams, access interface{}) middleware.Responder {
@@ -220,7 +221,7 @@ func (c EquipmentStatus) DeleteEquipmentStatusRemoveFromRepairFunc(
 				WithPayload(&models.Error{Data: &models.ErrorData{Message: "Wrong new equipment status, status should be only 'not available'"}})
 		}
 
-		timeNow := time.Now()
+		timeNow := timeNowEquipmentStatus()
 		addOneDayToCurrentDate := strfmt.DateTime(
 			time.Time(timeNow).AddDate(0, 0, 1),
 		)
