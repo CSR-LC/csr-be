@@ -50,20 +50,9 @@ func (c EquipmentStatus) GetEquipmentStatusCheckDatesFunc(
 		ctx := s.HTTPRequest.Context()
 		newStatus := s.Name.StatusName
 
-		ok, err := equipmentStatusAccessRights(access)
-		if err != nil {
-			c.logger.Error("Error while getting authorization", zap.Error(err))
-			return orders.NewAddNewOrderStatusDefault(http.StatusInternalServerError).
-				WithPayload(&models.Error{Data: &models.ErrorData{Message: "Can't get authorization"}})
-		}
-
-		if !ok {
-			c.logger.Error("User have no right to check that equipment status has orders for provided dates",
-				zap.Any("access", access))
-			return orders.NewAddNewOrderStatusDefault(http.StatusForbidden).
-				WithPayload(&models.Error{Data: &models.ErrorData{
-					Message: "You don't have rights to update equipment status"}},
-				)
+		errResponder := c.checkEquipmentStatusAccessRights(access)
+		if errResponder != nil {
+			return errResponder
 		}
 
 		if !newStatusIsUnavailable(*newStatus) {
@@ -131,17 +120,9 @@ func (c EquipmentStatus) PutEquipmentStatusInRepairFunc(
 		ctx := s.HTTPRequest.Context()
 		newStatus := s.Name.StatusName
 
-		ok, err := equipmentStatusAccessRights(access)
-		if err != nil {
-			c.logger.Error("Error while getting authorization", zap.Error(err))
-			return orders.NewAddNewOrderStatusDefault(http.StatusInternalServerError).
-				WithPayload(&models.Error{Data: &models.ErrorData{Message: "Can't get authorization"}})
-		}
-
-		if !ok {
-			c.logger.Error("User have no right to update equipment status", zap.Any("access", access))
-			return orders.NewAddNewOrderStatusDefault(http.StatusForbidden).
-				WithPayload(&models.Error{Data: &models.ErrorData{Message: "You don't have rights to update equipment status"}})
+		errResponder := c.checkEquipmentStatusAccessRights(access)
+		if errResponder != nil {
+			return errResponder
 		}
 
 		if !newStatusIsUnavailable(*newStatus) {
@@ -228,17 +209,9 @@ func (c EquipmentStatus) DeleteEquipmentStatusRemoveFromRepairFunc(
 		ctx := s.HTTPRequest.Context()
 		newStatus := s.Name.StatusName
 
-		ok, err := equipmentStatusAccessRights(access)
-		if err != nil {
-			c.logger.Error("Error while getting authorization", zap.Error(err))
-			return orders.NewAddNewOrderStatusDefault(http.StatusInternalServerError).
-				WithPayload(&models.Error{Data: &models.ErrorData{Message: "Can't get authorization"}})
-		}
-
-		if !ok {
-			c.logger.Error("User have no right to update equipment status on available", zap.Any("access", access))
-			return orders.NewAddNewOrderStatusDefault(http.StatusForbidden).
-				WithPayload(&models.Error{Data: &models.ErrorData{Message: "You don't have rights to update equipment status"}})
+		errResponder := c.checkEquipmentStatusAccessRights(access)
+		if errResponder != nil {
+			return errResponder
 		}
 
 		if !newStatusIsAvailable(*newStatus) {
@@ -294,17 +267,9 @@ func (c EquipmentStatus) PatchEquipmentStatusEditDatesFunc(
 	return func(s eqStatus.UpdateRepairedEquipmentStatusDatesParams, access interface{}) middleware.Responder {
 		ctx := s.HTTPRequest.Context()
 
-		ok, err := equipmentStatusAccessRights(access)
-		if err != nil {
-			c.logger.Error("Error while getting authorization", zap.Error(err))
-			return orders.NewAddNewOrderStatusDefault(http.StatusInternalServerError).
-				WithPayload(&models.Error{Data: &models.ErrorData{Message: "Can't get authorization"}})
-		}
-
-		if !ok {
-			c.logger.Error("User have no right to update equipment status on available", zap.Any("access", access))
-			return orders.NewAddNewOrderStatusDefault(http.StatusForbidden).
-				WithPayload(&models.Error{Data: &models.ErrorData{Message: "You don't have rights to update equipment status"}})
+		errResponder := c.checkEquipmentStatusAccessRights(access)
+		if errResponder != nil {
+			return errResponder
 		}
 
 		existEqStatus, err := eqStatusRepository.GetEquipmentStatusByID(
@@ -350,6 +315,28 @@ func (c EquipmentStatus) PatchEquipmentStatusEditDatesFunc(
 				},
 			})
 	}
+}
+
+func (c EquipmentStatus) checkEquipmentStatusAccessRights(
+	access interface{}) middleware.Responder {
+	ok, err := equipmentStatusAccessRights(access)
+	if err != nil {
+		c.logger.Error("Error while getting authorization", zap.Error(err))
+		return orders.NewAddNewOrderStatusDefault(http.StatusInternalServerError).
+			WithPayload(&models.Error{Data: &models.ErrorData{Message: "Can't get authorization"}})
+
+	}
+
+	if !ok {
+		c.logger.Error("User have no right to change equipment status",
+			zap.Any("access", access))
+		return orders.NewAddNewOrderStatusDefault(http.StatusForbidden).
+			WithPayload(&models.Error{Data: &models.ErrorData{
+				Message: "You don't have rights to change equipment status"}},
+			)
+	}
+
+	return nil
 }
 
 func equipmentStatusAccessRights(access interface{}) (bool, error) {
