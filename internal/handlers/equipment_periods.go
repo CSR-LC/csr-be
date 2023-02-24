@@ -1,19 +1,25 @@
 package handlers
 
 import (
+	"net/http"
+
+	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/swagger/models"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/swagger/restapi/operations"
 	eqPeriods "git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/swagger/restapi/operations/equipment"
+	eqStatus "git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/swagger/restapi/operations/equipment_status"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/repositories"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/pkg/domain"
 	"github.com/go-openapi/runtime/middleware"
+	"github.com/go-openapi/strfmt"
 	"go.uber.org/zap"
 )
 
 func SetEquipmentPeriodsHandler(logger *zap.Logger, api *operations.BeAPI) {
 	equipmentStatusRepo := repositories.NewEquipmentStatusRepository()
-
 	equipmentPeriodsHandler := NewEquipmentPeriods(logger)
-	api.EquipmentGetUnavailabilityPeriodsByEquipmentIDHandler = equipmentPeriodsHandler.GetEquipmentUnavailableDatesFunc(equipmentStatusRepo)
+
+	api.EquipmentGetUnavailabilityPeriodsByEquipmentIDHandler = equipmentPeriodsHandler.
+		GetEquipmentUnavailableDatesFunc(equipmentStatusRepo)
 }
 
 type EquipmentPeriods struct {
@@ -33,6 +39,22 @@ func (c EquipmentPeriods) GetEquipmentUnavailableDatesFunc(
 		s eqPeriods.GetUnavailabilityPeriodsByEquipmentIDParams,
 		access interface{},
 	) middleware.Responder {
-		return nil
+		ctx := s.HTTPRequest.Context()
+		id := int(s.EquipmentID)
+
+		equipmentStatus, err := eqStatusRepository.GetUnavailableEquipmentStatusByEquipmentID(ctx, id)
+		if err != nil {
+			c.logger.Error("unable to find unavailable equipment status dates by provided equipment id", zap.Error(err))
+			return eqStatus.NewCheckEquipmentStatusDefault(http.StatusInternalServerError).
+				WithPayload(buildStringPayload("can't find unavailable equipment status dates by provided equipment id"))
+		}
+
+		return eqPeriods.NewGetUnavailabilityPeriodsByEquipmentIDOK().WithPayload(
+			&models.EquipmentUnavailabilityPeriodsResponse{
+				Data: &models.EquipmentUnavailabilityPeriods{
+					EndDate:   (*strfmt.DateTime)(&equipmentStatus.EndDate),
+					StartDate: (*strfmt.DateTime)(&equipmentStatus.StartDate),
+				},
+			})
 	}
 }
