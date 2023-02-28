@@ -3,6 +3,7 @@ package handlers
 import (
 	"net/http"
 
+	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/ent"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/swagger/models"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/swagger/restapi/operations"
 	eqPeriods "git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/swagger/restapi/operations/equipment"
@@ -44,9 +45,26 @@ func (c EquipmentPeriods) GetEquipmentUnavailableDatesFunc(
 
 		equipmentStatus, err := eqStatusRepository.GetUnavailableEquipmentStatusByEquipmentID(ctx, id)
 		if err != nil {
-			c.logger.Error("unable to find unavailable equipment status dates by provided equipment id", zap.Error(err))
+			_, notFoundError := err.(*ent.NotFoundError)
+			if notFoundError {
+				c.logger.Error(
+					"unable to find unavailable equipment status dates by provided equipment id",
+					zap.Error(err),
+				)
+				return eqStatus.NewCheckEquipmentStatusDefault(http.StatusNotFound).
+					WithPayload(
+						buildStringPayload(
+							"can't find unavailable equipment status dates by provided equipment id",
+						),
+					)
+			}
+
+			c.logger.Error(
+				"error during the search for unavailable equipment status dates",
+				zap.Error(err),
+			)
 			return eqStatus.NewCheckEquipmentStatusDefault(http.StatusInternalServerError).
-				WithPayload(buildStringPayload("can't find unavailable equipment status dates by provided equipment id"))
+				WithPayload(buildStringPayload("can't find unavailable equipment status dates"))
 		}
 
 		return eqPeriods.NewGetUnavailabilityPeriodsByEquipmentIDOK().WithPayload(
