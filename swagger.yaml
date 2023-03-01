@@ -602,7 +602,14 @@ paths:
           description: Unexpected error.
           schema:
             $ref: "#/definitions/Error"
-
+        404:
+          schema:
+            type: string
+          description: Not Found
+        default:
+          description: Unexpected error.
+          schema:
+            $ref: "#/definitions/Error"
   /equipment/categories/{categoryId}:
     parameters:
       - name: categoryId
