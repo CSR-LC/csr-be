@@ -3,6 +3,7 @@ package repositories
 import (
 	"context"
 	"errors"
+	"time"
 
 	"entgo.io/ent/dialect/sql"
 
@@ -60,7 +61,10 @@ func (r *equipmentRepository) EquipmentsByFilter(ctx context.Context, filter mod
 			OptionalIntEquipment(filter.CompensationCost, equipment.FieldCompensationCost),
 			OptionalIntEquipment(filter.InventoryNumber, equipment.FieldInventoryNumber),
 			OptionalStringEquipment(filter.Supplier, equipment.FieldSupplier),
-			OptionalStringEquipment(filter.ReceiptDate, equipment.FieldReceiptDate),
+			OptionalStringEquipment(
+				time.Unix(filter.ReceiptDate, 0).Format(utils.TimeFormat),
+				equipment.FieldReceiptDate,
+			),
 			OptionalStringEquipment(filter.Title, equipment.FieldTitle),
 			OptionalBoolEquipment(filter.TechnicalIssues, equipment.FieldTechIssue),
 			OptionalStringEquipment(filter.Condition, equipment.FieldCondition),
@@ -201,6 +205,7 @@ func (r *equipmentRepository) EquipmentsByFilterTotal(ctx context.Context, filte
 	if err != nil {
 		return 0, err
 	}
+	// eqReceiptDate := time.Unix(filter.ReceiptDate, 0).Format(utils.TimeFormat)
 
 	total, err := tx.Equipment.Query().
 		Where(
@@ -214,7 +219,10 @@ func (r *equipmentRepository) EquipmentsByFilterTotal(ctx context.Context, filte
 			OptionalIntEquipment(filter.CompensationCost, equipment.FieldCompensationCost),
 			OptionalIntEquipment(filter.InventoryNumber, equipment.FieldInventoryNumber),
 			OptionalStringEquipment(filter.Supplier, equipment.FieldSupplier),
-			OptionalStringEquipment(filter.ReceiptDate, equipment.FieldReceiptDate),
+			OptionalStringEquipment(
+				time.Unix(filter.ReceiptDate, 0).Format(utils.TimeFormat),
+				equipment.FieldReceiptDate,
+			),
 			OptionalStringEquipment(filter.Title, equipment.FieldTitle),
 			OptionalBoolEquipment(filter.TechnicalIssues, equipment.FieldTechIssue),
 			OptionalStringEquipment(filter.Condition, equipment.FieldCondition),
@@ -261,7 +269,7 @@ func (r *equipmentRepository) UpdateEquipmentByID(ctx context.Context, id int, e
 	if *eq.Supplier != "" {
 		edit.SetSupplier(*eq.Supplier)
 	}
-	if *eq.ReceiptDate != "" {
+	if *eq.ReceiptDate != 0 {
 		edit.SetReceiptDate(*eq.ReceiptDate)
 	}
 	if *eq.Category != 0 {
