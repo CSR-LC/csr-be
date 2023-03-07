@@ -22,7 +22,7 @@ func (Equipment) Fields() []ent.Field {
 		field.String("condition").Optional(),
 		field.Int64("inventoryNumber").Optional(),
 		field.String("supplier").Default("unknown"),
-		field.Int64("receiptDate").Optional(),
+		field.String("receiptDate").Default("unknown"),
 		field.Int64("maximumDays").Optional(),
 		field.String("description").Default("unknown"),
 	}

@@ -101,6 +101,9 @@ func (r *equipmentRepository) CreateEquipment(ctx context.Context, NewEquipment 
 	if err != nil {
 		return nil, err
 	}
+
+	eqReceiptDate := time.Unix(*NewEquipment.ReceiptDate, 0).Format(utils.TimeFormat)
+
 	eq, err := tx.Equipment.Create().
 		SetName(*NewEquipment.Name).
 		SetDescription(*NewEquipment.Description).
@@ -110,7 +113,7 @@ func (r *equipmentRepository) CreateEquipment(ctx context.Context, NewEquipment 
 		SetCondition(NewEquipment.Condition).
 		SetInventoryNumber(*NewEquipment.InventoryNumber).
 		SetSupplier(*NewEquipment.Supplier).
-		SetReceiptDate(*NewEquipment.ReceiptDate).
+		SetReceiptDate(eqReceiptDate).
 		SetMaximumDays(*NewEquipment.MaximumDays).
 		SetCategory(&ent.Category{ID: int(*NewEquipment.Category)}).
 		SetCurrentStatus(status).
@@ -278,9 +281,13 @@ func (r *equipmentRepository) UpdateEquipmentByID(ctx context.Context, id int, e
 	if *eq.Supplier != "" {
 		edit.SetSupplier(*eq.Supplier)
 	}
+
+	eqReceiptDate := time.Unix(*eq.ReceiptDate, 0).Format(utils.TimeFormat)
+
 	if *eq.ReceiptDate != 0 {
-		edit.SetReceiptDate(*eq.ReceiptDate)
+		edit.SetReceiptDate(eqReceiptDate)
 	}
+
 	if *eq.Category != 0 {
 		edit.SetCategory(&ent.Category{ID: int(*eq.Category)})
 	}

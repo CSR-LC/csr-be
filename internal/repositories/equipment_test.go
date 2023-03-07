@@ -112,7 +112,7 @@ func (s *EquipmentSuite) SetupTest() {
 		TermsOfUse:  "https://site.com",
 		TechIssue:   true,
 		Supplier:    "Виталий",
-		ReceiptDate: 1520345133,
+		ReceiptDate: "02.01.2006",
 		Description: "удовлетворительное, местами облупляется краска",
 		Condition:   "WARNING: do not put on cats!",
 	}
