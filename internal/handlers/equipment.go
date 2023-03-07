@@ -251,12 +251,15 @@ func mapEquipmentResponse(eq *ent.Equipment) (*models.EquipmentResponse, error) 
 		photoID = eq.Edges.Photo.ID
 	}
 
-	eqReceiptTime, err := time.Parse(utils.TimeFormat, eq.ReceiptDate)
-	if err != nil {
-		return nil, err
-	}
+	var eqReceiptDate int64
+	if eq.ReceiptDate != "" {
+		eqReceiptTime, err := time.Parse(utils.TimeFormat, eq.ReceiptDate)
+		if err != nil {
+			return nil, err
+		}
 
-	eqReceiptDate := eqReceiptTime.Unix()
+		eqReceiptDate = eqReceiptTime.Unix()
+	}
 
 	return &models.EquipmentResponse{
 		TermsOfUse:       &eq.TermsOfUse,

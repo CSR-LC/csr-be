@@ -94,13 +94,15 @@ func mapOrder(o *ent.Order, log *zap.Logger) (*models.Order, error) {
 			}
 		}
 
-		eqReceiptTime, err := time.Parse(utils.TimeFormat, eq.ReceiptDate)
-		if err != nil {
-			log.Error("error during parsing date string")
-			return nil, err
+		var eqReceiptDate int64
+		if eq.ReceiptDate != "" {
+			eqReceiptTime, err := time.Parse(utils.TimeFormat, eq.ReceiptDate)
+			if err != nil {
+				log.Error("error during parsing date string")
+				return nil, err
+			}
+			eqReceiptDate = eqReceiptTime.Unix()
 		}
-
-		eqReceiptDate := eqReceiptTime.Unix()
 
 		orderEquipments[i] = &models.EquipmentResponse{
 			TermsOfUse:       &eq.TermsOfUse,
