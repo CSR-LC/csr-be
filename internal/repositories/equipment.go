@@ -49,6 +49,11 @@ func (r *equipmentRepository) EquipmentsByFilter(ctx context.Context, filter mod
 		return nil, err
 	}
 
+	var filterReceiptDate string
+	if filter.ReceiptDate != 0 {
+		filterReceiptDate = time.Unix(filter.ReceiptDate, 0).Format(utils.TimeFormat)
+	}
+
 	result, err := tx.Equipment.Query().
 		Where(
 			equipment.HasCategoryWith(OptionalIntCategory(filter.Category, category.FieldID)),
@@ -62,7 +67,7 @@ func (r *equipmentRepository) EquipmentsByFilter(ctx context.Context, filter mod
 			OptionalIntEquipment(filter.InventoryNumber, equipment.FieldInventoryNumber),
 			OptionalStringEquipment(filter.Supplier, equipment.FieldSupplier),
 			OptionalStringEquipment(
-				time.Unix(filter.ReceiptDate, 0).Format(utils.TimeFormat),
+				filterReceiptDate,
 				equipment.FieldReceiptDate,
 			),
 			OptionalStringEquipment(filter.Title, equipment.FieldTitle),
@@ -205,7 +210,11 @@ func (r *equipmentRepository) EquipmentsByFilterTotal(ctx context.Context, filte
 	if err != nil {
 		return 0, err
 	}
-	// eqReceiptDate := time.Unix(filter.ReceiptDate, 0).Format(utils.TimeFormat)
+
+	var filterReceiptDate string
+	if filter.ReceiptDate != 0 {
+		filterReceiptDate = time.Unix(filter.ReceiptDate, 0).Format(utils.TimeFormat)
+	}
 
 	total, err := tx.Equipment.Query().
 		Where(
@@ -220,7 +229,7 @@ func (r *equipmentRepository) EquipmentsByFilterTotal(ctx context.Context, filte
 			OptionalIntEquipment(filter.InventoryNumber, equipment.FieldInventoryNumber),
 			OptionalStringEquipment(filter.Supplier, equipment.FieldSupplier),
 			OptionalStringEquipment(
-				time.Unix(filter.ReceiptDate, 0).Format(utils.TimeFormat),
+				filterReceiptDate,
 				equipment.FieldReceiptDate,
 			),
 			OptionalStringEquipment(filter.Title, equipment.FieldTitle),
