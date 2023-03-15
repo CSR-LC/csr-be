@@ -23,9 +23,13 @@ jobs:
           make coverage && coverage_total=$(make coverage_total | tail -n1) && echo $coverage_total
           if [ $min_coverage -gt $coverage_total ]; then exit 1; else echo "unit tests OK"; fi
           
-          function_min_coverage=$min_coverage make coverage | while read -r line ; do
+          function_min_coverage=$min_coverage 
+          make coverage | while read -r line ; 
+          do
               function_coverage=$(echo $line | awk '{ print $3 }' | sed 's/[^0-9\.]*//g')
-              if awk "BEGIN {exit !($function_min_coverage > $function_coverage)}"; then echo "low coverage ($function_coverage/$function_min_coverage) - $line"; exit 1; fi;
+              if awk 'BEGIN {exit !('$function_min_coverage' > '$function_coverage')}'; 
+              then echo "low coverage ($function_coverage/$function_min_coverage) - $line"; 
+              exit 1; fi;
           done
   lint:
     runs-on: ubuntu-latest
