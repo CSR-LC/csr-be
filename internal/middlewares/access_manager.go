@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	openApiErrors "github.com/go-openapi/errors"
+	"go.uber.org/zap"
 
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/authentication"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/utils"
@@ -31,6 +32,7 @@ type blackListAccessManager struct {
 	acceptableRoles []Role
 	fullAccessRoles []Role
 	accessMap       map[Role]map[string][]path
+	logger          *zap.Logger
 }
 
 type ExistingEndpoints map[string][]string
@@ -61,7 +63,7 @@ type Role struct {
 
 // NewAccessManager creates new access manager with admin access to all endpoints.
 // All roles can be declared with slug only.
-func NewAccessManager(roles, fullAccessRoles []Role, endpoints ExistingEndpoints) (AccessManager, error) {
+func NewAccessManager(roles, fullAccessRoles []Role, endpoints ExistingEndpoints, logger *zap.Logger) (AccessManager, error) {
 	err := endpoints.Validate()
 	if err != nil {
 		return nil, err
@@ -74,6 +76,7 @@ func NewAccessManager(roles, fullAccessRoles []Role, endpoints ExistingEndpoints
 		acceptableRoles: roleVariations,
 		fullAccessRoles: fullAccessRoleVariations,
 		accessMap:       accessMap,
+		logger:          logger,
 	}, nil
 }
 
@@ -229,10 +232,12 @@ func (a *blackListAccessManager) Authorize(r *http.Request, auth interface{}) er
 	}
 
 	if !role.IsEmailConfirmed {
+		a.logger.Info("User with unconfirmed email tried to access the endpoint", zap.String("login", userInfo.Login))
 		return openApiErrors.New(http.StatusForbidden, unconfirmedEmailMessage)
 	}
 
 	if !a.HasAccess(role, r.Method, r.URL.Path) {
+		a.logger.Info("User with role %s tried to access the endpoint %s", zap.String("role", userInfo.Role.Slug), zap.String("endpoint", r.URL.Path))
 		return openApiErrors.New(http.StatusForbidden, forbiddenMessage)
 	}
 	return nil
