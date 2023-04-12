@@ -76,7 +76,7 @@ func SetupAPI(entClient *ent.Client, lg *zap.Logger, conf *config.AppConfig) (*r
 	handlers.SetHealthHandler(lg, api)
 
 	api.Init()
-	accessManager, err := AccessManager(api, conf.AccessBindings)
+	accessManager, err := AccessManager(api, conf.AccessBindings, lg)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to create access manager: %w", err)
 	}
@@ -124,7 +124,7 @@ func loadSwaggerSpec() (*loads.Document, error) {
 	return swaggerSpec, nil
 }
 
-func AccessManager(api *operations.BeAPI, bindings []config.RoleEndpointBinding) (middlewares.AccessManager, error) {
+func AccessManager(api *operations.BeAPI, bindings []config.RoleEndpointBinding, logger *zap.Logger) (middlewares.AccessManager, error) {
 	roles := []middlewares.Role{
 		{
 			Slug: authentication.AdminSlug,
@@ -151,7 +151,7 @@ func AccessManager(api *operations.BeAPI, bindings []config.RoleEndpointBinding)
 		},
 	}
 
-	manager, err := middlewares.NewAccessManager(roles, fullAccessRoles, api.GetExistingEndpoints())
+	manager, err := middlewares.NewAccessManager(roles, fullAccessRoles, api.GetExistingEndpoints(), logger)
 	if err != nil {
 		return nil, err
 	}
