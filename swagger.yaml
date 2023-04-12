@@ -150,8 +150,10 @@ paths:
           enum:
             - id
             - name
+            - surname
             - login
             - email
+            - is_blocked
           default: id
       summary: Get all users
       security:
