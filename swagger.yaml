@@ -277,6 +277,34 @@ paths:
           description: Unexpected error
           schema:
             $ref: "#/definitions/Error"
+  /v1/users/me/email:
+    patch:
+      summary: Change the current email.
+      security:
+        - Bearer: [ ]
+      tags:
+        - Users
+      operationId: changeEmail
+      consumes:
+        - application/json
+      parameters:
+        - name: emailPatch
+          in: body
+          description: The patch to apply to the user email.
+          required: true
+          schema:
+            $ref: "#/definitions/PatchEmailRequest"
+      responses:
+        204:
+          description: Success
+        401:
+          description: Unauthorized
+          schema:
+            $ref: "#/definitions/Error"
+        default:
+          description: Unexpected error.
+          schema:
+            $ref: "#/definitions/Error"
   /management/users/{userId}:
     parameters:
       - name: userId
@@ -1956,6 +1984,11 @@ definitions:
         old_password:
             type: string
         new_password:
+            type: string
+  PatchEmailRequest:
+    type: object
+    properties:
+        new_email:
             type: string
       # User
   LoginInfo:

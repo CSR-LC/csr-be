@@ -145,6 +145,7 @@ type UserRepository interface {
 	SetUserRole(ctx context.Context, userId int, roleId int) error
 	UserByLogin(ctx context.Context, login string) (*ent.User, error)
 	ChangePasswordByLogin(ctx context.Context, login string, password string) error
+	ChangeEmailByLogin(ctx context.Context, login string, email string) error
 	CreateUser(ctx context.Context, data *models.UserRegister) (*ent.User, error)
 	GetUserByLogin(ctx context.Context, login string) (*ent.User, error)
 	GetUserByID(ctx context.Context, id int) (*ent.User, error)
