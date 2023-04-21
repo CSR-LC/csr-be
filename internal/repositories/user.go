@@ -243,6 +243,20 @@ func (r *userRepository) Delete(ctx context.Context, id int) error {
 	return tx.User.DeleteOneID(id).Exec(ctx)
 }
 
+func (r *userRepository) DeleteUserAccount(ctx context.Context, userId int) error {
+	tx, err := middlewares.TxFromContext(ctx)
+	if err != nil {
+		return err
+	}
+
+	_, err = tx.User.UpdateOneID(userId).SetIsDeletedAccount(true).Save(ctx)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (r *userRepository) SetIsReadonly(ctx context.Context, id int, isReadonly bool) error {
 	tx, err := middlewares.TxFromContext(ctx)
 	if err != nil {

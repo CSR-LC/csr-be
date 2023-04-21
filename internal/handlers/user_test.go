@@ -1065,6 +1065,34 @@ func (s *UserTestSuite) TestUser_DeleteUserFunc_OK() {
 	s.userRepository.AssertExpectations(t)
 }
 
+func (s *UserTestSuite) TestUser_DeleteUserAccountFunc_OK() {
+	t := s.T()
+	request := http.Request{}
+	ctx := request.Context()
+	userID := 3
+
+	handlerFunc := s.user.DeleteUserAccountByID(s.userRepository)
+	data := users.DeleteUserAccountParams{
+		HTTPRequest: &request,
+	}
+
+	s.userRepository.On("DeleteUserAccount", ctx, userID).Return(nil)
+
+	access := authentication.Auth{
+		Id: userID,
+		Role: &authentication.Role{
+			Slug: authentication.UserSlug,
+		},
+	}
+
+	resp := handlerFunc(data, access)
+	responseRecorder := httptest.NewRecorder()
+	producer := runtime.JSONProducer()
+	resp.WriteResponse(responseRecorder, producer)
+	require.Equal(t, http.StatusOK, responseRecorder.Code)
+	s.userRepository.AssertExpectations(t)
+}
+
 func (s *UserTestSuite) TestUser_ChangePasswordFunc_GetUserErr() {
 	t := s.T()
 	request := http.Request{}

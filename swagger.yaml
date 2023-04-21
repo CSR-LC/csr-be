@@ -263,6 +263,25 @@ paths:
           description: Unexpected error
           schema:
             $ref: "#/definitions/Error"
+  /v1/users/me/account:
+    delete:
+      summary: Delete the current user account.
+      security:
+        - Bearer: [ ]
+      tags:
+        - Users
+      operationId: deleteUserAccount
+      responses:
+        200:
+          description: Success
+        401:
+          description: Unauthorized
+          schema:
+            $ref: "#/definitions/Error"
+        default:
+          description: Unexpected error.
+          schema:
+            $ref: "#/definitions/Error"
   /management/users/{userId}:
     parameters:
       - name: userId

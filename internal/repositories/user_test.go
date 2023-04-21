@@ -6,6 +6,7 @@ import (
 	"math"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	"golang.org/x/crypto/bcrypt"
@@ -356,6 +357,38 @@ func (s *UserSuite) TestUserRepository_SetIsReadonly() {
 	require.Error(t, err)
 
 	require.NoError(s.T(), tx.Rollback())
+}
+
+func (s *UserSuite) TestUserRepository_DeleteUserAccount_OK() {
+	t := s.T()
+	repository := NewUserRepository()
+	ctx := s.ctx
+	login := s.users[1].Login
+	require.NotEmpty(t, login)
+
+	tx, err := s.client.Tx(ctx)
+	require.NoError(t, err)
+	ctx = context.WithValue(ctx, middlewares.TxContextKey, tx)
+	user, err := repository.UserByLogin(ctx, login)
+	require.NoError(t, err)
+	require.NoError(t, tx.Commit())
+
+	assert.Equal(t, user.IsDeletedAccount, false)
+
+	tx, err = s.client.Tx(ctx)
+	require.NoError(t, err)
+	ctx = context.WithValue(ctx, middlewares.TxContextKey, tx)
+	err = repository.DeleteUserAccount(ctx, user.ID)
+	require.NoError(t, err)
+	require.NoError(t, tx.Commit())
+
+	tx, err = s.client.Tx(ctx)
+	require.NoError(t, err)
+	ctx = context.WithValue(ctx, middlewares.TxContextKey, tx)
+	updatedUser, err := repository.UserByLogin(ctx, login)
+	require.NoError(t, err)
+	require.NoError(t, tx.Commit())
+	assert.Equal(t, updatedUser.IsDeletedAccount, true)
 }
 
 func mapContainsUser(t *testing.T, eq *ent.User, m map[int]*ent.User) bool {

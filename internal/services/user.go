@@ -108,6 +108,11 @@ func (s *tokenManager) GenerateTokens(ctx context.Context, login, password strin
 	if err != nil {
 		return "", "", true, err
 	}
+
+	if user.IsDeletedAccount {
+		return "", "", false, errors.New("account has been deleted")
+	}
+
 	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password))
 	if err != nil {
 		return "", "", false, err

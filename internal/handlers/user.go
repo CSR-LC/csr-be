@@ -37,6 +37,7 @@ func SetUserHandler(logger *zap.Logger, api *operations.BeAPI,
 	api.UsersDeleteUserHandler = userHandler.DeleteUserByID(userRepo)
 	api.UsersChangePasswordHandler = userHandler.ChangePassword(userRepo)
 	api.UsersLogoutHandler = userHandler.LogoutUserFunc(tokenManager)
+	api.UsersDeleteUserAccountHandler = userHandler.DeleteUserAccountByID(userRepo)
 	api.UsersUpdateReadonlyAccessHandler = userHandler.UpdateReadonlyAccess(userRepo)
 }
 
@@ -299,6 +300,27 @@ func (c User) DeleteUserByID(repo domain.UserRepository) users.DeleteUserHandler
 				})
 		}
 		return users.NewDeleteUserOK().WithPayload("User deleted")
+	}
+}
+
+func (c User) DeleteUserAccountByID(repository domain.UserRepository) users.DeleteUserAccountHandlerFunc {
+	return func(p users.DeleteUserAccountParams, access interface{}) middleware.Responder {
+		ctx := p.HTTPRequest.Context()
+		userId, err := authentication.GetUserId(access)
+		if err != nil {
+			c.logger.Error("get user id error during deleting user account", zap.Error(err))
+			return users.NewDeleteUserAccountDefault(http.StatusUnauthorized).
+				WithPayload(buildStringPayload("get user id error during deleting user account"))
+		}
+
+		err = repository.DeleteUserAccount(ctx, userId)
+		if err != nil {
+			c.logger.Error("error during deleting user account", zap.Error(err))
+			return users.NewDeleteUserAccountDefault(http.StatusInternalServerError).
+				WithPayload(buildStringPayload("can't delete user account"))
+		}
+
+		return users.NewDeleteUserAccountOK()
 	}
 }
 
