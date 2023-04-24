@@ -249,7 +249,7 @@ func (r *userRepository) DeleteUserAccount(ctx context.Context, userId int) erro
 		return err
 	}
 
-	_, err = tx.User.UpdateOneID(userId).SetIsDeletedAccount(true).Save(ctx)
+	_, err = tx.User.UpdateOneID(userId).SetIsDeleted(true).Save(ctx)
 	if err != nil {
 		return err
 	}

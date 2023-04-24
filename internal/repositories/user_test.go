@@ -373,7 +373,7 @@ func (s *UserSuite) TestUserRepository_DeleteUserAccount_OK() {
 	require.NoError(t, err)
 	require.NoError(t, tx.Commit())
 
-	assert.Equal(t, user.IsDeletedAccount, false)
+	assert.Equal(t, user.IsDeleted, false)
 
 	tx, err = s.client.Tx(ctx)
 	require.NoError(t, err)
@@ -388,7 +388,7 @@ func (s *UserSuite) TestUserRepository_DeleteUserAccount_OK() {
 	updatedUser, err := repository.UserByLogin(ctx, login)
 	require.NoError(t, err)
 	require.NoError(t, tx.Commit())
-	assert.Equal(t, updatedUser.IsDeletedAccount, true)
+	assert.Equal(t, updatedUser.IsDeleted, true)
 }
 
 func mapContainsUser(t *testing.T, eq *ent.User, m map[int]*ent.User) bool {

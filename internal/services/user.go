@@ -109,7 +109,7 @@ func (s *tokenManager) GenerateTokens(ctx context.Context, login, password strin
 		return "", "", true, err
 	}
 
-	if user.IsDeletedAccount {
+	if user.IsDeleted {
 		return "", "", false, errors.New("account has been deleted")
 	}
 
