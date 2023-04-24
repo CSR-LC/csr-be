@@ -359,7 +359,7 @@ func (s *UserSuite) TestUserRepository_SetIsReadonly() {
 	require.NoError(s.T(), tx.Rollback())
 }
 
-func (s *UserSuite) TestUserRepository_DeleteUserAccount_OK() {
+func (s *UserSuite) TestUserRepository_DeleteUser_OK() {
 	t := s.T()
 	repository := NewUserRepository()
 	ctx := s.ctx
@@ -378,7 +378,7 @@ func (s *UserSuite) TestUserRepository_DeleteUserAccount_OK() {
 	tx, err = s.client.Tx(ctx)
 	require.NoError(t, err)
 	ctx = context.WithValue(ctx, middlewares.TxContextKey, tx)
-	err = repository.DeleteUserAccount(ctx, user.ID)
+	err = repository.Delete(ctx, user.ID)
 	require.NoError(t, err)
 	require.NoError(t, tx.Commit())
 
