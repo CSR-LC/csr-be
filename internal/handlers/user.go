@@ -37,6 +37,7 @@ func SetUserHandler(logger *zap.Logger, api *operations.BeAPI,
 	api.UsersChangePasswordHandler = userHandler.ChangePassword(userRepo)
 	api.UsersLogoutHandler = userHandler.LogoutUserFunc(tokenManager)
 	api.UsersDeleteCurrentUserHandler = userHandler.DeleteCurrentUser(userRepo)
+	api.UsersUpdateReadonlyAccessHandler = userHandler.UpdateReadonlyAccess(userRepo)
 }
 
 type User struct {

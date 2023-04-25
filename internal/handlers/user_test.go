@@ -4,11 +4,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/stretchr/testify/mock"
 	"math"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/stretchr/testify/mock"
 
 	"entgo.io/ent/entc/integration/ent/user"
 	"github.com/go-openapi/loads"
@@ -1030,9 +1031,6 @@ func (s *UserTestSuite) TestUser_DeleteUserFunc_OK() {
 	}
 
 	s.userRepository.On("Delete", ctx, userID).Return(nil)
-
-	s.userRepository.On("Delete", ctx, idToDelete).Return(nil)
-	s.userRepository.On("GetUserByID", ctx, idToDelete).Return(userToDelete, nil)
 
 	access := authentication.Auth{
 		Id: userID,
