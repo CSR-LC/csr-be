@@ -36,8 +36,7 @@ func SetUserHandler(logger *zap.Logger, api *operations.BeAPI,
 	api.UsersAssignRoleToUserHandler = userHandler.AssignRoleToUserFunc(userRepo)
 	api.UsersChangePasswordHandler = userHandler.ChangePassword(userRepo)
 	api.UsersLogoutHandler = userHandler.LogoutUserFunc(tokenManager)
-	api.UsersDeleteUserHandler = userHandler.DeleteUserByID(userRepo)
-	api.UsersUpdateReadonlyAccessHandler = userHandler.UpdateReadonlyAccess(userRepo)
+	api.UsersDeleteCurrentUserHandler = userHandler.DeleteCurrentUser(userRepo)
 }
 
 type User struct {
@@ -269,24 +268,24 @@ func (c User) GetUsersList(repository domain.UserRepository) users.GetAllUsersHa
 	}
 }
 
-func (c User) DeleteUserByID(repository domain.UserRepository) users.DeleteUserHandlerFunc {
-	return func(p users.DeleteUserParams, access interface{}) middleware.Responder {
+func (c User) DeleteCurrentUser(repository domain.UserRepository) users.DeleteCurrentUserHandlerFunc {
+	return func(p users.DeleteCurrentUserParams, access interface{}) middleware.Responder {
 		ctx := p.HTTPRequest.Context()
 		userId, err := authentication.GetUserId(access)
 		if err != nil {
-			c.logger.Error("get user id error during deleting user account", zap.Error(err))
-			return users.NewDeleteUserDefault(http.StatusUnauthorized).
-				WithPayload(buildStringPayload("get user id error during deleting user account"))
+			c.logger.Error("get user id error during deleting user", zap.Error(err))
+			return users.NewDeleteCurrentUserDefault(http.StatusUnauthorized).
+				WithPayload(buildStringPayload("get user id error during deleting user"))
 		}
 
 		err = repository.Delete(ctx, userId)
 		if err != nil {
-			c.logger.Error("error during deleting user account", zap.Error(err))
-			return users.NewDeleteUserDefault(http.StatusInternalServerError).
-				WithPayload(buildStringPayload("can't delete user account"))
+			c.logger.Error("error during deleting user", zap.Error(err))
+			return users.NewDeleteCurrentUserDefault(http.StatusInternalServerError).
+				WithPayload(buildStringPayload("can't delete user"))
 		}
 
-		return users.NewDeleteUserOK()
+		return users.NewDeleteCurrentUserOK()
 	}
 }
 

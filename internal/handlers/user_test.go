@@ -51,7 +51,7 @@ func TestSetUserHandler(t *testing.T) {
 	require.NotEmpty(t, api.UsersGetUserHandler)
 	require.NotEmpty(t, api.UsersGetAllUsersHandler)
 	require.NotEmpty(t, api.UsersAssignRoleToUserHandler)
-	require.NotEmpty(t, api.UsersDeleteUserHandler)
+	require.NotEmpty(t, api.UsersDeleteCurrentUserHandler)
 }
 
 type UserTestSuite struct {
@@ -1024,8 +1024,8 @@ func (s *UserTestSuite) TestUser_DeleteUserFunc_OK() {
 	ctx := request.Context()
 	userID := 3
 
-	handlerFunc := s.user.DeleteUserByID(s.userRepository)
-	data := users.DeleteUserParams{
+	handlerFunc := s.user.DeleteCurrentUser(s.userRepository)
+	data := users.DeleteCurrentUserParams{
 		HTTPRequest: &request,
 	}
 

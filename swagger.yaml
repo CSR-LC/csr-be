@@ -237,7 +237,7 @@ paths:
         - Bearer: [ ]
       tags:
         - Users
-      operationId: deleteUser
+      operationId: deleteCurrentUser
       responses:
         200:
           description: Success

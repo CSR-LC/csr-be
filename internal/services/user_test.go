@@ -94,7 +94,7 @@ func (s *UserServiceTestSuite) TestUserService_GenerateAccessToken_HashCompareEr
 	s.userRepository.AssertExpectations(t)
 }
 
-func (s *UserServiceTestSuite) TestUserService_GenerateAccessToken_DeletedUserAccountError() {
+func (s *UserServiceTestSuite) TestUserService_GenerateAccessToken_DeletedUserError() {
 	t := s.T()
 	login := "login"
 	password := "password"
