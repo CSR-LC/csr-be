@@ -433,7 +433,7 @@ func (c User) ChangeEmail(repo domain.UserRepository) users.ChangeEmailHandlerFu
 				WithPayload(buildStringPayload("Can't get user by id"))
 		}
 
-		if requestedUser.IsBlocked {
+		if requestedUser.IsReadonly {
 			c.logger.Error("user is blocked", zap.Any("access", access))
 			return users.NewChangePasswordDefault(http.StatusForbidden).
 				WithPayload(&models.Error{Data: &models.ErrorData{Message: "User is blocked"}})
