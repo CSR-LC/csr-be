@@ -87,12 +87,22 @@ func mapOrder(o *ent.Order, log *zap.Logger) (*models.Order, error) {
 		if eq.Edges.PetKinds != nil {
 			for _, petKind := range eq.Edges.PetKinds {
 				j := &models.PetKind{
-					ID:   int64(petKind.ID),
 					Name: &petKind.Name,
 				}
 				petKinds = append(petKinds, j)
 			}
 		}
+
+		var eqReceiptDate int64
+		if eq.ReceiptDate != "" {
+			eqReceiptTime, err := time.Parse(utils.TimeFormat, eq.ReceiptDate)
+			if err != nil {
+				log.Error("error during parsing date string")
+				return nil, err
+			}
+			eqReceiptDate = eqReceiptTime.Unix()
+		}
+
 		orderEquipments[i] = &models.EquipmentResponse{
 			TermsOfUse:       &eq.TermsOfUse,
 			CompensationCost: &eq.CompensationCost,
@@ -107,7 +117,7 @@ func mapOrder(o *ent.Order, log *zap.Logger) (*models.Order, error) {
 			PhotoID:          &photoID,
 			PetSize:          &psID,
 			PetKinds:         petKinds,
-			ReceiptDate:      &eq.ReceiptDate,
+			ReceiptDate:      &eqReceiptDate,
 			Supplier:         &eq.Supplier,
 			TechnicalIssues:  &eq.TechIssue,
 			Title:            &eq.Title,

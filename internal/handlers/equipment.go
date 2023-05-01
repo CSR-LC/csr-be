@@ -4,6 +4,7 @@ import (
 	"errors"
 	"math"
 	"net/http"
+	"time"
 
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/ent/order"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/repositories"
@@ -234,8 +235,7 @@ func mapEquipmentResponse(eq *ent.Equipment) (*models.EquipmentResponse, error) 
 
 	petKinds := make([]*models.PetKind, len(eq.Edges.PetKinds))
 	for i, petKindEdge := range eq.Edges.PetKinds {
-		petKindID := int64(petKindEdge.ID)
-		petKind := models.PetKind{ID: petKindID, Name: &petKindEdge.Name}
+		petKind := models.PetKind{Name: &petKindEdge.Name}
 		petKinds[i] = &petKind
 	}
 
@@ -250,6 +250,16 @@ func mapEquipmentResponse(eq *ent.Equipment) (*models.EquipmentResponse, error) 
 		photoID = eq.Edges.Photo.ID
 	}
 
+	var eqReceiptDate int64
+	if eq.ReceiptDate != "" {
+		eqReceiptTime, err := time.Parse(utils.TimeFormat, eq.ReceiptDate)
+		if err != nil {
+			return nil, err
+		}
+
+		eqReceiptDate = eqReceiptTime.Unix()
+	}
+
 	return &models.EquipmentResponse{
 		TermsOfUse:       &eq.TermsOfUse,
 		CompensationCost: &eq.CompensationCost,
@@ -260,10 +270,9 @@ func mapEquipmentResponse(eq *ent.Equipment) (*models.EquipmentResponse, error) 
 		InventoryNumber:  &eq.InventoryNumber,
 		Category:         &categoryID,
 		Subcategory:      subcategoryID,
-		MaximumAmount:    &eq.MaximumAmount,
 		MaximumDays:      &eq.MaximumDays,
 		Name:             &eq.Name,
-		ReceiptDate:      &eq.ReceiptDate,
+		ReceiptDate:      &eqReceiptDate,
 		Status:           &statusID,
 		Supplier:         &eq.Supplier,
 		Title:            &eq.Title,

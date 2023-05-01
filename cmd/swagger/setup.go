@@ -1,11 +1,15 @@
 package main
 
 import (
+	"fmt"
+
 	"github.com/go-openapi/loads"
 	"github.com/rs/cors"
 	"go.uber.org/zap"
 
+	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/authentication"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/config"
+	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/docs"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/email"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/ent"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/swagger/restapi"
@@ -25,7 +29,7 @@ func SetupAPI(entClient *ent.Client, lg *zap.Logger, conf *config.AppConfig) (*r
 		return nil, nil, err
 	}
 
-	swaggerSpec, err := loads.Analyzed(restapi.SwaggerJSON, "")
+	swaggerSpec, err := loadSwaggerSpec()
 	if err != nil {
 		return nil, nil, err
 	}
@@ -53,7 +57,6 @@ func SetupAPI(entClient *ent.Client, lg *zap.Logger, conf *config.AppConfig) (*r
 	api.UseSwaggerUI()
 	api.BearerAuth = middlewares.BearerAuthenticateFunc(jwtSecret, lg)
 	handlers.SetActiveAreaHandler(lg, api)
-	handlers.SetBlockerHandler(lg, api)
 	handlers.SetEquipmentHandler(lg, api)
 	handlers.SetCategoryHandler(lg, api)
 	handlers.SetSubcategoryHandler(lg, api)
@@ -66,14 +69,22 @@ func SetupAPI(entClient *ent.Client, lg *zap.Logger, conf *config.AppConfig) (*r
 	handlers.SetRoleHandler(lg, api)
 	handlers.SetEquipmentStatusNameHandler(lg, api)
 	handlers.SetEquipmentStatusHandler(lg, api)
+	handlers.SetEquipmentPeriodsHandler(lg, api)
 	handlers.SetUserHandler(lg, api, tokenManager, regConfirmService)
 	handlers.SetPetKindHandler(lg, api)
 	handlers.SetHealthHandler(lg, api)
 
+	api.Init()
+	accessManager, err := AccessManager(api, conf.AccessBindings)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to create access manager: %w", err)
+	}
+	api.APIAuthorizer = accessManager
 	// run server
 	server := restapi.NewServer(api)
 	listeners := []string{"http"}
 
+	server.ConfigureAPI()
 	server.EnabledListeners = listeners
 	server.Host = conf.Server.Host
 	server.Port = conf.Server.Port
@@ -86,4 +97,73 @@ func SetupAPI(entClient *ent.Client, lg *zap.Logger, conf *config.AppConfig) (*r
 	return server,
 		overdue.NewOverdueCheckup(orderStatusRepo, orderFilterRepo, equipmentStatusRepo, lg),
 		nil
+}
+
+func loadSwaggerSpec() (*loads.Document, error) {
+	swaggerSpec, err := loads.Analyzed(restapi.SwaggerJSON, "")
+	if err != nil {
+		return nil, err
+	}
+	// adding unauthorized error to all endpoints
+	code, unauthorizedErr := docs.UnauthorizedError()
+	docs.AddErrorToSecuredEndpoints(code, unauthorizedErr, swaggerSpec)
+
+	code, forbiddenErr := docs.ForbiddenError()
+	docs.AddErrorToSecuredEndpoints(code, forbiddenErr, swaggerSpec)
+
+	raw, err := swaggerSpec.Spec().MarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+
+	swaggerSpec, err = loads.Analyzed(raw, "")
+	if err != nil {
+		return nil, err
+	}
+	return swaggerSpec, nil
+}
+
+func AccessManager(api *operations.BeAPI, bindings []config.RoleEndpointBinding) (middlewares.AccessManager, error) {
+	roles := []middlewares.Role{
+		{
+			Slug: authentication.AdminSlug,
+		},
+		{
+			Slug: authentication.UserSlug,
+		},
+		{
+			Slug: authentication.OperatorSlug,
+		},
+		{
+			Slug: authentication.ManagerSlug,
+		},
+	}
+	fullAccessRoles := []middlewares.Role{
+		{
+			Slug: authentication.AdminSlug,
+		},
+		{
+			Slug: authentication.ManagerSlug,
+		},
+		{
+			Slug: authentication.OperatorSlug,
+		},
+	}
+
+	manager, err := middlewares.NewAccessManager(roles, fullAccessRoles, api.GetExistingEndpoints())
+	if err != nil {
+		return nil, err
+	}
+
+	for _, binding := range bindings {
+		for verb, paths := range binding.AllowedEndpoints {
+			for _, path := range paths {
+				_, err = manager.AddNewAccess(binding.Role, verb, path)
+				if err != nil {
+					return nil, err
+				}
+			}
+		}
+	}
+	return manager, nil
 }

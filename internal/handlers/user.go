@@ -2,22 +2,23 @@ package handlers
 
 import (
 	"errors"
+	"fmt"
 	"math"
 	"net/http"
 
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/ent/user"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/repositories"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/utils"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/pkg/domain"
-
 	"github.com/go-openapi/runtime/middleware"
 	"go.uber.org/zap"
+	"golang.org/x/crypto/bcrypt"
 
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/authentication"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/ent"
+	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/ent/user"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/swagger/models"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/swagger/restapi/operations"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/swagger/restapi/operations/users"
+	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/repositories"
+	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/utils"
+	"git.epam.com/epm-lstr/epm-lstr-lc/be/pkg/domain"
 )
 
 func SetUserHandler(logger *zap.Logger, api *operations.BeAPI,
@@ -33,7 +34,10 @@ func SetUserHandler(logger *zap.Logger, api *operations.BeAPI,
 	api.UsersGetUserHandler = userHandler.GetUserById(userRepo)
 	api.UsersGetAllUsersHandler = userHandler.GetUsersList(userRepo)
 	api.UsersAssignRoleToUserHandler = userHandler.AssignRoleToUserFunc(userRepo)
-	api.UsersDeleteUserHandler = userHandler.DeleteUserByID(userRepo)
+	api.UsersChangePasswordHandler = userHandler.ChangePassword(userRepo)
+	api.UsersLogoutHandler = userHandler.LogoutUserFunc(tokenManager)
+	api.UsersDeleteCurrentUserHandler = userHandler.DeleteCurrentUser(userRepo)
+	api.UsersUpdateReadonlyAccessHandler = userHandler.UpdateReadonlyAccess(userRepo)
 }
 
 type User struct {
@@ -63,6 +67,21 @@ func (c User) LoginUserFunc(service domain.TokenManager) users.LoginHandlerFunc 
 			AccessToken:  &accessToken,
 			RefreshToken: &refreshToken,
 		})
+	}
+}
+
+func (c User) LogoutUserFunc(tokenManager domain.TokenManager) users.LogoutHandlerFunc {
+	return func(p users.LogoutParams) middleware.Responder {
+		ctx := p.HTTPRequest.Context()
+		refreshToken := *p.RefreshToken.RefreshToken
+		err := tokenManager.DeleteTokenPair(ctx, refreshToken)
+		if err != nil && ent.IsNotFound(err) {
+			return users.NewLogoutNotFound()
+		}
+		if err != nil {
+			return users.NewLogoutDefault(http.StatusInternalServerError)
+		}
+		return users.NewLogoutOK().WithPayload("Successfully logged out")
 	}
 }
 
@@ -99,7 +118,7 @@ func (c User) Refresh(manager domain.TokenManager) users.RefreshHandlerFunc {
 	return func(p users.RefreshParams) middleware.Responder {
 		ctx := p.HTTPRequest.Context()
 		refreshToken := *p.RefreshToken.RefreshToken
-		newToken, isValid, err := manager.RefreshToken(ctx, refreshToken)
+		newAccess, NewRefresh, isValid, err := manager.RefreshToken(ctx, refreshToken)
 		if isValid {
 			c.logger.Info("token invalid", zap.String("token", refreshToken))
 			return users.NewRefreshDefault(http.StatusBadRequest).
@@ -110,7 +129,10 @@ func (c User) Refresh(manager domain.TokenManager) users.RefreshHandlerFunc {
 			return users.NewRefreshDefault(http.StatusInternalServerError).
 				WithPayload(buildStringPayload("Error while refreshing token"))
 		}
-		return users.NewRefreshOK().WithPayload(&models.AccessToken{AccessToken: &newToken})
+		return users.NewRefreshOK().WithPayload(&models.TokenPair{
+			AccessToken:  &newAccess,
+			RefreshToken: &NewRefresh,
+		})
 	}
 }
 
@@ -124,7 +146,7 @@ func (c User) GetUserFunc(repository domain.UserRepository) users.GetCurrentUser
 				Message: "get user id error",
 			}})
 		}
-		user, err := repository.GetUserByID(ctx, userId)
+		userByID, err := repository.GetUserByID(ctx, userId)
 		if err != nil {
 			c.logger.Error("get user by id error", zap.Error(err))
 			return users.NewGetCurrentUserDefault(http.StatusInternalServerError).WithPayload(&models.Error{Data: &models.ErrorData{
@@ -132,7 +154,7 @@ func (c User) GetUserFunc(repository domain.UserRepository) users.GetCurrentUser
 			}})
 		}
 
-		result, err := mapUserInfo(user)
+		result, err := mapUserInfo(userByID)
 		if err != nil {
 			c.logger.Error("map user error", zap.Error(err))
 			return users.NewGetCurrentUserDefault(http.StatusInternalServerError).
@@ -164,23 +186,16 @@ func (c User) PatchUserFunc(repository domain.UserRepository) users.PatchUserHan
 
 func (c User) AssignRoleToUserFunc(repository domain.UserRepository) users.AssignRoleToUserHandlerFunc {
 	return func(p users.AssignRoleToUserParams, access interface{}) middleware.Responder {
-		isAdmin, err := authentication.IsAdmin(access)
-		if err != nil {
-			c.logger.Error("error while getting authorization", zap.Error(err))
-			return users.NewAssignRoleToUserDefault(http.StatusInternalServerError).
-				WithPayload(&models.Error{Data: &models.ErrorData{Message: "Can't get authorization"}})
-		}
-		if !isAdmin {
-			c.logger.Error("user is not admin", zap.Any("access", access))
-			return users.NewAssignRoleToUserDefault(http.StatusForbidden).
-				WithPayload(&models.Error{Data: &models.ErrorData{Message: "You don't have rights to add new status"}})
-		}
 
 		ctx := p.HTTPRequest.Context()
 		userId := int(p.UserID)
+		if p.Data.RoleID == nil {
+			return users.NewAssignRoleToUserDefault(http.StatusBadRequest).
+				WithPayload(buildStringPayload("role id is required"))
+		}
 		roleId := int(*p.Data.RoleID)
 
-		err = repository.SetUserRole(ctx, userId, roleId)
+		err := repository.SetUserRole(ctx, userId, roleId)
 		if err != nil {
 			c.logger.Error("set user role error", zap.Error(err))
 			return users.NewAssignRoleToUserDefault(http.StatusInternalServerError).WithPayload(buildErrorPayload(err))
@@ -254,45 +269,98 @@ func (c User) GetUsersList(repository domain.UserRepository) users.GetAllUsersHa
 	}
 }
 
-func (c User) DeleteUserByID(repo domain.UserRepository) users.DeleteUserHandlerFunc {
-	return func(p users.DeleteUserParams, access interface{}) middleware.Responder {
-		isAdmin, err := authentication.IsAdmin(access)
+func (c User) DeleteCurrentUser(repository domain.UserRepository) users.DeleteCurrentUserHandlerFunc {
+	return func(p users.DeleteCurrentUserParams, access interface{}) middleware.Responder {
+		ctx := p.HTTPRequest.Context()
+		userId, err := authentication.GetUserId(access)
+		if err != nil {
+			c.logger.Error("get user id error during deleting user", zap.Error(err))
+			return users.NewDeleteCurrentUserDefault(http.StatusUnauthorized).
+				WithPayload(buildStringPayload("get user id error during deleting user"))
+		}
+
+		err = repository.Delete(ctx, userId)
+		if err != nil {
+			c.logger.Error("error during deleting user", zap.Error(err))
+			return users.NewDeleteCurrentUserDefault(http.StatusInternalServerError).
+				WithPayload(buildStringPayload("can't delete user"))
+		}
+
+		return users.NewDeleteCurrentUserOK()
+	}
+}
+
+func (c User) ChangePassword(repo domain.UserRepository) users.ChangePasswordHandlerFunc {
+	return func(p users.ChangePasswordParams, access interface{}) middleware.Responder {
+		ctx := p.HTTPRequest.Context()
+		userID, err := authentication.GetUserId(access)
 		if err != nil {
 			c.logger.Error("error while getting authorization", zap.Error(err))
-			return users.NewDeleteUserDefault(http.StatusInternalServerError).
-				WithPayload(&models.Error{Data: &models.ErrorData{Message: "Can't get authorization"}})
+			return users.NewChangePasswordUnauthorized().
+				WithPayload(buildStringPayload("Can't get authorization"))
 		}
-		if !isAdmin {
-			c.logger.Error("user is not admin", zap.Any("access", access))
-			return users.NewDeleteUserDefault(http.StatusForbidden).
-				WithPayload(&models.Error{Data: &models.ErrorData{Message: "You don't have rights"}})
+		if p.PasswordPatch == nil {
+			c.logger.Error("password patch is nil", zap.Any("access", access))
+			return users.NewChangePasswordDefault(http.StatusBadRequest).
+				WithPayload(buildStringPayload("Password patch is nil"))
+		}
+		//TODO: add validation for password or ask frontend to do it
+		if p.PasswordPatch.OldPassword == p.PasswordPatch.NewPassword {
+			c.logger.Error("old and new passwords are the same", zap.Any("access", access))
+			return users.NewChangePasswordDefault(http.StatusBadRequest).
+				WithPayload(buildStringPayload("Old and new passwords are the same"))
+		}
+		requestedUser, err := repo.GetUserByID(ctx, userID)
+		if err != nil {
+			c.logger.Error("getting user failed", zap.Error(err))
+			return users.NewChangePasswordDefault(http.StatusInternalServerError).
+				WithPayload(buildStringPayload("Can't get user by id"))
+		}
+		expectedPasswordHash := requestedUser.Password
+		if err = bcrypt.CompareHashAndPassword([]byte(expectedPasswordHash), []byte(p.PasswordPatch.OldPassword)); err != nil {
+			c.logger.Error("wrong password", zap.Error(err))
+			return users.NewChangePasswordDefault(http.StatusForbidden).
+				WithPayload(buildStringPayload("Wrong password"))
+		}
+		if err = repo.ChangePasswordByLogin(ctx, requestedUser.Login, p.PasswordPatch.NewPassword); err != nil {
+			c.logger.Error("error while changing password", zap.Error(err))
+			return users.NewChangePasswordDefault(http.StatusInternalServerError).
+				WithPayload(buildStringPayload("Error while changing password"))
+		}
+		return users.NewChangePasswordNoContent()
+	}
+}
+
+func (c User) UpdateReadonlyAccess(repo domain.UserRepository) users.UpdateReadonlyAccessHandlerFunc {
+	return func(p users.UpdateReadonlyAccessParams, access interface{}) middleware.Responder {
+		currentUserID, err := authentication.GetUserId(access)
+		if err != nil {
+			c.logger.Error("error while getting authorization", zap.Error(err))
+			return users.NewUpdateReadonlyAccessUnauthorized().
+				WithPayload(buildStringPayload("Can't get authorization"))
 		}
 
 		ctx := p.HTTPRequest.Context()
-		userToDelete, err := repo.GetUserByID(ctx, int(p.UserID))
-		if err != nil {
-			c.logger.Error("getting user failed", zap.Error(err))
-			return users.NewDeleteUserDefault(http.StatusInternalServerError).
-				WithPayload(buildStringPayload("Can't get user by id"))
+		userID := int(p.UserID)
+		isReadonly := p.Body.IsReadonly
+
+		if err := repo.SetIsReadonly(ctx, userID, isReadonly); err != nil {
+			c.logger.Error("error while updating readonly access", zap.Error(err))
+			if ent.IsNotFound(err) {
+				return users.NewUpdateReadonlyAccessNotFound().
+					WithPayload(buildStringPayload("User not found"))
+			}
+			return users.NewUpdateReadonlyAccessDefault(http.StatusInternalServerError).
+				WithPayload(buildStringPayload("Unexpected error"))
 		}
 
-		if userToDelete.IsBlocked != true {
-			c.logger.Error("user must be blocked before delete", zap.Any("access", access))
-			return users.NewDeleteUserDefault(http.StatusConflict).
-				WithPayload(&models.Error{Data: &models.ErrorData{Message: "User must be blocked before delete"}})
+		if isReadonly {
+			c.logger.Info(fmt.Sprintf("User %d has been granted read-only access by user %d", userID, currentUserID))
+		} else {
+			c.logger.Info(fmt.Sprintf("Read-only access for user %d has been revoked by user %d", userID, currentUserID))
 		}
 
-		err = repo.Delete(ctx, int(p.UserID))
-		if err != nil {
-			c.logger.Error("Error while deleting user by id", zap.Error(err))
-			return users.NewDeleteUserDefault(http.StatusInternalServerError).WithPayload(
-				&models.Error{
-					Data: &models.ErrorData{
-						Message: "Error while deleting user",
-					},
-				})
-		}
-		return users.NewDeleteUserOK().WithPayload("User deleted")
+		return users.NewUpdateReadonlyAccessNoContent()
 	}
 }
 
@@ -311,7 +379,7 @@ func mapUserInfo(user *ent.User) (*models.UserInfo, error) {
 	result := &models.UserInfo{
 		Email:             &user.Email,
 		ID:                &userID,
-		IsBlocked:         &user.IsBlocked,
+		IsReadonly:        &user.IsReadonly,
 		Login:             &user.Login,
 		Name:              &user.Name,
 		OrgName:           user.OrgName,

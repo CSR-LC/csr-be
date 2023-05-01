@@ -61,9 +61,37 @@ paths:
           description: Unexpected error.
           schema:
             $ref: "#/definitions/Error"
+  /v1/logout:
+    post:
+      description: 'Logout user'
+      tags:
+        - Users
+      operationId: Logout
+      consumes:
+        - "application/json"
+      parameters:
+        - name: 'Refresh token'
+          in: 'body'
+          required: true
+          description: 'Refresh payload'
+          schema:
+            $ref: '#/definitions/RefreshToken'
+      responses:
+        200:
+          description: Successful logout
+          schema:
+            type: string
+        404:
+          description: Refresh token not found.
+          schema:
+            $ref: "#/definitions/Error"
+        default:
+          description: Unexpected error.
+          schema:
+            $ref: "#/definitions/Error"
   /v1/refresh:
     post:
-      description: 'Returns new access token for an authorized User'
+      description: 'Returns new token pair for an authorized User'
       tags:
         - Users
       operationId: Refresh
@@ -81,7 +109,7 @@ paths:
         200:
           description: Successful refresh.
           schema:
-            $ref: '#/definitions/AccessToken'
+            $ref: '#/definitions/TokenPair'
         404:
           description: Refresh token not found.
           schema:
@@ -91,6 +119,57 @@ paths:
           schema:
             $ref: "#/definitions/Error"
   /v1/users:
+    get:
+      parameters:
+        - name: limit
+          in: query
+          required: false
+          description: limit of items in page
+          type: integer
+          default: 10
+        - name: offset
+          in: query
+          required: false
+          description: offset of items
+          type: integer
+          default: 0
+        - name: order_by
+          in: query
+          required: false
+          description: how to order list
+          type: string
+          enum:
+            - asc
+            - desc
+          default: asc
+        - name: order_column
+          in: query
+          required: false
+          description: column to order by
+          type: string
+          enum:
+            - id
+            - name
+            - surname
+            - login
+            - email
+            - is_readonly
+          default: id
+      summary: Get all users
+      security:
+        - Bearer: [ ]
+      tags:
+        - Users
+      operationId: GetAllUsers
+      responses:
+        200:
+          description: Success
+          schema:
+            $ref: "#/definitions/GetListUsers"
+        default:
+          description: Unexpected error.
+          schema:
+            $ref: "#/definitions/Error"
     post:
       summary: Register a new user.
       tags:
@@ -152,6 +231,56 @@ paths:
           description: Unexpected error
           schema:
             $ref: "#/definitions/Error"
+    delete:
+      summary: Delete the current user account.
+      security:
+        - Bearer: [ ]
+      tags:
+        - Users
+      operationId: deleteCurrentUser
+      responses:
+        200:
+          description: Success
+        401:
+          description: Unauthorized
+          schema:
+            $ref: "#/definitions/Error"
+        default:
+          description: Unexpected error.
+          schema:
+            $ref: "#/definitions/Error"
+  /v1/users/me/password:
+    patch:
+      summary: Change the current user password.
+      security:
+        - Bearer: [ ]
+      tags:
+        - Users
+      operationId: changePassword
+      consumes:
+        - application/json
+      parameters:
+        - name: passwordPatch
+          in: body
+          description: The patch to apply to the user password.
+          required: true
+          schema:
+            $ref: "#/definitions/PatchPasswordRequest"
+      responses:
+        204:
+          description: Success
+        401:
+          description: Unauthorized
+          schema:
+            $ref: "#/definitions/Error"
+        403:
+          description: Wrong old password
+          schema:
+            $ref: "#/definitions/Error"
+        default:
+          description: Unexpected error
+          schema:
+            $ref: "#/definitions/Error"
   /management/users/{userId}:
     parameters:
       - name: userId
@@ -171,72 +300,6 @@ paths:
           description: Success
           schema:
             $ref: "#/definitions/UserInfo"
-        default:
-          description: Unexpected error.
-          schema:
-            $ref: "#/definitions/Error"
-    delete:
-      summary: Delete user by id
-      security:
-        - Bearer: [ ]
-      tags:
-        - Users
-      operationId: DeleteUser
-      responses:
-        200:
-          description: User deleted
-          schema:
-            type: string
-        default:
-          description: Unexpected error.
-          schema:
-            $ref: "#/definitions/Error"
-  /management/listUsers:
-    get:
-      parameters:
-        - name: limit
-          in: query
-          required: false
-          description: limit of items in page
-          type: integer
-          default: 10
-        - name: offset
-          in: query
-          required: false
-          description: offset of items
-          type: integer
-          default: 0
-        - name: order_by
-          in: query
-          required: false
-          description: how to order list
-          type: string
-          enum:
-            - asc
-            - desc
-          default: asc
-        - name: order_column
-          in: query
-          required: false
-          description: column to order by
-          type: string
-          enum:
-            - id
-            - name
-            - login
-            - email
-          default: id
-      summary: Get all users
-      security:
-        - Bearer: [ ]
-      tags:
-        - Users
-      operationId: GetAllUsers
-      responses:
-        200:
-          description: Success
-          schema:
-            $ref: "#/definitions/GetListUsers"
         default:
           description: Unexpected error.
           schema:
@@ -319,6 +382,54 @@ paths:
           description: User information has been updated.
           schema:
             $ref: "#/definitions/SuccessUserUpdateResponse"
+        default:
+          description: Unexpected error.
+          schema:
+            $ref: "#/definitions/Error"
+
+  /v1/users/{userId}/readonly-access:
+    put:
+      summary: Update user's read-only access status
+      parameters:
+        - name: userId
+          in: path
+          description: ID of the user to update
+          required: true
+          type: integer
+        - name: body
+          in: body
+          description: Request body containing the new read-only access status
+          required: true
+          schema:
+            type: object
+            properties:
+              is_readonly:
+                type: boolean
+                description: New read-only access status for the user
+      tags:
+        - Users
+      security:
+        - Bearer: [ ]
+      operationId: UpdateReadonlyAccess
+      responses:
+        204:
+          description: Success
+        400:
+          description: Bad request
+          schema:
+            $ref: "#/definitions/Error"
+        401:
+          description: Unauthorized
+          schema:
+            $ref: "#/definitions/Error"
+        403:
+          description: Forbidden
+          schema:
+            $ref: "#/definitions/Error"
+        404:
+          description: User not found
+          schema:
+            $ref: "#/definitions/Error"
         default:
           description: Unexpected error.
           schema:
@@ -437,7 +548,7 @@ paths:
           description: Status Name for equipment
           required: true
           schema:
-            $ref: "#/definitions/EquipmentStatusName"
+            $ref: "#/definitions/NewEquipmentStatusName"
       responses:
         201:
           description: Status name for equipment has been created
@@ -579,6 +690,33 @@ paths:
           description: Unexpected error.
           schema:
             $ref: "#/definitions/Error"
+  /equipment/unavailability_periods/{equipmentId}:
+    parameters:
+      - name: equipmentId
+        in: path
+        required: true
+        description: equipment id
+        type: integer
+    get:
+      summary: Get information about the unavailability periods of equipment by id.
+      security:
+        - Bearer: [ ]
+      tags:
+        - Equipment
+      operationId: GetUnavailabilityPeriodsByEquipmentID
+      responses:
+        200:
+          description: Success
+          schema:
+            $ref: "#/definitions/EquipmentUnavailabilityPeriodsResponse"
+        default:
+          description: Unexpected error.
+          schema:
+            $ref: "#/definitions/Error"
+        404:
+          schema:
+            type: string
+          description: Not Found
   /equipment/categories/{categoryId}:
     parameters:
       - name: categoryId
@@ -1484,48 +1622,6 @@ paths:
           description: Unexpected error.
           schema:
             $ref: "#/definitions/Error"
-  /v1/managment/users/{userId}/block:
-    parameters:
-      - name: userId
-        in: path
-        required: true
-        description: user id
-        type: integer
-    post:
-      summary: Block user
-      security:
-        - Bearer: [ ]
-      tags:
-        - Users
-      operationId: blockUser
-      responses:
-        200:
-          description: Success
-        default:
-          description: Unexpected error.
-          schema:
-            $ref: "#/definitions/Error"
-  /v1/managment/users/{userId}/unblock:
-    parameters:
-      - name: userId
-        in: path
-        required: true
-        description: user id
-        type: integer
-    post:
-      summary: Unblock user
-      security:
-        - Bearer: [ ]
-      tags:
-        - Users
-      operationId: unblockUser
-      responses:
-        200:
-          description: Success
-        default:
-          description: Unexpected error.
-          schema:
-            $ref: "#/definitions/Error"
 
   /password_reset/:
     post:
@@ -1719,13 +1815,29 @@ paths:
             $ref: "#/definitions/Error"
 
 definitions:
+  SwaggerError: # Do not delete it. It is used for generating error responses.
+    type: object
+    required:
+      - code
+      - message
+    properties:
+        code:
+            type: integer
+            enum:
+              - 401
+              - 403
+            format: int32
+        message:
+            type: string
+            enum:
+              - Token is invalid
+              - User is not authorized
+              - User has no confirmed email
   PetKind:
     type: object
     required:
       - name
     properties:
-      id:
-        type: integer
       name:
         type: string
   Error:
@@ -1773,7 +1885,7 @@ definitions:
             description: Surname of user.
           patronymic:
             type: string
-            description: Patronymyc data.
+            description: Patronymic data.
           passport_series:
             type: string
           passport_number:
@@ -1822,6 +1934,13 @@ definitions:
         type: string
       vk:
         type: string
+  PatchPasswordRequest:
+    type: object
+    properties:
+        old_password:
+            type: string
+        new_password:
+            type: string
       # User
   LoginInfo:
     type: object
@@ -1892,7 +2011,7 @@ definitions:
         description: Surname of user.
       patronymic:
         type: string
-        description: Patronymyc data.
+        description: Patronymic data.
       passport_series:
         type: string
       passport_number:
@@ -2007,7 +2126,7 @@ definitions:
       - passport_issue_date
       - phone_number
       - email
-      - is_blocked
+      - is_readonly
       - type
       - org_name
     properties:
@@ -2040,7 +2159,7 @@ definitions:
         type: string
       email:
         type: string
-      is_blocked:
+      is_readonly:
         type: boolean
         example: false
       type:
@@ -2095,6 +2214,13 @@ definitions:
     properties:
       id:
         type: integer
+      name:
+        type: string
+  NewEquipmentStatusName:
+    type: object
+    required:
+      - name
+    properties:
       name:
         type: string
   ListEquipmentStatusNames:
@@ -2165,6 +2291,16 @@ definitions:
     properties:
       data:
         $ref: "#/definitions/EquipmentStatusRepairConfirmation"
+  #EquipmentUnavailabilityPeriodsResponse
+  EquipmentUnavailabilityPeriodsResponse:
+    type: object
+    required:
+      - items
+    properties:
+      items:
+        type: array
+        items:
+          $ref: "#/definitions/EquipmentUnavailabilityPeriods"
   #EquipmentStatusRepairConfirmation
   EquipmentStatusRepairConfirmation:
     type: object
@@ -2193,6 +2329,19 @@ definitions:
         type: string
       order_id:
         type: integer
+  #EquipmentUnavailabilityPeriods
+  EquipmentUnavailabilityPeriods:
+    type: object
+    required:
+      - start_date
+      - end_date
+    properties:
+      start_date:
+        type: string
+        format: date-time
+      end_date:
+        type: string
+        format: date-time
   #EquipmentStatus
   EquipmentStatus:
     type: object
@@ -2393,14 +2542,11 @@ definitions:
     type: object
     required:
       - name
-      - category
       - max_reservation_time
       - max_reservation_units
     properties:
       name:
         type: string
-      category:
-        type: integer
       max_reservation_time:
         type: integer
       max_reservation_units:
@@ -2412,8 +2558,6 @@ definitions:
       - name
       - size
     properties:
-      id:
-        type: integer
       name:
         type: string
         example: "big"
@@ -2426,7 +2570,7 @@ definitions:
   ListOfPetSizes:
     type: array
     items:
-      $ref: "#/definitions/PetSize"
+      $ref: "#/definitions/PetSizeResponse"
   PetSizeResponse:
     type: object
     required:
@@ -2481,7 +2625,6 @@ definitions:
       - inventoryNumber
       - supplier
       - receiptDate
-      - maximumAmount
       - maximumDays
       - location
       - description
@@ -2493,10 +2636,12 @@ definitions:
       name:
         type: string
         example: "Dog harness 3000"
+        maxLength: 100
       nameSubstring:
         type: string
         example: "box"
         description: "Substring of name for case in-sensitive search"
+        maxLength: 255
       title:
         type: string
         example: "клетка midwest icrate 1"
@@ -2530,11 +2675,8 @@ definitions:
         type: string
         example: "ИП Григорьев Виталий Васильевич"
       receiptDate:
-        type: string
-        example: "2018"
-      maximumAmount:
         type: integer
-        example: 3
+        example: 1678111533
       maximumDays:
         type: integer
         example: 30
@@ -2598,11 +2740,8 @@ definitions:
         type: string
         example: "ИП Григорьев Виталий Васильевич"
       receiptDate:
-        type: string
-        example: "2018"
-      maximumAmount:
         type: integer
-        example: 3
+        example: 1678111533
       maximumDays:
         type: integer
         example: 30
@@ -2634,7 +2773,6 @@ definitions:
       - inventoryNumber
       - supplier
       - receiptDate
-      - maximumAmount
       - maximumDays
       - location
       - description
@@ -2681,11 +2819,8 @@ definitions:
         type: string
         example: "ИП Григорьев Виталий Васильевич"
       receiptDate:
-        type: string
-        example: "2018"
-      maximumAmount:
         type: integer
-        example: 3
+        example: 1678111533
       maximumDays:
         type: integer
         example: 30

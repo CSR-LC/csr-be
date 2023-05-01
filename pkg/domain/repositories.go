@@ -13,10 +13,6 @@ type ActiveAreaRepository interface {
 	TotalActiveAreas(ctx context.Context) (int, error)
 }
 
-type BlockerRepository interface {
-	SetIsBlockedUser(ctx context.Context, userId int, isBlocked bool) error
-}
-
 type Filter struct {
 	Limit, Offset        int
 	OrderBy, OrderColumn string
@@ -56,6 +52,7 @@ type EquipmentStatusRepository interface {
 	Update(ctx context.Context, data *models.EquipmentStatus) (*ent.EquipmentStatus, error)
 	GetOrderAndUserByEquipmentStatusID(ctx context.Context, id int) (*ent.Order, *ent.User, error)
 	GetEquipmentStatusByID(ctx context.Context, equipmentStatusID int) (*ent.EquipmentStatus, error)
+	GetUnavailableEquipmentStatusByEquipmentID(ctx context.Context, equipmentID int) ([]*ent.EquipmentStatus, error)
 }
 
 type EquipmentStatusNameRepository interface {
@@ -153,7 +150,8 @@ type UserRepository interface {
 	GetUserByID(ctx context.Context, id int) (*ent.User, error)
 	UpdateUserByID(ctx context.Context, id int, patch *models.PatchUserRequest) error
 	UserList(ctx context.Context, limit, offset int, orderBy, orderColumn string) ([]*ent.User, error)
-	Delete(ctx context.Context, id int) error
+	Delete(ctx context.Context, userId int) error
 	UsersListTotal(ctx context.Context) (int, error)
 	ConfirmRegistration(ctx context.Context, login string) error
+	SetIsReadonly(ctx context.Context, id int, isReadonly bool) error
 }

@@ -2,6 +2,7 @@ package equipment
 
 import (
 	"context"
+	"net/http"
 	"os"
 	"testing"
 
@@ -30,16 +31,8 @@ func TestIntegration_CreateEquipment(t *testing.T) {
 	ctx := context.Background()
 	client := utils.SetupClient()
 
-	l, p, err := utils.GenerateLoginAndPassword()
-	require.NoError(t, err)
-
-	_, err = utils.CreateUser(ctx, client, l, p)
-	require.NoError(t, err)
-
-	loginUser, err := utils.LoginUser(ctx, client, l, p)
-	require.NoError(t, err)
-
-	auth := utils.AuthInfoFunc(loginUser.GetPayload().AccessToken)
+	tokens := utils.AdminUserLogin(t)
+	auth := utils.AuthInfoFunc(tokens.GetPayload().AccessToken)
 
 	t.Run("Create Equipment", func(t *testing.T) {
 		params := equipment.NewCreateNewEquipmentParamsWithContext(ctx)
@@ -61,10 +54,8 @@ func TestIntegration_CreateEquipment(t *testing.T) {
 		assert.Equal(t, model.InventoryNumber, res.Payload.InventoryNumber)
 		assert.Equal(t, model.Category, res.Payload.Category)
 		//assert.Equal(t, location, *res.Payload.Location)
-		assert.Equal(t, model.MaximumAmount, res.Payload.MaximumAmount)
 		assert.Equal(t, model.MaximumDays, res.Payload.MaximumDays)
 		assert.Equal(t, model.Name, res.Payload.Name)
-		assert.Equal(t, model.PetKinds[0], res.Payload.PetKinds[0].ID)
 		assert.Equal(t, model.PetSize, res.Payload.PetSize)
 		assert.Contains(t, *res.Payload.PhotoID, *model.PhotoID)
 		assert.Equal(t, model.ReceiptDate, res.Payload.ReceiptDate)
@@ -73,6 +64,51 @@ func TestIntegration_CreateEquipment(t *testing.T) {
 		assert.Equal(t, model.TechnicalIssues, res.Payload.TechnicalIssues)
 		assert.Equal(t, model.Title, res.Payload.Title)
 	})
+
+	t.Run("Create Equipment failed: 422 status code error, description and name fields have a number of characters greater than the limit ",
+		func(t *testing.T) {
+			params := equipment.NewCreateNewEquipmentParamsWithContext(ctx)
+			model, err := setParameters(ctx, client, auth)
+			require.NoError(t, err)
+
+			// name field tests:
+			// max length of name field: 100 characters
+			name, err := utils.GenerateRandomString(101)
+			require.NoError(t, err)
+			model.Name = &name
+			params.NewEquipment = model
+
+			_, err = client.Equipment.CreateNewEquipment(params, auth)
+			require.Error(t, err)
+
+			name, err = utils.GenerateRandomString(99)
+			require.NoError(t, err)
+			model.Name = &name
+			params.NewEquipment = model
+
+			_, err = client.Equipment.CreateNewEquipment(params, auth)
+			require.NoError(t, err)
+
+			// description field tests:
+			// max length of description field: 255 characters
+			model, err = setParameters(ctx, client, auth)
+			require.NoError(t, err)
+			description, err := utils.GenerateRandomString(256)
+			require.NoError(t, err)
+			model.Description = &description
+
+			params.NewEquipment = model
+			_, err = client.Equipment.CreateNewEquipment(params, auth)
+			require.Error(t, err)
+
+			description, err = utils.GenerateRandomString(254)
+			require.NoError(t, err)
+			model.Description = &description
+			params.NewEquipment = model
+
+			_, err = client.Equipment.CreateNewEquipment(params, auth)
+			require.NoError(t, err)
+		})
 
 	t.Run("Create Equipment failed: foreign key constraint error", func(t *testing.T) {
 		params := equipment.NewCreateNewEquipmentParamsWithContext(ctx)
@@ -104,7 +140,7 @@ func TestIntegration_CreateEquipment(t *testing.T) {
 		_, gotErr := client.Equipment.CreateNewEquipment(params, utils.AuthInfoFunc(&token))
 		require.Error(t, gotErr)
 
-		wantErr := equipment.NewCreateNewEquipmentDefault(500)
+		wantErr := equipment.NewCreateNewEquipmentDefault(http.StatusUnauthorized)
 		wantErr.Payload = &models.Error{Data: nil}
 		assert.Equal(t, wantErr, gotErr)
 	})
@@ -118,20 +154,12 @@ func TestIntegration_GetAllEquipment(t *testing.T) {
 	ctx := context.Background()
 	client := utils.SetupClient()
 
-	l, p, err := utils.GenerateLoginAndPassword()
-	require.NoError(t, err)
+	tokens := utils.AdminUserLogin(t)
 
-	_, err = utils.CreateUser(ctx, client, l, p)
-	require.NoError(t, err)
-
-	loginUser, err := utils.LoginUser(ctx, client, l, p)
-	require.NoError(t, err)
-
-	auth := utils.AuthInfoFunc(loginUser.GetPayload().AccessToken)
+	auth := utils.AuthInfoFunc(tokens.GetPayload().AccessToken)
 
 	t.Run("Get All Equipment", func(t *testing.T) {
 		params := equipment.NewGetAllEquipmentParamsWithContext(ctx)
-		require.NoError(t, err)
 
 		res, err := client.Equipment.GetAllEquipment(params, auth)
 		require.NoError(t, err)
@@ -145,7 +173,7 @@ func TestIntegration_GetAllEquipment(t *testing.T) {
 		_, gotErr := client.Equipment.GetAllEquipment(params, utils.AuthInfoFunc(&token))
 		require.Error(t, gotErr)
 
-		wantErr := equipment.NewGetAllEquipmentDefault(500)
+		wantErr := equipment.NewGetAllEquipmentDefault(http.StatusUnauthorized)
 		wantErr.Payload = &models.Error{Data: nil}
 		assert.Equal(t, wantErr, gotErr)
 	})
@@ -159,16 +187,9 @@ func TestIntegration_GetEquipment(t *testing.T) {
 	ctx := context.Background()
 	client := utils.SetupClient()
 
-	l, p, err := utils.GenerateLoginAndPassword()
-	require.NoError(t, err)
+	tokens := utils.AdminUserLogin(t)
 
-	_, err = utils.CreateUser(ctx, client, l, p)
-	require.NoError(t, err)
-
-	loginUser, err := utils.LoginUser(ctx, client, l, p)
-	require.NoError(t, err)
-
-	auth := utils.AuthInfoFunc(loginUser.GetPayload().AccessToken)
+	auth := utils.AuthInfoFunc(tokens.GetPayload().AccessToken)
 
 	model, err := setParameters(ctx, client, auth)
 	require.NoError(t, err)
@@ -193,11 +214,9 @@ func TestIntegration_GetEquipment(t *testing.T) {
 		assert.Equal(t, model.Description, res.Payload.Description)
 		assert.Equal(t, model.InventoryNumber, res.Payload.InventoryNumber)
 		assert.Equal(t, model.Category, res.Payload.Category)
-		assert.Equal(t, model.MaximumAmount, res.Payload.MaximumAmount)
 		assert.Equal(t, model.MaximumDays, res.Payload.MaximumDays)
 		assert.Equal(t, model.Name, res.Payload.Name)
 		//assert.Equal(t, model.Location, res.Payload.Location)
-		assert.Equal(t, model.PetKinds[0], res.Payload.PetKinds[0].ID)
 		assert.Equal(t, model.PetSize, res.Payload.PetSize)
 		assert.Contains(t, *res.Payload.PhotoID, *model.PhotoID)
 		assert.Equal(t, model.ReceiptDate, res.Payload.ReceiptDate)
@@ -229,7 +248,7 @@ func TestIntegration_GetEquipment(t *testing.T) {
 		_, gotErr := client.Equipment.GetEquipment(params, utils.AuthInfoFunc(&token))
 		require.Error(t, gotErr)
 
-		wantErr := equipment.NewGetEquipmentDefault(500)
+		wantErr := equipment.NewGetEquipmentDefault(http.StatusUnauthorized)
 		wantErr.Payload = &models.Error{Data: nil}
 		assert.Equal(t, wantErr, gotErr)
 	})
@@ -243,16 +262,10 @@ func TestIntegration_FindEquipment(t *testing.T) {
 	ctx := context.Background()
 	client := utils.SetupClient()
 
-	l, p, err := utils.GenerateLoginAndPassword()
-	require.NoError(t, err)
+	tokens := utils.AdminUserLogin(t)
 
-	_, err = utils.CreateUser(ctx, client, l, p)
-	require.NoError(t, err)
+	auth := utils.AuthInfoFunc(tokens.GetPayload().AccessToken)
 
-	loginUser, err := utils.LoginUser(ctx, client, l, p)
-	require.NoError(t, err)
-
-	auth := utils.AuthInfoFunc(loginUser.GetPayload().AccessToken)
 	model, err := setParameters(ctx, client, auth)
 	require.NoError(t, err)
 
@@ -297,7 +310,7 @@ func TestIntegration_FindEquipment(t *testing.T) {
 		_, gotErr := client.Equipment.FindEquipment(params, utils.AuthInfoFunc(&token))
 		require.Error(t, gotErr)
 
-		wantErr := equipment.NewFindEquipmentDefault(500)
+		wantErr := equipment.NewFindEquipmentDefault(http.StatusUnauthorized)
 		wantErr.Payload = &models.Error{Data: nil}
 		assert.Equal(t, wantErr, gotErr)
 	})
@@ -323,16 +336,9 @@ func TestIntegration_EditEquipment(t *testing.T) {
 	ctx := context.Background()
 	client := utils.SetupClient()
 
-	l, p, err := utils.GenerateLoginAndPassword()
-	require.NoError(t, err)
+	tokens := utils.AdminUserLogin(t)
 
-	_, err = utils.CreateUser(ctx, client, l, p)
-	require.NoError(t, err)
-
-	loginUser, err := utils.LoginUser(ctx, client, l, p)
-	require.NoError(t, err)
-
-	auth := utils.AuthInfoFunc(loginUser.GetPayload().AccessToken)
+	auth := utils.AuthInfoFunc(tokens.GetPayload().AccessToken)
 	model, err := setParameters(ctx, client, auth)
 	require.NoError(t, err)
 
@@ -374,7 +380,7 @@ func TestIntegration_EditEquipment(t *testing.T) {
 		_, gotErr := client.Equipment.EditEquipment(params, utils.AuthInfoFunc(&token))
 		require.Error(t, gotErr)
 
-		wantErr := equipment.NewEditEquipmentDefault(500)
+		wantErr := equipment.NewEditEquipmentDefault(http.StatusUnauthorized)
 		wantErr.Payload = &models.Error{Data: nil}
 		assert.Equal(t, wantErr, gotErr)
 	})
@@ -388,16 +394,9 @@ func TestIntegration_DeleteEquipment(t *testing.T) {
 	ctx := context.Background()
 	client := utils.SetupClient()
 
-	l, p, err := utils.GenerateLoginAndPassword()
-	require.NoError(t, err)
+	tokens := utils.AdminUserLogin(t)
 
-	_, err = utils.CreateUser(ctx, client, l, p)
-	require.NoError(t, err)
-
-	loginUser, err := utils.LoginUser(ctx, client, l, p)
-	require.NoError(t, err)
-
-	auth := utils.AuthInfoFunc(loginUser.GetPayload().AccessToken)
+	auth := utils.AuthInfoFunc(tokens.GetPayload().AccessToken)
 
 	t.Run("Delete All Equipment", func(t *testing.T) {
 		res, err := client.Equipment.GetAllEquipment(equipment.NewGetAllEquipmentParamsWithContext(ctx), auth)
@@ -437,7 +436,7 @@ func TestIntegration_DeleteEquipment(t *testing.T) {
 		_, gotErr := client.Equipment.DeleteEquipment(params, utils.AuthInfoFunc(&token))
 		require.Error(t, gotErr)
 
-		wantErr := equipment.NewDeleteEquipmentDefault(500)
+		wantErr := equipment.NewDeleteEquipmentDefault(http.StatusUnauthorized)
 		wantErr.Payload = &models.Error{Data: nil}
 		assert.Equal(t, wantErr, gotErr)
 	})
@@ -461,10 +460,9 @@ func setParameters(ctx context.Context, client *client.Be, auth runtime.ClientAu
 	}
 
 	location := int64(71)
-	amount := int64(1)
 	mdays := int64(10)
 	catName := "Том"
-	rDate := "2018"
+	rDate := int64(1520294400)
 
 	status, err := client.EquipmentStatusName.GetEquipmentStatusName(
 		eqStatusName.NewGetEquipmentStatusNameParamsWithContext(ctx).WithStatusID(1), auth)
@@ -511,12 +509,11 @@ func setParameters(ctx context.Context, client *client.Be, auth runtime.ClientAu
 		Category:         category.Payload.Data.ID,
 		Subcategory:      subCategoryInt64,
 		Location:         &location,
-		MaximumAmount:    &amount,
 		MaximumDays:      &mdays,
 		Name:             &catName,
 		NameSubstring:    "box",
 		PetKinds:         []int64{*cats.Payload.ID},
-		PetSize:          &petSize.Payload[0].ID,
+		PetSize:          petSize.Payload[0].ID,
 		PhotoID:          photo.Payload.Data.ID,
 		ReceiptDate:      &rDate,
 		Status:           &status.Payload.Data.ID,

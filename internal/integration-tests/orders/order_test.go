@@ -41,18 +41,11 @@ func TestIntegration_BeforeOrderSetup(t *testing.T) {
 	ctx := context.Background()
 	client := common.SetupClient()
 
-	l, p, err := common.GenerateLoginAndPassword()
-	require.NoError(t, err)
-
-	_, err = common.CreateUser(ctx, client, l, p)
-	require.NoError(t, err)
-
-	loginUser, err := common.LoginUser(ctx, client, l, p)
-	require.NoError(t, err)
-
-	token = loginUser.GetPayload().AccessToken
+	login := common.AdminUserLogin(t)
+	token = login.GetPayload().AccessToken
 	auth = common.AuthInfoFunc(token)
 
+	var err error
 	eq, err = createEquipment(ctx, client, auth)
 	require.NoError(t, err)
 }
@@ -80,7 +73,7 @@ func TestIntegration_CreateOrder(t *testing.T) {
 		_, gotErr := client.Orders.CreateOrder(params, common.AuthInfoFunc(&incorrectToken))
 		require.Error(t, gotErr)
 
-		wantErr := orders.NewCreateOrderDefault(http.StatusInternalServerError)
+		wantErr := orders.NewCreateOrderDefault(http.StatusUnauthorized)
 		wantErr.Payload = &models.Error{Data: nil}
 		assert.Equal(t, wantErr, gotErr)
 	})
@@ -295,7 +288,7 @@ func TestIntegration_GetAllOrders(t *testing.T) {
 		_, gotErr := client.Orders.GetAllOrders(params, common.AuthInfoFunc(&token))
 		require.Error(t, gotErr)
 
-		wantErr := orders.NewGetAllOrdersDefault(http.StatusInternalServerError)
+		wantErr := orders.NewGetAllOrdersDefault(http.StatusUnauthorized)
 		wantErr.Payload = &models.Error{Data: nil}
 		assert.Equal(t, wantErr, gotErr)
 	})
@@ -418,10 +411,9 @@ func setParameters(ctx context.Context, client *client.Be, auth runtime.ClientAu
 	}
 
 	location := int64(71)
-	amount := int64(1)
 	mdays := int64(10)
 	catName := "Том"
-	rDate := "2018"
+	rDate := int64(1520345133)
 
 	status, err := client.EquipmentStatusName.
 		GetEquipmentStatusName(eqStatusName.NewGetEquipmentStatusNameParamsWithContext(ctx).WithStatusID(1), auth)
@@ -468,12 +460,11 @@ func setParameters(ctx context.Context, client *client.Be, auth runtime.ClientAu
 		Category:         category.Payload.Data.ID,
 		Subcategory:      subCatInt64,
 		Location:         &location,
-		MaximumAmount:    &amount,
 		MaximumDays:      &mdays,
 		Name:             &catName,
 		NameSubstring:    "box",
 		PetKinds:         []int64{*cats.Payload.ID},
-		PetSize:          &petSize.Payload[0].ID,
+		PetSize:          petSize.Payload[0].ID,
 		PhotoID:          photo.Payload.Data.ID,
 		ReceiptDate:      &rDate,
 		Status:           &status.Payload.Data.ID,

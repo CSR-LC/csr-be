@@ -5,9 +5,9 @@ endif
 packagesToTest=$$(go list ./... | grep -v generated)
 
 setup:
-	go install github.com/go-swagger/go-swagger/cmd/swagger@v0.30.0
-	go install entgo.io/ent/cmd/ent@v0.11.2
-	go install github.com/vektra/mockery/v2@v2.15.0
+	go install github.com/go-swagger/go-swagger/cmd/swagger@v0.30.4
+	go install entgo.io/ent/cmd/ent@v0.11.8
+	go install github.com/vektra/mockery/v2@v2.20.2
 
 setup_alpine:
 	apk add --update --no-cache git build-base && rm -rf /var/cache/apk/*
@@ -22,7 +22,7 @@ generate/mocks: clean/mocks
 	mockery --all --case snake --dir ./pkg/domain --output ./internal/generated/mocks
 
 clean/swagger:
-	rm -rf ./internal/generated/swagger
+	cd ./internal/generated/swagger && rm -rfv '!("gethandlers.go")'
 
 generate/swagger: clean/swagger
 	swagger generate server -f ./swagger.yaml -s ./internal/generated/swagger/restapi -m ./internal/generated/swagger/models --exclude-main
@@ -57,7 +57,7 @@ coverage_total:
 int-test:
 	DOCKER_BUILDKIT=1  docker build -f ./int-test-infra/Dockerfile.int-test --network host --no-cache -t csr:int-test --target run .
 	$(MAKE) int-infra-up
-	go test -v -timeout 10m ./... -run Integration
+	$(MAKE) int-test-without-infra
 	$(MAKE) int-infra-down
 
 int-test-without-infra:
@@ -82,3 +82,10 @@ deploy_ssh:
 	ssh -o "StrictHostKeyChecking=no" -i ~/.ssh/ssh_deploy -p"${deploy_ssh_port}" "${deploy_ssh_user}@${deploy_ssh_host}" \
 	"sudo systemctl daemon-reload && sudo service ${env}.csr stop && cp ~/tmp_csr /var/www/csr/${env}/server && sudo service ${env}.csr start"
 
+rebuild_project:
+	git pull
+	docker-compose build csr
+start_project:
+	docker-compose up
+stop_project:
+	docker-compose down
