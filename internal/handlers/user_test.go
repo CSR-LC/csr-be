@@ -41,7 +41,7 @@ func TestSetUserHandler(t *testing.T) {
 	api := operations.NewBeAPI(swaggerSpec)
 	tokenManager := &mocks.TokenManager{}
 	registrationConfirm := &mocks.RegistrationConfirmService{}
-	SetUserHandler(logger, api, tokenManager, registrationConfirm)
+	SetUserHandler(logger, api, tokenManager, registrationConfirm, nil)
 
 	require.NotEmpty(t, api.UsersLoginHandler)
 	require.NotEmpty(t, api.UsersRefreshHandler)

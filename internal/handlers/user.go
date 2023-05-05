@@ -22,7 +22,8 @@ import (
 )
 
 func SetUserHandler(logger *zap.Logger, api *operations.BeAPI,
-	tokenManager domain.TokenManager, regConfirmService domain.RegistrationConfirmService) {
+	tokenManager domain.TokenManager,
+	regConfirmService domain.RegistrationConfirmService, changeEmailService domain.ChangeEmailService) {
 	userRepo := repositories.NewUserRepository()
 	userHandler := NewUser(logger)
 
@@ -39,7 +40,7 @@ func SetUserHandler(logger *zap.Logger, api *operations.BeAPI,
 	api.UsersDeleteCurrentUserHandler = userHandler.DeleteCurrentUser(userRepo)
 	api.UsersDeleteUserHandler = userHandler.DeleteUser(userRepo)
 	api.UsersUpdateReadonlyAccessHandler = userHandler.UpdateReadonlyAccess(userRepo)
-	api.UsersChangeEmailHandler = userHandler.ChangeEmail(userRepo)
+	api.UsersChangeEmailHandler = userHandler.ChangeEmail(userRepo, changeEmailService)
 }
 
 type User struct {
@@ -410,42 +411,43 @@ func (c User) UpdateReadonlyAccess(repo domain.UserRepository) users.UpdateReado
 	}
 }
 
-func (c User) ChangeEmail(repo domain.UserRepository) users.ChangeEmailHandlerFunc {
+func (c User) ChangeEmail(repo domain.UserRepository,
+	changeEmailService domain.ChangeEmailService) users.ChangeEmailHandlerFunc {
 	return func(p users.ChangeEmailParams, access interface{}) middleware.Responder {
 		ctx := p.HTTPRequest.Context()
 		userID, err := authentication.GetUserId(access)
 		if err != nil {
 			c.logger.Error("error while getting authorization during changing email", zap.Error(err))
-			return users.NewChangePasswordUnauthorized().
+			return users.NewChangeEmailUnauthorized().
 				WithPayload(buildStringPayload("Can't get authorization"))
 		}
 
 		if p.EmailPatch == nil {
 			c.logger.Error("email patch is nil", zap.Any("access", access))
-			return users.NewChangePasswordDefault(http.StatusBadRequest).
+			return users.NewChangeEmailDefault(http.StatusBadRequest).
 				WithPayload(buildStringPayload("Email patch is nil"))
 		}
 
 		requestedUser, err := repo.GetUserByID(ctx, userID)
 		if err != nil {
 			c.logger.Error("getting user for changing email failed", zap.Error(err))
-			return users.NewChangePasswordDefault(http.StatusInternalServerError).
+			return users.NewChangeEmailDefault(http.StatusInternalServerError).
 				WithPayload(buildStringPayload("Can't get user by id"))
 		}
 
 		if requestedUser.IsReadonly {
 			c.logger.Error("user is blocked", zap.Any("access", access))
-			return users.NewChangePasswordDefault(http.StatusForbidden).
+			return users.NewChangeEmailDefault(http.StatusForbidden).
 				WithPayload(&models.Error{Data: &models.ErrorData{Message: "User is blocked"}})
 		}
 
-		if err = repo.ChangeEmailByLogin(ctx, requestedUser.Login, p.EmailPatch.NewEmail); err != nil {
-			c.logger.Error("error while changing email", zap.Error(err))
-			return users.NewChangePasswordDefault(http.StatusInternalServerError).
-				WithPayload(buildStringPayload("Error while changing email"))
+		err = changeEmailService.SendEmailConfirmationLink(ctx, requestedUser.Login, p.EmailPatch.NewEmail)
+		if err != nil {
+			c.logger.Error("error while sending link for confirmation new email", zap.Error(err))
+			return users.NewChangeEmailDefault(http.StatusInternalServerError).
+				WithPayload(buildStringPayload("Can't send link for confirmation new email"))
 		}
 
-		// TODO: Add a check to ensure that the new email is confirmed.
 		return users.NewChangeEmailNoContent()
 	}
 }

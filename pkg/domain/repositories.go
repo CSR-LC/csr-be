@@ -96,6 +96,12 @@ type PasswordResetRepository interface {
 	DeleteToken(ctx context.Context, token string) error
 }
 
+type EmailConfirmRepository interface {
+	CreateToken(ctx context.Context, token string, ttl time.Time, userID int, email string) error
+	GetToken(ctx context.Context, token string) (*ent.EmailConfirm, error)
+	DeleteToken(ctx context.Context, token string) error
+}
+
 type PetKindRepository interface {
 	Create(ctx context.Context, ps models.PetKind) (*ent.PetKind, error)
 	GetByID(ctx context.Context, id int) (*ent.PetKind, error)
