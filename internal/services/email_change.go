@@ -57,11 +57,6 @@ func (e *emailChange) SendEmailConfirmationLink(ctx context.Context, login, emai
 		return err
 	}
 
-	// if !e.Sender.IsSendRequired() {
-	// 	e.logger.Info("change email service: confirmation link wasn't send to new email, sending parameter is set to false and send email is not required")
-	// } else {
-	// 	e.logger.Info("change email service: send confirmation link to new email")
-	// }
 	return nil
 }
 
@@ -96,10 +91,5 @@ func (e *emailChange) VerifyTokenAndChangeEmail(ctx context.Context, tokenToVeri
 			zap.String("token", tokenToVerify), zap.Error(errDelete),
 		)
 	}
-	// if !e.Sender.IsSendRequired() {
-	// 	e.logger.Info("password reset service: verified token, password wasn't send, sending parameter is set to false and send email is not required")
-	// } else {
-	// 	e.logger.Info("password reset service: verified token and send password")
-	// }
 	return nil
 }

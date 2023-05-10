@@ -1857,6 +1857,26 @@ paths:
           description: Unexpected error.
           schema:
             $ref: "#/definitions/Error"
+  /email_confirm/{token}:
+    get:
+      summary: Verify email confirmation token.
+      tags:
+        - Email_Confirm
+      operationId: VerifyEmailConfirmToken
+      parameters:
+        - name: token
+          in: path
+          required: true
+          type: string
+      responses:
+        200:
+          description: Success
+          schema:
+            $ref: "#/definitions/EmailConfirmResponse"
+        default:
+          description: Unexpected error.
+          schema:
+            $ref: "#/definitions/Error"
 
 definitions:
   SwaggerError: # Do not delete it. It is used for generating error responses.
@@ -2955,6 +2975,9 @@ definitions:
       data:
         $ref: "#/definitions/Login"
   RegistrationConfirmResponse:
+    type: string
+
+  EmailConfirmResponse:
     type: string
 
   Login:
