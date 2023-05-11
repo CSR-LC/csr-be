@@ -60,6 +60,7 @@ type UserTestSuite struct {
 	service             *mocks.TokenManager
 	user                *User
 	userRepository      *mocks.UserRepository
+	changeEmailService  *mocks.ChangeEmailService
 	registrationConfirm *mocks.RegistrationConfirmService
 }
 
@@ -72,6 +73,7 @@ func (s *UserTestSuite) SetupTest() {
 	s.service = &mocks.TokenManager{}
 	s.registrationConfirm = &mocks.RegistrationConfirmService{}
 	s.userRepository = &mocks.UserRepository{}
+	s.changeEmailService = &mocks.ChangeEmailService{}
 	s.user = NewUser(s.logger)
 }
 
@@ -1362,6 +1364,43 @@ func (s *UserTestSuite) TestUser_ChangePasswordFunc_OK() {
 
 	s.userRepository.On("GetUserByID", ctx, user.ID).Return(user, nil)
 	s.userRepository.On("ChangePasswordByLogin", ctx, user.Login, newPassword).Return(nil)
+
+	resp := handlerFunc(data, auth)
+	responseRecorder := httptest.NewRecorder()
+	producer := runtime.JSONProducer()
+	resp.WriteResponse(responseRecorder, producer)
+	require.Equal(t, http.StatusNoContent, responseRecorder.Code)
+	s.userRepository.AssertExpectations(t)
+}
+
+func (s *UserTestSuite) TestUser_ChangeEmailFunc_OK() {
+	t := s.T()
+	request := http.Request{}
+	ctx := request.Context()
+	handlerFunc := s.user.ChangeEmail(s.userRepository, s.changeEmailService)
+
+	id := 1
+	user := validUser(t, id)
+
+	testEmail := "test@email1"
+
+	data := users.ChangeEmailParams{
+		HTTPRequest: &request,
+		EmailPatch: &models.PatchEmailRequest{
+			NewEmail: testEmail,
+		},
+	}
+
+	auth := authentication.Auth{
+		Id:         id,
+		IsReadonly: false,
+		Role: &authentication.Role{
+			Slug: authentication.UserSlug,
+		},
+	}
+
+	s.userRepository.On("GetUserByID", ctx, user.ID).Return(user, nil)
+	s.changeEmailService.On("SendEmailConfirmationLink", ctx, user.Login, testEmail).Return(nil)
 
 	resp := handlerFunc(data, auth)
 	responseRecorder := httptest.NewRecorder()
