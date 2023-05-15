@@ -1410,6 +1410,44 @@ func (s *UserTestSuite) TestUser_ChangeEmailFunc_OK() {
 	s.userRepository.AssertExpectations(t)
 }
 
+func (s *UserTestSuite) TestUser_ChangeEmailFunc_Err() {
+	t := s.T()
+	request := http.Request{}
+	ctx := request.Context()
+	handlerFunc := s.user.ChangeEmail(s.userRepository, s.changeEmailService)
+
+	id := 1
+	user := validUser(t, id)
+
+	testEmail := "test@email1"
+
+	data := users.ChangeEmailParams{
+		HTTPRequest: &request,
+		EmailPatch: &models.PatchEmailRequest{
+			NewEmail: testEmail,
+		},
+	}
+
+	auth := authentication.Auth{
+		Id:         id,
+		IsReadonly: false,
+		Role: &authentication.Role{
+			Slug: authentication.UserSlug,
+		},
+	}
+
+	s.userRepository.On("GetUserByID", ctx, user.ID).Return(user, nil)
+	err := errors.New("unable to send email confirmation link")
+	s.changeEmailService.On("SendEmailConfirmationLink", ctx, user.Login, testEmail).Return(err)
+
+	resp := handlerFunc(data, auth)
+	responseRecorder := httptest.NewRecorder()
+	producer := runtime.JSONProducer()
+	resp.WriteResponse(responseRecorder, producer)
+	require.Equal(t, http.StatusInternalServerError, responseRecorder.Code)
+	s.userRepository.AssertExpectations(t)
+}
+
 func (s *UserTestSuite) TestUser_UpdateReadonlyAccess_Grant() {
 	t := s.T()
 

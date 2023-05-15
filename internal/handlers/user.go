@@ -435,12 +435,6 @@ func (c User) ChangeEmail(repo domain.UserRepository,
 				WithPayload(buildStringPayload("Can't get user by id"))
 		}
 
-		if requestedUser.IsReadonly {
-			c.logger.Error("user is blocked", zap.Any("access", access))
-			return users.NewChangeEmailDefault(http.StatusForbidden).
-				WithPayload(&models.Error{Data: &models.ErrorData{Message: "User is blocked"}})
-		}
-
 		err = changeEmailService.SendEmailConfirmationLink(ctx, requestedUser.Login, p.EmailPatch.NewEmail)
 		if err != nil {
 			c.logger.Error("error while sending link for confirmation new email", zap.Error(err))

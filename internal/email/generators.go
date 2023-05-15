@@ -19,8 +19,8 @@ func GenerateRegistrationConfirmMessage(userName, websiteUrl, token string) (str
 	return generateHtml(generateRegistrationConfirmMessage(userName, websiteUrl, token))
 }
 
-func GenerateNewEmailConfirmMessage(userName, websiteUrl, token string) (string, error) {
-	return generateHtml(generateNewEmailConfirmMessage(userName, websiteUrl, token))
+func GenerateEmailConfirmMessage(userName, websiteUrl, token string) (string, error) {
+	return generateHtml(generateEmailConfirmMessage(userName, websiteUrl, token))
 }
 
 func generateSendLinkReset(userName, websiteUrl, token string) hermes.Email {
@@ -90,7 +90,7 @@ func generateRegistrationConfirmMessage(userName, websiteUrl, token string) herm
 	}
 }
 
-func generateNewEmailConfirmMessage(userName, websiteUrl, token string) hermes.Email {
+func generateEmailConfirmMessage(userName, websiteUrl, token string) hermes.Email {
 	return hermes.Email{
 		Body: hermes.Body{
 			Name: userName,

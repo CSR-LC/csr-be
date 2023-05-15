@@ -35,8 +35,10 @@ func (e *emailChange) SendEmailConfirmationLink(ctx context.Context, login, emai
 	token := uuid.New().String()
 	user, err := e.UserRepository.UserByLogin(ctx, login)
 	if err != nil {
-		err = ErrUserNotFound
-		e.logger.Error("Error while getting user by login", zap.String("login", login), zap.Error(err))
+		e.logger.Error(
+			"Error while getting user by login", zap.String("login", login),
+			zap.Error(ErrUserNotFound),
+		)
 		return err
 	}
 

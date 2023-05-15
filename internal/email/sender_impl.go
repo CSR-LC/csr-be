@@ -107,7 +107,7 @@ func (c *sender) SendEmailConfirmationLink(email string, userName string, token 
 		return nil
 	}
 
-	text, err := GenerateNewEmailConfirmMessage(userName, c.websiteUrl, token)
+	text, err := GenerateEmailConfirmMessage(userName, c.websiteUrl, token)
 	if err != nil {
 		return fmt.Errorf("cant generate message for new email confirmation  %w", err)
 	}
