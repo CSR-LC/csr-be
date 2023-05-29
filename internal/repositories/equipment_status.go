@@ -127,13 +127,12 @@ func (r *equipmentStatusRepository) GetUnavailableEquipmentStatusByEquipmentID(
 		Where(equipmentstatus.HasEquipmentsWith(equipment.IDEQ(equipmentID))).
 		Where(
 			equipmentstatus.Or(
-				equipmentstatus.HasEquipmentStatusNameWith(equipmentstatusname.IDEQ(2)), // booked
-				equipmentstatus.HasEquipmentStatusNameWith(equipmentstatusname.IDEQ(3)), // in use
-				equipmentstatus.HasEquipmentStatusNameWith(equipmentstatusname.IDEQ(4)), // not available
+				equipmentstatus.HasEquipmentStatusNameWith(equipmentstatusname.NameEQ(domain.EquipmentStatusBooked)),
+				equipmentstatus.HasEquipmentStatusNameWith(equipmentstatusname.NameEQ(domain.EquipmentStatusInUse)),
+				equipmentstatus.HasEquipmentStatusNameWith(equipmentstatusname.NameEQ(domain.EquipmentStatusNotAvailable)),
 			)).
 		Where(equipmentstatus.EndDateGTE(time.Now())).
 		All(ctx)
-
 }
 
 func (r *equipmentStatusRepository) HasStatusByPeriod(ctx context.Context, status string, eqID int,
