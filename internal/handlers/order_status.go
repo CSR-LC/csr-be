@@ -241,6 +241,7 @@ func (h *OrderStatus) AddNewStatusToOrder(
 			}
 
 			if currentOrderStatus.Edges.OrderStatusName.Status == domain.OrderStatusApproved ||
+				currentOrderStatus.Edges.OrderStatusName.Status == domain.OrderStatusBlocked ||
 				currentOrderStatus.Edges.OrderStatusName.Status == domain.OrderStatusPrepared &&
 					userRole == roles.Manager {
 				if len(orderEquipmentStatuses) != 0 {
