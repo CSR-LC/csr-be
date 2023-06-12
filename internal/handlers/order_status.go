@@ -437,7 +437,7 @@ func canRoleChangeStatus(role string, currentStatus *ent.OrderStatus, newStatus 
 	case domain.OrderStatusApproved:
 		switch newStatus {
 		case domain.OrderStatusPrepared:
-			return role == roles.Operator
+			return role == roles.Operator || role == roles.Admin
 		case domain.OrderStatusClosed:
 			return role == roles.Manager
 		}
@@ -454,6 +454,12 @@ func canRoleChangeStatus(role string, currentStatus *ent.OrderStatus, newStatus 
 		if newStatus == domain.OrderStatusClosed {
 			return role == roles.Manager || role == roles.Operator
 		}
+
+	case domain.OrderStatusBlocked:
+		if newStatus == domain.OrderStatusClosed {
+			return role == roles.Manager
+		}
+
 	}
 
 	return role == roles.Admin ||
