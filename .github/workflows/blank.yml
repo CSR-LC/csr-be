@@ -17,12 +17,16 @@ jobs:
           coverage_result: '/total:\s+\(statements\)\s+(\d+.\d+)\%/'
         run: |
           set -e
+          fail() {
+            echo "$1"
+            exit 1
+          }
+
           apk add --update --no-cache make
           make setup_alpine && make setup && make generate
           go test $(go list ./... | grep -v generated) -race -coverprofile=coverage.out -short
           make coverage && coverage_total=$(make coverage_total | tail -n1 | awk '{print $1}')
-          echo "Coverage total: $coverage_total%"
-          if (( $(echo "$min_coverage > $coverage_total" | bc -l) )); then echo "Coverage below requirement: $min_coverage%" && exit 1; fi
+          (( $(echo "$min_coverage > $coverage_total" | bc -l) )) && fail "Coverage below requirement: $min_coverage%"
 
           failed=0
           function_min_coverage=1
