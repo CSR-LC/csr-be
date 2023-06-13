@@ -22,7 +22,7 @@ jobs:
           go test $(go list ./... | grep -v generated) -race -coverprofile=coverage.out -short
           make coverage && coverage_total=$(make coverage_total | tail -n1) && echo $coverage_total
           if [ $min_coverage -gt $coverage_total ]; then exit 1; else echo "unit tests OK"; fi
-          
+
           failed=0
           function_min_coverage=1
           make coverage | tail -n +2 | while read -r line ;
@@ -99,6 +99,6 @@ jobs:
           script: |
             mkdir -p /var/www/csr/stage/
             echo '${{ secrets.DEPLOY_CONFIG }}' > /var/www/csr/stage/config.json
-            sudo systemctl daemon-reload && sudo service stage.csr stop  
-            cp ~/csr /var/www/csr/stage/server 
+            sudo systemctl daemon-reload && sudo service stage.csr stop
+            cp ~/csr /var/www/csr/stage/server
             sudo service stage.csr start
