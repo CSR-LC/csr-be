@@ -20,8 +20,8 @@ jobs:
           apk add --update --no-cache make
           make setup_alpine && make setup && make generate
           go test $(go list ./... | grep -v generated) -race -coverprofile=coverage.out -short
-          make coverage && coverage_total=$(make coverage_total | tail -n1) && echo $coverage_total
-          if [ $min_coverage -gt $coverage_total ]; then exit 1; else echo "unit tests OK"; fi
+          make coverage && coverage_total=$(make coverage_total | tail -n1 | awk '{print $1}')
+          if (( $(echo "$min_coverage > $coverage_total" | bc -l) )); then exit 1; else echo "unit tests OK"; fi
 
           failed=0
           function_min_coverage=1
