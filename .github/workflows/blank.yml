@@ -17,27 +17,28 @@ jobs:
           coverage_result: '/total:\s+\(statements\)\s+(\d+.\d+)\%/'
         run: |
           set -e
-          fail() {
-            echo "$1"
-            exit 1
-          }
-
           apk add --update --no-cache make
           make setup_alpine && make setup && make generate
           go test $(go list ./... | grep -v generated) -race -coverprofile=coverage.out -short
           make coverage && coverage_total=$(make coverage_total | tail -n1 | awk '{print $1}')
-          (( $(echo "$min_coverage > $coverage_total" | bc -l) )) && fail "Coverage below requirement: $min_coverage%"
+          if (( $(echo "$min_coverage > $coverage_total" | bc -l) )); then
+            echo "Coverage below $min_coverage% requirement";
+            echo "Total coverage: $coverage_total%";
+            exit 1
+          else
+            echo "unit tests OK";
+          fi
 
           failed=0
           function_min_coverage=1
-          make coverage | tail -n +2 | while read -r line ;
+          while read -r line ;
           do
             function_coverage=$(echo $line | awk '{ print $3 }' | sed 's/[^0-9\.]*//g')
             if awk 'BEGIN {exit !('$function_min_coverage' > '$function_coverage')}';
             then echo "low coverage ($function_coverage/$function_min_coverage) - $line";
             failed=1; fi;
-          done;
-          test -n "$failed" && echo 'check functions coverage!'
+          done < <(make coverage | tail -n +2)
+          if [ "$failed" -eq 1 ]; then echo 'check functions coverage!'; fi
   lint:
     runs-on: ubuntu-latest
     container: registry.gitlab.com/gitlab-org/gitlab-build-images:golangci-lint-alpine
