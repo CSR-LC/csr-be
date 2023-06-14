@@ -25,6 +25,7 @@ jobs:
 
           if (( $(awk 'BEGIN {print ("'$min_coverage'" > "'$coverage_total'")}') )); then
               echo "Coverage $coverage_total is below the minimum coverage $min_coverage"
+              echo "::error ::Coverage $coverage_total is below the minimum coverage $min_coverage"
               exit 1
           else
               echo "unit tests OK"
