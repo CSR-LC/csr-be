@@ -23,7 +23,7 @@ jobs:
           coverage_total=$(make coverage_total | tail -n1 | awk '{print $1}')
           echo "Total coverage: $coverage_total"
 
-          if (( $(echo "$min_coverage > $coverage_total" | bc -l) )); then
+          if [ $(echo "$min_coverage > $coverage_total" | bc -l) -eq 1 ]; then
               echo "Coverage $coverage_total is below the minimum coverage $min_coverage"
               exit 1
           else
