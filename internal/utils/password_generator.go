@@ -2,15 +2,12 @@ package utils
 
 import (
 	"crypto/rand"
-	"fmt"
 	"math/big"
 
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/pkg/domain"
 )
 
 const (
-	MinPasswordLen                    = 8
-	MaxPasswordLen                    = 32
 	AllowedRandomResetPasswordSymbols = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 )
 
@@ -19,12 +16,6 @@ type passwordGenerator struct {
 }
 
 func NewPasswordGenerator(length int) (domain.PasswordGenerator, error) {
-	if length < MinPasswordLen {
-		return nil, fmt.Errorf("password length must be at least %d", MinPasswordLen)
-	}
-	if length > MaxPasswordLen {
-		return nil, fmt.Errorf("password length must be at most %d", MaxPasswordLen)
-	}
 	return &passwordGenerator{length: length}, nil
 }
 

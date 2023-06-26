@@ -6,18 +6,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestNewPasswordGenerator_PasswordLengthTooLow(t *testing.T) {
-	generator, err := NewPasswordGenerator(1)
-	require.Error(t, err)
-	require.Nil(t, generator)
-}
-
-func TestNewPasswordGenerator_PasswordLengthTooBig(t *testing.T) {
-	generator, err := NewPasswordGenerator(33)
-	require.Error(t, err)
-	require.Nil(t, generator)
-}
-
 func TestNewPasswordGenerator_OK(t *testing.T) {
 	generator, err := NewPasswordGenerator(10)
 	require.NoError(t, err)
