@@ -35,6 +35,7 @@ func SetOrderStatusHandler(logger *zap.Logger, api *operations.BeAPI) (domain.Or
 	api.OrdersAddNewOrderStatusHandler = orderStatusHandler.AddNewStatusToOrder(orderStatusRepo, equipmentStatusRepo)
 	api.OrdersGetFullOrderHistoryHandler = orderStatusHandler.OrderStatusesHistory(orderStatusRepo)
 	api.OrdersGetAllStatusNamesHandler = orderStatusHandler.GetAllStatusNames(orderStatusNameRepo)
+	api.OrdersGetOrdersByFilterHandler = orderStatusHandler.GetOrdersByActiveFilter(orderFilterRepo)
 	return orderStatusRepo, orderFilterRepo, equipmentStatusRepo
 }
 
@@ -352,6 +353,51 @@ func (h *OrderStatus) GetOrdersByPeriodAndStatus(repository domain.OrderReposito
 			Total: &totalOrders,
 		}
 		return orders.NewGetOrdersByDateAndStatusOK().WithPayload(listOrders)
+
+	}
+}
+
+// GetOrdersByFilter receive orders by filter: active orders, completed orders, all orders
+// active orders: in review, approved, overdue, in progress, prepared
+// completed orders: rejected, blocked, closed
+func (h *OrderStatus) GetOrdersByActiveFilter(repository domain.OrderRepositoryWithFilter) orders.GetOrdersByFilterHandlerFunc {
+	return func(params orders.GetOrdersByFilterParams, principal *models.Principal) middleware.Responder {
+		ctx := params.HTTPRequest.Context()
+		if params.OrderFilter != "all" && params.OrderFilter != "active" &&
+			params.OrderFilter != "completed" {
+			h.logger.Error("GetOrdersByActiveFilter error", zap.Error(errors.New("wrong filter type")))
+			return orders.NewGetOrdersByFilterDefault(http.StatusInternalServerError).
+				WithPayload(buildStringPayload(
+					"Wrong filter type. Filter should contains: 'all' or 'completed' or 'active'"),
+				)
+		}
+
+		userID := int(principal.ID)
+		ordersFromDatabase, err := repository.GetOrdersByActiveFilter(ctx, userID, params.OrderFilter)
+		if err != nil {
+			h.logger.Error("GetOrdersByFilter error", zap.Error(err))
+			return orders.NewGetOrdersByFilterDefault(http.StatusInternalServerError).
+				WithPayload(buildStringPayload("Can't get orders by provided filter"))
+		}
+
+		fmt.Println("ordersFromDatabase11111", ordersFromDatabase)
+		ordersResult := make([]*models.Order, len(ordersFromDatabase))
+		for index, order := range ordersFromDatabase {
+			tmpOrder, errMap := mapOrder(order, h.logger)
+			if errMap != nil {
+				h.logger.Error("GetOrdersByActiveFilter error", zap.Error(errMap))
+				return orders.NewGetOrdersByFilterDefault(http.StatusInternalServerError).
+					WithPayload(buildStringPayload("Can't map order"))
+			}
+			ordersResult[index] = tmpOrder
+		}
+
+		totalOrders := int64(len(ordersFromDatabase))
+		listOrders := &models.OrderList{
+			Items: ordersResult,
+			Total: &totalOrders,
+		}
+		return orders.NewGetOrdersByFilterOK().WithPayload(listOrders)
 
 	}
 }

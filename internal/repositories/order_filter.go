@@ -3,14 +3,17 @@ package repositories
 import (
 	"context"
 	"errors"
+	"fmt"
 	"time"
 
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/ent"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/ent/order"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/ent/orderstatus"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/ent/orderstatusname"
+	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/ent/user"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/middlewares"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/utils"
+	"git.epam.com/epm-lstr/epm-lstr-lc/be/pkg/domain"
 )
 
 type orderFilterRepository struct {
@@ -47,6 +50,189 @@ func (r *orderFilterRepository) OrdersByPeriodAndStatusTotal(ctx context.Context
 		Where(orderstatus.CurrentDateGT(from)).
 		Where(orderstatus.CurrentDateLTE(to)).
 		Count(ctx)
+}
+
+func (r *orderFilterRepository) GetOrdersByActiveFilter(ctx context.Context, ownerId int,
+	filter string) ([]*ent.Order, error) {
+	fmt.Println("receiving orders by filter111111111111111111111 ")
+	tx, err := middlewares.TxFromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	switch filter {
+	case "all":
+		fmt.Println("receiving ALL orders.........")
+
+		result, err := tx.Order.Query().
+			Where(order.HasUsersWith(user.ID(ownerId))).
+			WithUsers().WithOrderStatus().WithEquipments().
+			All(ctx)
+		if err != nil {
+			return nil, err
+		}
+
+		return result, nil
+
+	case "active":
+		fmt.Println("receiving ACTIVE orders.........")
+		// result, err := tx.Order.Query().
+		// 	Where(order.HasUsersWith(user.ID(ownerId))).
+		// 	Where(
+		// 		order.Or(
+		// 			order.HasOrderStatusWith(
+		// 				orderstatus.
+		// 					HasOrderStatusNameWith(orderstatusname.StatusEQ(domain.OrderStatusInReview)),
+		// 			),
+		// 			order.HasOrderStatusWith(
+		// 				orderstatus.
+		// 					HasOrderStatusNameWith(orderstatusname.StatusEQ(domain.OrderStatusInProgress)),
+		// 			),
+		// 			order.HasOrderStatusWith(
+		// 				orderstatus.
+		// 					HasOrderStatusNameWith(orderstatusname.StatusEQ(domain.OrderStatusApproved)),
+		// 			),
+		// 			order.HasOrderStatusWith(
+		// 				orderstatus.
+		// 					HasOrderStatusNameWith(orderstatusname.StatusEQ(domain.OrderStatusOverdue)),
+		// 			),
+		// 			order.HasOrderStatusWith(
+		// 				orderstatus.
+		// 					HasOrderStatusNameWith(orderstatusname.StatusEQ(domain.OrderStatusPrepared)),
+		// 			),
+		// 		),
+		// 	).
+		// 	WithUsers().WithOrderStatus().WithEquipments().
+		// 	All(ctx)
+
+		fmt.Println("ownerID", ownerId)
+		result, err := tx.Order.Query().
+			Where(order.HasUsersWith(user.ID(ownerId))).
+			Where(
+				order.HasOrderStatusWith(
+					orderstatus.
+						HasOrderStatusNameWith(orderstatusname.StatusEQ(domain.OrderStatusInReview)),
+				),
+			).
+			WithUsers().WithOrderStatus().WithEquipments().
+			All(ctx)
+
+		// result, err := tx.Order.Query().
+		// 	Where(order.HasUsersWith(user.ID(ownerId))).
+		// 	Where(
+		// 		order.HasOrderStatusWith(
+		// 			orderstatus.
+		// 				HasOrderStatusNameWith(orderstatusname.StatusEQ(domain.OrderStatusInReview)),
+		// 		),
+		// 	).Order(ent.Desc("current_date")).First(ctx).
+		// 	WithUsers().WithOrderStatus().WithEquipments().
+		// 	All(ctx)
+
+		if err != nil {
+			return nil, err
+		}
+
+		// var resultEND []*ent.Order
+		// // owner := o.Edges.Users
+		// for _, value := range result {
+		// 	// var statusToOrder *models.OrderStatus
+		// 	allStatuses := value.Edges.OrderStatus
+		// 	fmt.Println("allStatusess", allStatuses)
+		// 	fmt.Println("value.Edges.OrderStatus", value.Edges.OrderStatus)
+		// 	if len(allStatuses) != 0 {
+		// 		lastStatus := allStatuses[0]
+		// 		fmt.Println("lastStatus", lastStatus)
+		// 		if lastStatus.ID == 1 {
+		// 			resultEND = append(resultEND, value)
+		// 		}
+		// 		// for _, s := range allStatuses {
+		// 		// 	if lastStatus != domain.OrderStatusInReview {
+
+		// 		// 	}
+		// 		// 	if s.CurrentDate.After(lastStatus.CurrentDate) {
+		// 		// 		lastStatus = s
+		// 		// 	}
+		// 		// }
+		// 		// mappedStatus, err := MapStatus(id, lastStatus)
+		// 		// if err != nil {
+		// 		// 	log.Error("failed to map status", zap.Error(err))
+		// 		// 	return nil, err
+		// 		// }
+		// 		// statusToOrder = mappedStatus
+		// 	}
+		// }
+
+		// return resultEND, nil
+		return result, nil
+
+	case "completed":
+		fmt.Println("receiving COMPLETED orders.........")
+
+		result, err := tx.Order.Query().
+			Where(order.HasUsersWith(user.ID(ownerId))).
+			Where(
+				order.Or(
+					order.HasOrderStatusWith(
+						orderstatus.
+							HasOrderStatusNameWith(orderstatusname.StatusEQ(domain.OrderStatusRejected)),
+					),
+					order.HasOrderStatusWith(
+						orderstatus.
+							HasOrderStatusNameWith(orderstatusname.StatusEQ(domain.OrderStatusBlocked)),
+					),
+					order.HasOrderStatusWith(
+						orderstatus.
+							HasOrderStatusNameWith(orderstatusname.StatusEQ(domain.OrderStatusClosed)),
+					),
+				),
+			).
+			WithUsers().WithOrderStatus().WithEquipments().
+			All(ctx)
+
+		if err != nil {
+			return nil, err
+		}
+
+		return result, nil
+
+	default:
+		return nil, nil
+	}
+
+	// result, err := tx.Order.Query().
+	// 	Where(order.HasUsersWith(user.ID(ownerId))).
+	// 	Where(
+	// 		order.Or(
+	// 			// order.HasOrderStatusWith(
+	// 			// 	orderstatus.
+	// 			// 		HasOrderStatusNameWith(orderstatusname.StatusEQ(domain.OrderStatusInReview)),
+	// 			// ),
+	// 			order.HasOrderStatusWith(
+	// 				orderstatus.
+	// 					HasOrderStatusNameWith(orderstatusname.StatusEQ(domain.OrderStatusRejected)),
+	// 			),
+
+	// 			order.HasOrderStatusWith(
+	// 				orderstatus.
+	// 					HasOrderStatusNameWith(orderstatusname.StatusEQ(domain.OrderStatusClosed)),
+	// 			),
+	// 		),
+	// 	).
+	// 	WithUsers().WithOrderStatus().WithEquipments().
+	// 	All(ctx)
+
+	// if err != nil {
+	// 	return nil, err
+	// }
+
+	fmt.Println("status111")
+
+	// result, err := tx.OrderStatus.Query().
+	// Where(predicate.OrderStatus(orderstatusname.StatusIn(statuses...))).
+	// All(ctx)
+
+	return nil, nil
+
 }
 
 func (r *orderFilterRepository) OrdersByPeriodAndStatus(ctx context.Context, from, to time.Time, status string,

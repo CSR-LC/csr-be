@@ -1326,6 +1326,33 @@ paths:
           description: Unexpected error.
           schema:
             $ref: '#/definitions/Error'
+  /v1/orders/filter={order_filter}:
+    get:
+      summary: Get orders type.
+      tags:
+        - Orders
+      security:
+        - Bearer: [ ]
+      parameters:
+        - name: order_filter
+          in: path
+          required: true
+          description: Possible values all, active, completed
+          type: string
+      operationId: GetOrdersByFilter
+      responses:
+        200:
+          description: Success
+          schema:
+            $ref: "#/definitions/OrderList"
+        404:
+          description: No orders found
+          schema:
+            type: string
+        default:
+          description: Unexpected error.
+          schema:
+            $ref: '#/definitions/Error'
   /v1/status_names:
     get:
       summary: Get all status names.

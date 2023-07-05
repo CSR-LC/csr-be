@@ -78,6 +78,7 @@ type OrderRepositoryWithFilter interface {
 	OrdersByPeriodAndStatus(ctx context.Context, from, to time.Time, status string, limit, offset int,
 		orderBy, orderColumn string) ([]*ent.Order, error)
 	OrdersByPeriodAndStatusTotal(ctx context.Context, from, to time.Time, status string) (int, error)
+	GetOrdersByActiveFilter(ctx context.Context, ownerId int, filter string) ([]*ent.Order, error)
 }
 
 type OrderStatusRepository interface {

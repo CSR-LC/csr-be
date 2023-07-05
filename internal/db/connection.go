@@ -24,6 +24,7 @@ func GetDB(cfg config.DB) (*ent.Client, *sql.DB, error) {
 
 	opts := []ent.Option{
 		ent.Driver(entsql.OpenDB(dialect.Postgres, db)),
+		// ent.Debug(),
 	}
 
 	if cfg.ShowSql {
@@ -34,3 +35,5 @@ func GetDB(cfg config.DB) (*ent.Client, *sql.DB, error) {
 
 	return entClient, db, nil
 }
+
+// SELECT o.*, os.* FROM orders o JOIN LATERAL (SELECT * FROM order_status WHERE order_order_status = o.id AND DATE(current_date) = (SELECT MAX(DATE(current_date)) FROM order_status WHERE order_order_status = o.id) ORDER BY id DESC LIMIT 1) os ON TRUE WHERE os.order_status_name_order_status = 'In Review';
