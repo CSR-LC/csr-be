@@ -30,6 +30,7 @@ func SetEquipmentHandler(logger *zap.Logger, api *operations.BeAPI) {
 	api.EquipmentEditEquipmentHandler = equipmentHandler.EditEquipmentFunc(eqRepo)
 	api.EquipmentFindEquipmentHandler = equipmentHandler.FindEquipmentFunc(eqRepo)
 	api.EquipmentArchiveEquipmentHandler = equipmentHandler.ArchiveEquipmentFunc(eqRepo)
+	api.EquipmentBlockEquipmentHandler = equipmentHandler.BlockEquipmentFunc(eqRepo)
 }
 
 type Equipment struct {
@@ -103,6 +104,28 @@ func (c Equipment) ArchiveEquipmentFunc(repository domain.EquipmentRepository) e
 				WithPayload(buildStringPayload("Error while archiving equipment"))
 		}
 		return equipment.NewArchiveEquipmentNoContent()
+	}
+}
+
+func (c Equipment) BlockEquipmentFunc(
+	repository domain.EquipmentRepository) equipment.BlockEquipmentHandlerFunc {
+	return func(s equipment.BlockEquipmentParams, _ *models.Principal) middleware.Responder {
+		ctx := s.HTTPRequest.Context()
+		err := repository.BlockEquipment(
+			ctx, int(s.EquipmentID), time.Time(s.Data.StartDate), time.Time(s.Data.EndDate),
+		)
+		if err != nil {
+			if ent.IsNotFound(err) {
+				return equipment.NewBlockEquipmentNotFound().
+					WithPayload(buildStringPayload(EquipmentNotFoundMsg))
+			}
+
+			c.logger.Error("Error while blocking equipment", zap.Error(err))
+			return equipment.NewBlockEquipmentDefault(http.StatusInternalServerError).
+				WithPayload(buildStringPayload("Error while blocking equipment"))
+		}
+
+		return equipment.NewBlockEquipmentNoContent()
 	}
 }
 

@@ -3,6 +3,7 @@ package repositories
 import (
 	"context"
 	"errors"
+	"fmt"
 	"time"
 
 	"entgo.io/ent/dialect/sql"
@@ -10,6 +11,7 @@ import (
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/ent"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/ent/category"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/ent/equipment"
+	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/ent/equipmentstatus"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/ent/equipmentstatusname"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/ent/order"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/ent/orderstatusname"
@@ -270,6 +272,103 @@ func (r *equipmentRepository) ArchiveEquipment(ctx context.Context, id int) erro
 	}
 	// change equipment status to archived
 	_, err = tx.Equipment.UpdateOneID(id).SetCurrentStatus(equipmentStatusArchived).Save(ctx)
+	return err
+}
+
+func (r *equipmentRepository) BlockEquipment(ctx context.Context,
+	id int, startDate, endDate time.Time) error {
+	tx, err := middlewares.TxFromContext(ctx)
+	if err != nil {
+		return err
+	}
+	// check if equipment exists
+	_, err = tx.Equipment.Get(ctx, id)
+	if err != nil {
+		return err
+	}
+	// get equipment status not available
+	equipmentStatusNotAvailable, err := tx.EquipmentStatusName.Query().
+		Where(
+			equipmentstatusname.Name(domain.EquipmentStatusNotAvailable),
+		).Only(ctx)
+	if err != nil {
+		return err
+	}
+
+	// get equipment status and change it to not available
+	equipmentStatuses, err := tx.EquipmentStatus.Query().
+		Where(
+			equipmentstatus.EndDateLTE(endDate),
+			equipmentstatus.StartDateGTE(startDate),
+		).
+		QueryEquipments().
+		Where(equipment.ID(id)).
+		QueryEquipmentStatus().
+		All(ctx)
+	if err != nil {
+		return err
+	}
+	fmt.Println("equipmentStatuses", equipmentStatuses)
+	// if this equipment is not in order, then change status to not available
+	if len(equipmentStatuses) == 0 {
+		_, err = tx.Equipment.UpdateOneID(id).
+			SetCurrentStatus(equipmentStatusNotAvailable).
+			Save(ctx)
+		return err
+	}
+	// if this equipment is in order, then not available equipment status
+	for _, equipmentStatus := range equipmentStatuses {
+		_, err = equipmentStatus.Update().
+			SetEquipmentStatusNameID(
+				equipmentStatusNotAvailable.ID,
+			).Save(ctx)
+		if err != nil {
+			return err
+		}
+		// get orders with this equipment status
+		var ordersToUpdate = []*ent.Order{}
+		ordersToUpdate, err = equipmentStatus.QueryOrder().All(ctx)
+		if err != nil {
+			return err
+		}
+
+		fmt.Println("ordersToUpdate", ordersToUpdate)
+
+		// get blocked order status id
+		orderStatusBlocked, err := tx.OrderStatusName.Query().
+			Where(
+				orderstatusname.Status(domain.OrderStatusBlocked),
+			).
+			Only(ctx)
+		if err != nil {
+			return err
+		}
+
+		// change all order statuses to blocked
+		for _, orderToUpdate := range ordersToUpdate {
+			var orderStatusesToUpdate = []*ent.OrderStatus{}
+			orderStatusesToUpdate, err = tx.OrderStatus.Query().
+				QueryOrder().
+				Where(order.ID(orderToUpdate.ID)).
+				QueryOrderStatus().All(ctx)
+			if err != nil {
+				return err
+			}
+
+			for _, orderStatusToUpdate := range orderStatusesToUpdate {
+				_, err = orderStatusToUpdate.Update().
+					SetOrderStatusNameID(orderStatusBlocked.ID).
+					Save(ctx)
+				if err != nil {
+					return err
+				}
+			}
+		}
+	}
+	// change equipment status to not available
+	_, err = tx.Equipment.UpdateOneID(id).
+		SetCurrentStatus(equipmentStatusNotAvailable).
+		Save(ctx)
 	return err
 }
 
