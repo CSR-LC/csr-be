@@ -3,7 +3,6 @@ package repositories
 import (
 	"context"
 	"errors"
-	"fmt"
 	"time"
 
 	"entgo.io/ent/dialect/sql"
@@ -298,8 +297,8 @@ func (r *equipmentRepository) BlockEquipment(ctx context.Context,
 	// get equipment status and change it to not available
 	equipmentStatuses, err := tx.EquipmentStatus.Query().
 		Where(
-			equipmentstatus.EndDateLTE(endDate),
-			equipmentstatus.StartDateGTE(startDate),
+			equipmentstatus.EndDateGTE(startDate),
+			equipmentstatus.StartDateLTE(endDate),
 		).
 		QueryEquipments().
 		Where(equipment.ID(id)).
@@ -308,7 +307,7 @@ func (r *equipmentRepository) BlockEquipment(ctx context.Context,
 	if err != nil {
 		return err
 	}
-	fmt.Println("equipmentStatuses", equipmentStatuses)
+
 	// if this equipment is not in order, then change status to not available
 	if len(equipmentStatuses) == 0 {
 		_, err = tx.Equipment.UpdateOneID(id).
@@ -331,8 +330,6 @@ func (r *equipmentRepository) BlockEquipment(ctx context.Context,
 		if err != nil {
 			return err
 		}
-
-		fmt.Println("ordersToUpdate", ordersToUpdate)
 
 		// get blocked order status id
 		orderStatusBlocked, err := tx.OrderStatusName.Query().
