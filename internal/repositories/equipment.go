@@ -10,7 +10,6 @@ import (
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/ent"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/ent/category"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/ent/equipment"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/ent/equipmentstatus"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/ent/equipmentstatusname"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/ent/order"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/ent/orderstatusname"
@@ -296,10 +295,6 @@ func (r *equipmentRepository) BlockEquipment(ctx context.Context,
 
 	// get equipment status and change it to not available
 	equipmentStatuses, err := tx.EquipmentStatus.Query().
-		Where(
-			equipmentstatus.EndDateGTE(startDate),
-			equipmentstatus.StartDateLTE(endDate),
-		).
 		QueryEquipments().
 		Where(equipment.ID(id)).
 		QueryEquipmentStatus().
@@ -318,9 +313,10 @@ func (r *equipmentRepository) BlockEquipment(ctx context.Context,
 	// if this equipment is in order, then not available equipment status
 	for _, equipmentStatus := range equipmentStatuses {
 		_, err = equipmentStatus.Update().
-			SetEquipmentStatusNameID(
-				equipmentStatusNotAvailable.ID,
-			).Save(ctx)
+			SetEquipmentStatusNameID(equipmentStatusNotAvailable.ID).
+			SetStartDate(startDate).
+			SetEndDate(endDate).
+			Save(ctx)
 		if err != nil {
 			return err
 		}
