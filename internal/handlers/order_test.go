@@ -3,6 +3,7 @@ package handlers
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"math"
 	"net/http"
 	"net/http/httptest"
@@ -129,6 +130,35 @@ func (s *orderTestSuite) TestOrder_ListOrder_RepoErr() {
 	producer := runtime.JSONProducer()
 	resp.WriteResponse(responseRecorder, producer)
 	require.Equal(t, http.StatusInternalServerError, responseRecorder.Code)
+}
+
+func (s *orderTestSuite) TestOrder_ListOrder_WrongStatus() {
+	t := s.T()
+	request := http.Request{}
+	userID := 1
+	st := "qwe"
+
+	handlerFunc := s.orderHandler.ListOrderFunc(s.orderRepository)
+	data := orders.GetAllOrdersParams{
+		HTTPRequest: &request,
+		Status:      &st,
+	}
+
+	principal := &models.Principal{ID: int64(userID)}
+	resp := handlerFunc.Handle(data, principal)
+
+	responseRecorder := httptest.NewRecorder()
+	producer := runtime.JSONProducer()
+	resp.WriteResponse(responseRecorder, producer)
+
+	var response models.Error
+	err := json.Unmarshal(responseRecorder.Body.Bytes(), &response)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	require.Equal(t, http.StatusBadRequest, responseRecorder.Code)
+	require.Equal(t, fmt.Sprintf("Invalid order status '%v'", st), response.Data.Message)
 }
 
 func (s *orderTestSuite) TestOrder_ListOrder_MapErr() {

@@ -665,6 +665,144 @@ func (s *OrderSuite) TestOrderRepository_List_Offset() {
 	require.Greater(t, len(s.orders), len(orders))
 }
 
+func (s *OrderSuite) TestOrderRepository_Update_OK() {
+	t := s.T()
+	ctx := s.ctx
+	crtx, err := s.client.Tx(ctx)
+	require.NoError(t, err)
+	ctx = context.WithValue(ctx, middlewares.TxContextKey, crtx)
+
+	description := "test"
+	eqID := int64(1)
+	startDate := strfmt.DateTime(time.Now().UTC())
+	endDate := strfmt.DateTime(time.Now().UTC().Add(time.Hour * 24 * 5))
+	data := &models.OrderCreateRequest{
+		Description: description,
+		EquipmentID: &eqID,
+		RentEnd:     &endDate,
+		RentStart:   &startDate,
+	}
+	createdOrder, err := s.orderRepository.Create(ctx, data, s.user.ID, []int{s.equipments[0].ID})
+	require.NoError(t, err)
+	require.NoError(t, crtx.Commit())
+
+	tx, err := s.client.Tx(ctx)
+	require.NoError(t, err)
+	ctx = context.WithValue(ctx, middlewares.TxContextKey, tx)
+	newDesc := "new desc"
+	newStartDate := strfmt.DateTime(time.Now().UTC())
+	newEndDate := strfmt.DateTime(time.Now().UTC().Add(time.Hour * 24 * 10))
+	newQuantity := int64(1)
+	req := &models.OrderUpdateRequest{
+		Description: &newDesc,
+		Quantity:    &newQuantity,
+		RentStart:   &newStartDate,
+		RentEnd:     &newEndDate,
+	}
+	updated, err := s.orderRepository.Update(ctx, createdOrder.ID, req, s.user.ID)
+	require.NoError(t, err)
+	require.NoError(t, tx.Commit())
+	require.Equal(t, newDesc, updated.Description)
+	require.Equal(t, newEndDate, strfmt.DateTime(updated.RentEnd))
+	require.Equal(t, newStartDate, strfmt.DateTime(updated.RentStart))
+}
+
+func (s *OrderSuite) TestOrderRepository_Update_MissingOrder() {
+	t := s.T()
+	ctx := s.ctx
+	tx, err := s.client.Tx(ctx)
+	require.NoError(t, err)
+	ctx = context.WithValue(ctx, middlewares.TxContextKey, tx)
+
+	newDesc := "new desc"
+	newStartDate := strfmt.DateTime(time.Now().UTC())
+	newEndDate := strfmt.DateTime(time.Now().UTC().Add(time.Hour * 24 * 10))
+	newQuantity := int64(1)
+	req := &models.OrderUpdateRequest{
+		Description: &newDesc,
+		Quantity:    &newQuantity,
+		RentStart:   &newStartDate,
+		RentEnd:     &newEndDate,
+	}
+	updated, err := s.orderRepository.Update(ctx, 123, req, s.user.ID)
+	require.EqualError(t, err, "ent: order not found")
+	require.NoError(t, tx.Rollback())
+	require.Nil(t, updated)
+}
+
+func (s *OrderSuite) TestOrderRepository_Update_WrongOwner() {
+	t := s.T()
+	ctx := s.ctx
+	crtx, err := s.client.Tx(ctx)
+	require.NoError(t, err)
+	ctx = context.WithValue(ctx, middlewares.TxContextKey, crtx)
+
+	description := "test"
+	eqID := int64(1)
+	startDate := strfmt.DateTime(time.Now().UTC())
+	endDate := strfmt.DateTime(time.Now().UTC().Add(time.Hour * 24 * 5))
+	data := &models.OrderCreateRequest{
+		Description: description,
+		EquipmentID: &eqID,
+		RentEnd:     &endDate,
+		RentStart:   &startDate,
+	}
+	createdOrder, err := s.orderRepository.Create(ctx, data, s.user.ID, []int{s.equipments[0].ID})
+	require.NoError(t, err)
+	require.NoError(t, crtx.Commit())
+
+	tx, err := s.client.Tx(ctx)
+	require.NoError(t, err)
+	ctx = context.WithValue(ctx, middlewares.TxContextKey, tx)
+	newDesc := "new desc"
+	newStartDate := strfmt.DateTime(time.Now().UTC())
+	newEndDate := strfmt.DateTime(time.Now().UTC().Add(time.Hour * 24 * 10))
+	newQuantity := int64(1)
+	req := &models.OrderUpdateRequest{
+		Description: &newDesc,
+		Quantity:    &newQuantity,
+		RentStart:   &newStartDate,
+		RentEnd:     &newEndDate,
+	}
+	updated, err := s.orderRepository.Update(ctx, createdOrder.ID, req, s.user.ID+1)
+	require.EqualError(t, err, "permission denied")
+	require.NoError(t, tx.Rollback())
+	require.Nil(t, updated)
+}
+
+func (s *OrderSuite) TestOrderRepository_getQuantity() {
+	t := s.T()
+	valid := int(1)
+	tests := map[string]struct {
+		q         int
+		maxQ      int
+		res       *int
+		errString string
+	}{
+		"ok": {
+			q:         1,
+			maxQ:      2,
+			res:       &valid,
+			errString: "",
+		},
+		"nok": {
+			q:         2,
+			maxQ:      1,
+			res:       nil,
+			errString: "quantity limit exceeded: 1 allowed",
+		},
+	}
+	for _, tc := range tests {
+		res, err := getQuantity(tc.q, tc.maxQ)
+		if tc.errString != "" {
+			require.EqualError(t, err, tc.errString)
+		} else {
+			require.NoError(t, err)
+			require.Equal(t, tc.res, res)
+		}
+	}
+}
+
 func containsOrder(t *testing.T, order *ent.Order, orders []*ent.Order) bool {
 	t.Helper()
 	for _, o := range orders {
