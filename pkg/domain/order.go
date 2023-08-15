@@ -30,4 +30,19 @@ var (
 		OrderStatusActive:   {},
 		OrderStatusFinished: {},
 	}
+
+	OrderStatusAggregation = map[string][]string{
+		OrderStatusActive: {
+			OrderStatusInReview,
+			OrderStatusApproved,
+			OrderStatusOverdue,
+			OrderStatusInProgress,
+			OrderStatusPrepared,
+		},
+		OrderStatusFinished: {
+			OrderStatusRejected,
+			OrderStatusBlocked,
+			OrderStatusClosed,
+		},
+	}
 )

@@ -2,10 +2,12 @@ package repositories
 
 import (
 	"context"
+	"database/sql/driver"
 	"errors"
 	"fmt"
 	"time"
 
+	"entgo.io/ent/dialect/sql"
 	"github.com/go-openapi/strfmt"
 
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/ent"
@@ -81,21 +83,18 @@ func (r *orderRepository) List(ctx context.Context, ownerId int, filter domain.O
 	if err != nil {
 		return nil, err
 	}
-	items, err := tx.Order.Query().
+	query := tx.Order.Query().
 		Where(order.HasUsersWith(user.ID(ownerId))).
 		Order(orderFunc).
 		Limit(filter.Limit).Offset(filter.Offset).
-		WithUsers().WithOrderStatus().
-		All(ctx)
+		WithUsers().WithOrderStatus().WithEquipments()
+	query = r.applyListFilters(query, filter)
+
+	items, err := query.All(ctx)
 	if err != nil {
 		return nil, err
 	}
-	for i, item := range items { // get order status relations
-		items[i], err = r.getFullOrder(ctx, item)
-		if err != nil {
-			return nil, err
-		}
-	}
+
 	return items, err
 }
 
@@ -256,6 +255,29 @@ func (r *orderRepository) Update(ctx context.Context, id int, data *models.Order
 	return r.getFullOrder(ctx, returnOrder)
 }
 
+func (r *orderRepository) applyListFilters(q *ent.OrderQuery, filter domain.OrderFilter) *ent.OrderQuery {
+	if filter.Status != nil && *filter.Status != domain.OrderStatusAll {
+		statuses, isAggregated := domain.OrderStatusAggregation[*filter.Status]
+		if !isAggregated {
+			statuses = []string{*filter.Status}
+		}
+		statusValues := make([]driver.Value, len(statuses))
+		for i, s := range statuses {
+			statusValues[i] = s
+		}
+		q = q.Where(func(s *sql.Selector) {
+			t := sql.Table(orderstatus.Table)
+			s.Join(t).On(s.C(order.FieldID), t.C(orderstatus.OrderColumn))
+		}).
+			Where(func(s *sql.Selector) {
+				t1 := sql.Table("t1") // order_status table from the join above
+				t2 := sql.Table(orderstatusname.Table)
+				s.Join(t2).On(t1.C(orderstatus.OrderStatusNameColumn), t2.C(orderstatusname.FieldID))
+				s.Where(sql.InValues(orderstatusname.FieldStatus, statusValues...))
+			})
+	}
+	return q
+}
 func (r *orderRepository) getFullOrder(ctx context.Context, order *ent.Order) (*ent.Order, error) {
 	for i, orderStatus := range order.Edges.OrderStatus { // get order status relations
 		statusName, err := orderStatus.QueryOrderStatusName().Only(ctx)
