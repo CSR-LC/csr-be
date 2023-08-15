@@ -3,6 +3,7 @@ package repositories
 import (
 	"context"
 	"errors"
+	"fmt"
 	"time"
 
 	"entgo.io/ent/dialect/sql"
@@ -483,4 +484,29 @@ func OptionalIntsPetKind(k []int64, field string) predicate.PetKind {
 	return func(s *sql.Selector) {
 		s.Where(sql.InInts(s.C(field), petKind...))
 	}
+}
+
+func (r *equipmentRepository) BlockEquipment(ctx context.Context, id int, startDate, endDate time.Time) error {
+	tx, err := middlewares.TxFromContext(ctx)
+	if err != nil {
+		return err
+	}
+
+	// check if equipment exists
+	_, err = tx.Equipment.Get(ctx, id)
+	if err != nil {
+		return err
+	}
+
+	// get equipment status blocked id
+	equipmentStatusBlocked, err := tx.EquipmentStatusName.
+		Query().
+		Where(equipmentstatusname.Name(domain.EquipmentStatusNotAvailable)).
+		Only(ctx)
+	if err != nil {
+		return err
+	}
+
+	fmt.Println(equipmentStatusBlocked)
+	return err
 }
