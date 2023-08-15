@@ -433,7 +433,15 @@ func (s *OrderSuite) TestOrderRepository_Create_isFirstFieldForPreviousCreatedOr
 	err = s.orderStatusRepository.UpdateStatus(ctx, s.user.ID, model)
 	require.NoError(t, err)
 
-	orderList, err := s.orderRepository.List(ctx, s.user.ID, math.MaxInt, 0, utils.AscOrder, order.FieldID)
+	filter := domain.OrderFilter{
+		Filter: domain.Filter{
+			Limit:       math.MaxInt,
+			Offset:      0,
+			OrderBy:     utils.AscOrder,
+			OrderColumn: order.FieldID,
+		},
+	}
+	orderList, err := s.orderRepository.List(ctx, s.user.ID, filter)
 	require.NoError(t, err)
 
 	for _, order := range orderList {
@@ -460,15 +468,20 @@ func (s *OrderSuite) TestOrderRepository_OrdersTotal() {
 
 func (s *OrderSuite) TestOrderRepository_List_EmptyOrderBy() {
 	t := s.T()
-	limit := math.MaxInt
-	offset := 0
-	orderBy := ""
-	orderColumn := order.FieldID
+	filter := domain.OrderFilter{
+		Filter: domain.Filter{
+			Limit:       math.MaxInt,
+			Offset:      0,
+			OrderBy:     "",
+			OrderColumn: order.FieldID,
+		},
+	}
 	ctx := s.ctx
 	tx, err := s.client.Tx(ctx)
 	require.NoError(t, err)
 	ctx = context.WithValue(ctx, middlewares.TxContextKey, tx)
-	orders, err := s.orderRepository.List(ctx, s.user.ID, limit, offset, orderBy, orderColumn)
+
+	orders, err := s.orderRepository.List(ctx, s.user.ID, filter)
 	require.Error(t, err)
 	require.NoError(t, tx.Rollback())
 	require.Nil(t, orders)
@@ -476,15 +489,19 @@ func (s *OrderSuite) TestOrderRepository_List_EmptyOrderBy() {
 
 func (s *OrderSuite) TestOrderRepository_List_WrongOrderColumn() {
 	t := s.T()
-	limit := math.MaxInt
-	offset := 0
-	orderBy := utils.AscOrder
-	orderColumn := order.FieldDescription
+	filter := domain.OrderFilter{
+		Filter: domain.Filter{
+			Limit:       math.MaxInt,
+			Offset:      0,
+			OrderBy:     utils.AscOrder,
+			OrderColumn: order.FieldDescription,
+		},
+	}
 	ctx := s.ctx
 	tx, err := s.client.Tx(ctx)
 	require.NoError(t, err)
 	ctx = context.WithValue(ctx, middlewares.TxContextKey, tx)
-	orders, err := s.orderRepository.List(ctx, s.user.ID, limit, offset, orderBy, orderColumn)
+	orders, err := s.orderRepository.List(ctx, s.user.ID, filter)
 	require.Error(t, err)
 	require.NoError(t, tx.Rollback())
 	require.Nil(t, orders)
@@ -492,15 +509,19 @@ func (s *OrderSuite) TestOrderRepository_List_WrongOrderColumn() {
 
 func (s *OrderSuite) TestOrderRepository_List_OrderByIDDesc() {
 	t := s.T()
-	limit := math.MaxInt
-	offset := 0
-	orderBy := utils.DescOrder
-	orderColumn := order.FieldID
+	filter := domain.OrderFilter{
+		Filter: domain.Filter{
+			Limit:       math.MaxInt,
+			Offset:      0,
+			OrderBy:     utils.DescOrder,
+			OrderColumn: order.FieldID,
+		},
+	}
 	ctx := s.ctx
 	tx, err := s.client.Tx(ctx)
 	require.NoError(t, err)
 	ctx = context.WithValue(ctx, middlewares.TxContextKey, tx)
-	orders, err := s.orderRepository.List(ctx, s.user.ID, limit, offset, orderBy, orderColumn)
+	orders, err := s.orderRepository.List(ctx, s.user.ID, filter)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -516,15 +537,19 @@ func (s *OrderSuite) TestOrderRepository_List_OrderByIDDesc() {
 
 func (s *OrderSuite) TestOrderRepository_List_OrderByRentStartDesc() {
 	t := s.T()
-	limit := math.MaxInt
-	offset := 0
-	orderBy := utils.DescOrder
-	orderColumn := order.FieldRentStart
+	filter := domain.OrderFilter{
+		Filter: domain.Filter{
+			Limit:       math.MaxInt,
+			Offset:      0,
+			OrderBy:     utils.DescOrder,
+			OrderColumn: order.FieldRentStart,
+		},
+	}
 	ctx := s.ctx
 	tx, err := s.client.Tx(ctx)
 	require.NoError(t, err)
 	ctx = context.WithValue(ctx, middlewares.TxContextKey, tx)
-	orders, err := s.orderRepository.List(ctx, s.user.ID, limit, offset, orderBy, orderColumn)
+	orders, err := s.orderRepository.List(ctx, s.user.ID, filter)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -540,15 +565,19 @@ func (s *OrderSuite) TestOrderRepository_List_OrderByRentStartDesc() {
 
 func (s *OrderSuite) TestOrderRepository_List_OrderByIDAsc() {
 	t := s.T()
-	limit := math.MaxInt
-	offset := 0
-	orderBy := utils.AscOrder
-	orderColumn := order.FieldID
+	filter := domain.OrderFilter{
+		Filter: domain.Filter{
+			Limit:       math.MaxInt,
+			Offset:      0,
+			OrderBy:     utils.AscOrder,
+			OrderColumn: order.FieldID,
+		},
+	}
 	ctx := s.ctx
 	tx, err := s.client.Tx(ctx)
 	require.NoError(t, err)
 	ctx = context.WithValue(ctx, middlewares.TxContextKey, tx)
-	orders, err := s.orderRepository.List(ctx, s.user.ID, limit, offset, orderBy, orderColumn)
+	orders, err := s.orderRepository.List(ctx, s.user.ID, filter)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -564,15 +593,19 @@ func (s *OrderSuite) TestOrderRepository_List_OrderByIDAsc() {
 
 func (s *OrderSuite) TestOrderRepository_List_OrderByRentStartAsc() {
 	t := s.T()
-	limit := math.MaxInt
-	offset := 0
-	orderBy := utils.AscOrder
-	orderColumn := order.FieldRentStart
+	filter := domain.OrderFilter{
+		Filter: domain.Filter{
+			Limit:       math.MaxInt,
+			Offset:      0,
+			OrderBy:     utils.AscOrder,
+			OrderColumn: order.FieldRentStart,
+		},
+	}
 	ctx := s.ctx
 	tx, err := s.client.Tx(ctx)
 	require.NoError(t, err)
 	ctx = context.WithValue(ctx, middlewares.TxContextKey, tx)
-	orders, err := s.orderRepository.List(ctx, s.user.ID, limit, offset, orderBy, orderColumn)
+	orders, err := s.orderRepository.List(ctx, s.user.ID, filter)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -588,39 +621,47 @@ func (s *OrderSuite) TestOrderRepository_List_OrderByRentStartAsc() {
 
 func (s *OrderSuite) TestOrderRepository_List_Limit() {
 	t := s.T()
-	limit := 2
-	offset := 0
-	orderBy := utils.AscOrder
-	orderColumn := order.FieldID
+	filter := domain.OrderFilter{
+		Filter: domain.Filter{
+			Limit:       2,
+			Offset:      0,
+			OrderBy:     utils.AscOrder,
+			OrderColumn: order.FieldID,
+		},
+	}
 	ctx := s.ctx
 	tx, err := s.client.Tx(ctx)
 	require.NoError(t, err)
 	ctx = context.WithValue(ctx, middlewares.TxContextKey, tx)
-	orders, err := s.orderRepository.List(ctx, s.user.ID, limit, offset, orderBy, orderColumn)
+	orders, err := s.orderRepository.List(ctx, s.user.ID, filter)
 	if err != nil {
 		t.Fatal(err)
 	}
 	require.NoError(t, tx.Commit())
-	require.Equal(t, limit, len(orders))
+	require.Equal(t, filter.Limit, len(orders))
 	require.Greater(t, len(s.orders), len(orders))
 }
 
 func (s *OrderSuite) TestOrderRepository_List_Offset() {
 	t := s.T()
-	limit := 0
-	offset := 3
-	orderBy := utils.AscOrder
-	orderColumn := order.FieldID
+	filter := domain.OrderFilter{
+		Filter: domain.Filter{
+			Limit:       0,
+			Offset:      3,
+			OrderBy:     utils.AscOrder,
+			OrderColumn: order.FieldID,
+		},
+	}
 	ctx := s.ctx
 	tx, err := s.client.Tx(ctx)
 	require.NoError(t, err)
 	ctx = context.WithValue(ctx, middlewares.TxContextKey, tx)
-	orders, err := s.orderRepository.List(ctx, s.user.ID, limit, offset, orderBy, orderColumn)
+	orders, err := s.orderRepository.List(ctx, s.user.ID, filter)
 	if err != nil {
 		t.Fatal(err)
 	}
 	require.NoError(t, tx.Commit())
-	require.Equal(t, len(s.orders)-offset, len(orders))
+	require.Equal(t, len(s.orders)-filter.Offset, len(orders))
 	require.Greater(t, len(s.orders), len(orders))
 }
 

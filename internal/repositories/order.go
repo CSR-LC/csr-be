@@ -69,11 +69,11 @@ func getQuantity(quantity int, maxQuantity int) (*int, error) {
 	return &quantity, nil
 }
 
-func (r *orderRepository) List(ctx context.Context, ownerId, limit, offset int, orderBy, orderColumn string) ([]*ent.Order, error) {
-	if !utils.IsValueInList(orderColumn, fieldsToOrderOrders) {
+func (r *orderRepository) List(ctx context.Context, ownerId int, filter domain.OrderFilter) ([]*ent.Order, error) {
+	if !utils.IsValueInList(filter.OrderColumn, fieldsToOrderOrders) {
 		return nil, errors.New("wrong column to order by")
 	}
-	orderFunc, err := utils.GetOrderFunc(orderBy, orderColumn)
+	orderFunc, err := utils.GetOrderFunc(filter.OrderBy, filter.OrderColumn)
 	if err != nil {
 		return nil, err
 	}
@@ -84,7 +84,7 @@ func (r *orderRepository) List(ctx context.Context, ownerId, limit, offset int, 
 	items, err := tx.Order.Query().
 		Where(order.HasUsersWith(user.ID(ownerId))).
 		Order(orderFunc).
-		Limit(limit).Offset(offset).
+		Limit(filter.Limit).Offset(filter.Offset).
 		WithUsers().WithOrderStatus().
 		All(ctx)
 	if err != nil {

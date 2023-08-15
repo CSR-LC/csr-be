@@ -137,14 +137,18 @@ func (s *orderTestSuite) TestOrder_ListOrder_MapErr() {
 	ctx := request.Context()
 
 	userID := 1
-	limit := math.MaxInt
-	offset := 0
-	orderBy := utils.AscOrder
-	orderColumn := order.FieldID
+	filter := domain.OrderFilter{
+		Filter: domain.Filter{
+			Limit:       math.MaxInt,
+			Offset:      0,
+			OrderBy:     utils.AscOrder,
+			OrderColumn: order.FieldID,
+		},
+	}
 	var orderList []*ent.Order
 	orderList = append(orderList, orderWithNoEdges())
 	s.orderRepository.On("OrdersTotal", ctx, userID).Return(1, nil)
-	s.orderRepository.On("List", ctx, userID, limit, offset, orderBy, orderColumn).
+	s.orderRepository.On("List", ctx, userID, filter).
 		Return(orderList, nil)
 
 	handlerFunc := s.orderHandler.ListOrderFunc(s.orderRepository)
@@ -191,15 +195,19 @@ func (s *orderTestSuite) TestOrder_ListOrder_EmptyParams() {
 	ctx := request.Context()
 
 	userID := 1
-	limit := math.MaxInt
-	offset := 0
-	orderBy := utils.AscOrder
-	orderColumn := order.FieldID
+	filter := domain.OrderFilter{
+		Filter: domain.Filter{
+			Limit:       math.MaxInt,
+			Offset:      0,
+			OrderBy:     utils.AscOrder,
+			OrderColumn: order.FieldID,
+		},
+	}
 	orderList := []*ent.Order{
 		orderWithAllEdges(t, 1),
 	}
 	s.orderRepository.On("OrdersTotal", ctx, userID).Return(1, nil)
-	s.orderRepository.On("List", ctx, userID, limit, offset, orderBy, orderColumn).
+	s.orderRepository.On("List", ctx, userID, filter).
 		Return(orderList, nil)
 
 	handlerFunc := s.orderHandler.ListOrderFunc(s.orderRepository)
@@ -218,7 +226,7 @@ func (s *orderTestSuite) TestOrder_ListOrder_EmptyParams() {
 		t.Fatal(err)
 	}
 	require.Equal(t, len(orderList), int(*response.Total))
-	require.GreaterOrEqual(t, limit, len(response.Items))
+	require.GreaterOrEqual(t, filter.Limit, len(response.Items))
 	for _, item := range response.Items {
 		require.True(t, containsOrder(t, orderList, item))
 	}
@@ -234,12 +242,20 @@ func (s *orderTestSuite) TestOrder_ListOrder_LimitGreaterThanTotal() {
 	offset := int64(0)
 	orderBy := utils.AscOrder
 	orderColumn := order.FieldID
+	filter := domain.OrderFilter{
+		Filter: domain.Filter{
+			Limit:       int(limit),
+			Offset:      int(offset),
+			OrderBy:     utils.AscOrder,
+			OrderColumn: order.FieldID,
+		},
+	}
 	orderList := []*ent.Order{
 		orderWithAllEdges(t, 1),
 		orderWithAllEdges(t, 2),
 	}
 	s.orderRepository.On("OrdersTotal", ctx, userID).Return(2, nil)
-	s.orderRepository.On("List", ctx, userID, int(limit), int(offset), orderBy, orderColumn).
+	s.orderRepository.On("List", ctx, userID, filter).
 		Return(orderList, nil)
 
 	handlerFunc := s.orderHandler.ListOrderFunc(s.orderRepository)
@@ -280,6 +296,14 @@ func (s *orderTestSuite) TestOrder_ListOrder_LimitLessThanTotal() {
 	offset := int64(0)
 	orderBy := utils.AscOrder
 	orderColumn := order.FieldID
+	filter := domain.OrderFilter{
+		Filter: domain.Filter{
+			Limit:       int(limit),
+			Offset:      int(offset),
+			OrderBy:     utils.AscOrder,
+			OrderColumn: order.FieldID,
+		},
+	}
 	orderList := []*ent.Order{
 		orderWithAllEdges(t, 1),
 		orderWithAllEdges(t, 2),
@@ -287,7 +311,7 @@ func (s *orderTestSuite) TestOrder_ListOrder_LimitLessThanTotal() {
 		orderWithAllEdges(t, 4),
 	}
 	s.orderRepository.On("OrdersTotal", ctx, userID).Return(4, nil)
-	s.orderRepository.On("List", ctx, userID, int(limit), int(offset), orderBy, orderColumn).
+	s.orderRepository.On("List", ctx, userID, filter).
 		Return(orderList[:limit], nil)
 
 	handlerFunc := s.orderHandler.ListOrderFunc(s.orderRepository)
@@ -328,6 +352,14 @@ func (s *orderTestSuite) TestOrder_ListOrder_SecondPage() {
 	offset := int64(2)
 	orderBy := utils.AscOrder
 	orderColumn := order.FieldID
+	filter := domain.OrderFilter{
+		Filter: domain.Filter{
+			Limit:       int(limit),
+			Offset:      int(offset),
+			OrderBy:     utils.AscOrder,
+			OrderColumn: order.FieldID,
+		},
+	}
 	orderList := []*ent.Order{
 		orderWithAllEdges(t, 1),
 		orderWithAllEdges(t, 2),
@@ -335,7 +367,7 @@ func (s *orderTestSuite) TestOrder_ListOrder_SecondPage() {
 		orderWithAllEdges(t, 4),
 	}
 	s.orderRepository.On("OrdersTotal", ctx, userID).Return(4, nil)
-	s.orderRepository.On("List", ctx, userID, int(limit), int(offset), orderBy, orderColumn).
+	s.orderRepository.On("List", ctx, userID, filter).
 		Return(orderList[offset:], nil)
 
 	handlerFunc := s.orderHandler.ListOrderFunc(s.orderRepository)
@@ -376,6 +408,14 @@ func (s *orderTestSuite) TestOrder_ListOrder_SeveralPages() {
 	offset := int64(0)
 	orderBy := utils.AscOrder
 	orderColumn := order.FieldID
+	filter := domain.OrderFilter{
+		Filter: domain.Filter{
+			Limit:       int(limit),
+			Offset:      int(offset),
+			OrderBy:     utils.AscOrder,
+			OrderColumn: order.FieldID,
+		},
+	}
 	orderList := []*ent.Order{
 		orderWithAllEdges(t, 1),
 		orderWithAllEdges(t, 2),
@@ -383,7 +423,7 @@ func (s *orderTestSuite) TestOrder_ListOrder_SeveralPages() {
 		orderWithAllEdges(t, 4),
 	}
 	s.orderRepository.On("OrdersTotal", ctx, userID).Return(4, nil)
-	s.orderRepository.On("List", ctx, userID, int(limit), int(offset), orderBy, orderColumn).
+	s.orderRepository.On("List", ctx, userID, filter).
 		Return(orderList[:limit], nil)
 
 	handlerFunc := s.orderHandler.ListOrderFunc(s.orderRepository)
@@ -414,8 +454,9 @@ func (s *orderTestSuite) TestOrder_ListOrder_SeveralPages() {
 	}
 
 	offset = limit
+	filter.Offset = int(offset)
 	s.orderRepository.On("OrdersTotal", ctx, userID).Return(4, nil)
-	s.orderRepository.On("List", ctx, userID, int(limit), int(offset), orderBy, orderColumn).
+	s.orderRepository.On("List", ctx, userID, filter).
 		Return(orderList[offset:], nil)
 
 	data = orders.GetAllOrdersParams{
