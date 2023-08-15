@@ -195,7 +195,7 @@ func (o Order) ListOrderFunc(repository domain.OrderRepository) orders.GetAllOrd
 			_, ok := domain.AllOrderStatuses[*p.Status]
 			if !ok {
 				return orders.NewGetAllOrdersDefault(http.StatusBadRequest).
-				WithPayload(buildStringPayload(fmt.Sprintf("Invalid order status '%v'", *p.Status)))
+					WithPayload(buildStringPayload(fmt.Sprintf("Invalid order status '%v'", *p.Status)))
 			}
 		}
 

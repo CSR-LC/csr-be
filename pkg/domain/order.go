@@ -17,17 +17,17 @@ var (
 
 	// AllOrderStatuses contains all allowed OrderStatus values
 	AllOrderStatuses = map[string]struct{}{
-		OrderStatusInReview: {},
-		OrderStatusApproved: {},
+		OrderStatusInReview:   {},
+		OrderStatusApproved:   {},
 		OrderStatusInProgress: {},
-		OrderStatusRejected: {},
-		OrderStatusClosed: {},
-		OrderStatusPrepared: {},
-		OrderStatusOverdue: {},
-		OrderStatusBlocked: {},
+		OrderStatusRejected:   {},
+		OrderStatusClosed:     {},
+		OrderStatusPrepared:   {},
+		OrderStatusOverdue:    {},
+		OrderStatusBlocked:    {},
 		// Aggregated states
-		OrderStatusAll: {},
-		OrderStatusActive: {},
+		OrderStatusAll:      {},
+		OrderStatusActive:   {},
 		OrderStatusFinished: {},
 	}
 )
