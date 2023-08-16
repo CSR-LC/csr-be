@@ -13,6 +13,7 @@ import (
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/ent"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/ent/enttest"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/ent/order"
+	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/ent/orderstatusname"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/swagger/models"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/middlewares"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/utils"
@@ -103,6 +104,24 @@ func (s *OrderSuite) SetupTest() {
 		s.equipments[i] = e
 	}
 
+	// list of statuses with IDs. Amount of statuses is equal to amount of orders.
+	statusNameMap := map[int]string{
+		1: "in review",   // active
+		2: "in progress", // active
+		3: "rejected",    // finished
+		4: "closed",      // finished
+	}
+	_, err = s.client.OrderStatusName.Delete().Exec(s.ctx) // clean up
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, statusName := range statusNameMap { // create statuses
+		_, errCreation := s.client.OrderStatusName.Create().SetStatus(statusName).Save(s.ctx)
+		if errCreation != nil {
+			t.Fatal(errCreation)
+		}
+	}
+
 	s.orders = []*ent.Order{
 		{
 			Quantity:  1,
@@ -155,15 +174,24 @@ func (s *OrderSuite) SetupTest() {
 		}
 		s.orders[i].ID = o.ID
 		s.orders[i].CreatedAt = o.CreatedAt
-	}
 
-	_, err = s.client.OrderStatusName.Delete().Exec(s.ctx)
-	if err != nil {
-		t.Fatal(err)
-	}
-	_, err = s.client.OrderStatusName.Create().SetStatus(domain.OrderStatusInReview).Save(s.ctx)
-	if err != nil {
-		t.Fatal(err)
+		statusName, err := s.client.OrderStatusName.Query().
+			Where(orderstatusname.StatusEQ(statusNameMap[i+1])).Only(s.ctx)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		_, err = s.client.OrderStatus.Create().
+			SetComment("Test order status").
+			SetCurrentDate(time.Now()).
+			SetOrder(o).
+			SetOrderStatusName(statusName).
+			SetUsers(s.user).
+			SetUsersID(s.user.ID).
+			Save(s.ctx)
+		if err != nil {
+			t.Fatal(err)
+		}
 	}
 }
 
@@ -292,9 +320,6 @@ func (s *OrderSuite) TestOrderRepository_Create_isFirstCreatedOrderIsTrueIfOneOf
 		RentStart:   &startDate,
 	}
 
-	err = s.client.OrderStatusName.Create().
-		SetStatus(domain.OrderStatusRejected).
-		Exec(ctx)
 	require.NoError(t, err)
 	orderId := int64(s.orders[0].ID)
 	testComment := "testComment"
@@ -665,6 +690,92 @@ func (s *OrderSuite) TestOrderRepository_List_Offset() {
 	require.Greater(t, len(s.orders), len(orders))
 }
 
+func (s *OrderSuite) TestOrderRepository_List_StatusFilter() {
+	t := s.T()
+	filter := domain.Filter{
+		Limit:       10,
+		Offset:      0,
+		OrderBy:     utils.AscOrder,
+		OrderColumn: order.FieldID,
+	}
+	tests := map[string]struct {
+		fl          domain.OrderFilter
+		expectedErr string
+		expectedIDs []int // in AscOrder
+	}{
+		"all": {
+			fl: domain.OrderFilter{
+				Filter: filter,
+				Status: &domain.OrderStatusAll,
+			},
+			expectedIDs: []int{s.orders[0].ID, s.orders[1].ID, s.orders[2].ID, s.orders[3].ID},
+		},
+		"active": {
+			fl: domain.OrderFilter{
+				Filter: filter,
+				Status: &domain.OrderStatusActive,
+			},
+			expectedIDs: []int{s.orders[0].ID, s.orders[1].ID},
+		},
+		"finished": {
+			fl: domain.OrderFilter{
+				Filter: filter,
+				Status: &domain.OrderStatusFinished,
+			},
+			expectedIDs: []int{s.orders[2].ID, s.orders[3].ID},
+		},
+		"in review": {
+			fl: domain.OrderFilter{
+				Filter: filter,
+				Status: &domain.OrderStatusInReview,
+			},
+			expectedIDs: []int{s.orders[0].ID},
+		},
+		"in progress": {
+			fl: domain.OrderFilter{
+				Filter: filter,
+				Status: &domain.OrderStatusInProgress,
+			},
+			expectedIDs: []int{s.orders[1].ID},
+		},
+		"rejected": {
+			fl: domain.OrderFilter{
+				Filter: filter,
+				Status: &domain.OrderStatusRejected,
+			},
+			expectedIDs: []int{s.orders[2].ID},
+		},
+		"closed": {
+			fl: domain.OrderFilter{
+				Filter: filter,
+				Status: &domain.OrderStatusClosed,
+			},
+			expectedIDs: []int{s.orders[3].ID},
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			ctx := s.ctx
+			tx, err := s.client.Tx(ctx)
+			require.NoError(t, err)
+			ctx = context.WithValue(ctx, middlewares.TxContextKey, tx)
+			orders, err := s.orderRepository.List(ctx, s.user.ID, tc.fl)
+			if tc.expectedErr != "" {
+				require.EqualError(t, err, tc.expectedErr)
+				require.NoError(t, tx.Rollback())
+			} else {
+				require.NoError(t, err)
+				require.NoError(t, tx.Commit())
+				ids := make([]int, 0, len(orders))
+				for _, o := range orders {
+					ids = append(ids, o.ID)
+				}
+				require.Equal(t, tc.expectedIDs, ids)
+			}
+		})
+	}
+}
+
 func (s *OrderSuite) TestOrderRepository_Update_OK() {
 	t := s.T()
 	ctx := s.ctx
@@ -792,14 +903,16 @@ func (s *OrderSuite) TestOrderRepository_getQuantity() {
 			errString: "quantity limit exceeded: 1 allowed",
 		},
 	}
-	for _, tc := range tests {
-		res, err := getQuantity(tc.q, tc.maxQ)
-		if tc.errString != "" {
-			require.EqualError(t, err, tc.errString)
-		} else {
-			require.NoError(t, err)
-			require.Equal(t, tc.res, res)
-		}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			res, err := getQuantity(tc.q, tc.maxQ)
+			if tc.errString != "" {
+				require.EqualError(t, err, tc.errString)
+			} else {
+				require.NoError(t, err)
+				require.Equal(t, tc.res, res)
+			}
+		})
 	}
 }
 

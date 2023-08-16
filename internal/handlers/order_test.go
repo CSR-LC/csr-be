@@ -578,38 +578,39 @@ func (s *orderTestSuite) TestOrder_ListOrder_StatusFilter() {
 			ords: []*ent.Order{orderList[3]},
 		},
 	}
-	for _, tc := range tests {
-		tc := tc
-		s.orderRepository.On("OrdersTotal", ctx, userID).Return(4, nil)
-		s.orderRepository.On("List", ctx, userID, tc.fl).
-			Return(tc.ords, nil)
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			s.orderRepository.On("OrdersTotal", ctx, userID).Return(4, nil)
+			s.orderRepository.On("List", ctx, userID, tc.fl).
+				Return(tc.ords, nil)
 
-		data := orders.GetAllOrdersParams{
-			HTTPRequest: &request,
-			Limit:       &limit,
-			Offset:      &offset,
-			OrderBy:     &orderBy,
-			OrderColumn: &orderColumn,
-			Status:      tc.fl.Status,
-		}
-		principal := &models.Principal{ID: int64(userID)}
-		resp := handlerFunc.Handle(data, principal)
+			data := orders.GetAllOrdersParams{
+				HTTPRequest: &request,
+				Limit:       &limit,
+				Offset:      &offset,
+				OrderBy:     &orderBy,
+				OrderColumn: &orderColumn,
+				Status:      tc.fl.Status,
+			}
+			principal := &models.Principal{ID: int64(userID)}
+			resp := handlerFunc.Handle(data, principal)
 
-		responseRecorder := httptest.NewRecorder()
-		producer := runtime.JSONProducer()
-		resp.WriteResponse(responseRecorder, producer)
-		require.Equal(t, http.StatusOK, responseRecorder.Code)
+			responseRecorder := httptest.NewRecorder()
+			producer := runtime.JSONProducer()
+			resp.WriteResponse(responseRecorder, producer)
+			require.Equal(t, http.StatusOK, responseRecorder.Code)
 
-		var response models.OrderList
-		err := json.Unmarshal(responseRecorder.Body.Bytes(), &response)
-		if err != nil {
-			t.Fatal(err)
-		}
+			var response models.OrderList
+			err := json.Unmarshal(responseRecorder.Body.Bytes(), &response)
+			if err != nil {
+				t.Fatal(err)
+			}
 
-		require.Equal(t, len(tc.ords), len(response.Items))
-		for i, o := range response.Items {
-			require.Equal(t, tc.ords[i].ID, int(*o.ID))
-		}
+			require.Equal(t, len(tc.ords), len(response.Items))
+			for i, o := range response.Items {
+				require.Equal(t, tc.ords[i].ID, int(*o.ID))
+			}
+		})
 	}
 }
 
