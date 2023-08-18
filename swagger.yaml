@@ -1559,7 +1559,7 @@ paths:
         required: true
         description: equipment id
         type: integer
-    patch:
+    post:
         summary: Block equipment by id
         security:
             - Bearer: [ ]

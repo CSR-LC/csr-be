@@ -7,10 +7,12 @@ import (
 	"time"
 
 	"entgo.io/ent/dialect/sql"
+	"github.com/go-openapi/strfmt"
 
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/ent"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/ent/category"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/ent/equipment"
+	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/ent/equipmentstatus"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/ent/equipmentstatusname"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/ent/order"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/ent/orderstatusname"
@@ -492,14 +494,13 @@ func (r *equipmentRepository) BlockEquipment(ctx context.Context, id int, startD
 		return err
 	}
 
-	// check if equipment exists
-	_, err = tx.Equipment.Get(ctx, id)
+	eqToBlock, err := tx.Equipment.Get(ctx, id)
 	if err != nil {
 		return err
 	}
 
-	// get equipment status blocked id
-	equipmentStatusBlocked, err := tx.EquipmentStatusName.
+	// Get EquipmentStatusName form DB
+	eqStatusNotAvailable, err := tx.EquipmentStatusName.
 		Query().
 		Where(equipmentstatusname.Name(domain.EquipmentStatusNotAvailable)).
 		Only(ctx)
@@ -507,6 +508,69 @@ func (r *equipmentRepository) BlockEquipment(ctx context.Context, id int, startD
 		return err
 	}
 
-	fmt.Println(equipmentStatusBlocked)
+	start, end, err := checkDates(&startDate, &endDate)
+	if err != nil {
+		return err
+	}
+
+	// Set a new EquipmentStatusName for current Equipment
+	_, err = eqToBlock.Update().SetCurrentStatus(eqStatusNotAvailable).Save(ctx)
+	if err != nil {
+		return err
+	}
+
+	// check if EquipnmentStatus with the same date interval and equipmentId exists
+	fmt.Println(eqToBlock.QueryEquipmentStatus().All(ctx))
+	fmt.Println("11111111")
+	fmt.Println(strfmt.DateTime(*start))
+	fmt.Println(eqToBlock.QueryEquipmentStatus().Where(equipmentstatus.StartDateEQ(startDate)).All(ctx))
+	fmt.Println("11111111")
+	fmt.Println(eqToBlock.QueryEquipmentStatus().Where(equipmentstatus.StartDateEQ(*start)).Only(ctx))
+
+	// Create a new EquipmentStatus and set startDate, endDate, Equipment and EquipmentStatusName
+	_, err = tx.EquipmentStatus.Create().
+		SetCreatedAt(time.Now()).
+		SetComment("Блокировка").
+		SetEndDate(*end).
+		SetStartDate(*start).
+		SetEquipments(eqToBlock).
+		SetEquipmentStatusName(eqStatusNotAvailable).
+		SetUpdatedAt(time.Now()).
+		Save(ctx)
+	if err != nil {
+		return err
+	}
+
+	// Get OrderStatusName form DB
+	orStatusBlocked, err := tx.OrderStatusName.
+		Query().
+		Where(orderstatusname.Status(domain.OrderStatusBlocked)).
+		Only(ctx)
+	if err != nil {
+		return err
+	}
+
+	// Find all Orders which start from startDate and later
+	orders, err := eqToBlock.QueryOrder().Where(order.RentStartGTE(*start)).All(ctx)
+
+	// Set a new OrderStatusName for these Orders
+	for _, order := range orders {
+		order.Update().SetCurrentStatus(orStatusBlocked)
+		if err != nil {
+			return err
+		}
+	}
+	fmt.Println(orders)
 	return err
+}
+
+func checkDates(start *time.Time, end *time.Time) (*time.Time, *time.Time, error) {
+	startDate := time.Time(*start)
+	endDate := time.Time(*end)
+
+	if startDate.After(endDate) {
+		return nil, nil, errors.New("start date should be before end date")
+	}
+
+	return &startDate, &endDate, nil
 }
