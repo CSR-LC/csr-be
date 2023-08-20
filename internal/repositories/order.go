@@ -152,6 +152,11 @@ func (r *orderRepository) Create(ctx context.Context, data *models.OrderCreateRe
 		isFirst = true
 	}
 
+	statusName, err := tx.OrderStatusName.Query().Where(orderstatusname.StatusEQ(domain.OrderStatusInReview)).Only(ctx)
+	if err != nil {
+		return nil, err
+	}
+
 	createdOrder, err := tx.Order.
 		Create().
 		SetDescription(data.Description).
@@ -161,6 +166,7 @@ func (r *orderRepository) Create(ctx context.Context, data *models.OrderCreateRe
 		SetUsers(owner).
 		SetUsersID(owner.ID).
 		SetIsFirst(isFirst).
+		SetCurrentStatus(statusName).
 		AddEquipments(equipments...).
 		AddEquipmentIDs(equipmentIDs...).
 		Save(ctx)
@@ -168,10 +174,6 @@ func (r *orderRepository) Create(ctx context.Context, data *models.OrderCreateRe
 		return nil, err
 	}
 
-	statusName, err := tx.OrderStatusName.Query().Where(orderstatusname.StatusEQ(domain.OrderStatusInReview)).Only(ctx)
-	if err != nil {
-		return nil, err
-	}
 	_, err = tx.OrderStatus.Create().
 		SetComment("Order created").
 		SetCurrentDate(time.Now()).
