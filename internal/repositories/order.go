@@ -2,12 +2,10 @@ package repositories
 
 import (
 	"context"
-	"database/sql/driver"
 	"errors"
 	"fmt"
 	"time"
 
-	"entgo.io/ent/dialect/sql"
 	"github.com/go-openapi/strfmt"
 
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/ent"
@@ -261,20 +259,7 @@ func (r *orderRepository) applyListFilters(q *ent.OrderQuery, filter domain.Orde
 		if !isAggregated {
 			statuses = []string{*filter.Status}
 		}
-		statusValues := make([]driver.Value, len(statuses))
-		for i, s := range statuses {
-			statusValues[i] = s
-		}
-		q = q.Where(func(s *sql.Selector) {
-			t := sql.Table(orderstatus.Table)
-			s.Join(t).On(s.C(order.FieldID), t.C(orderstatus.OrderColumn))
-		}).
-			Where(func(s *sql.Selector) {
-				t1 := sql.Table("t1") // order_status table from the join above
-				t2 := sql.Table(orderstatusname.Table)
-				s.Join(t2).On(t1.C(orderstatus.OrderStatusNameColumn), t2.C(orderstatusname.FieldID))
-				s.Where(sql.InValues(orderstatusname.FieldStatus, statusValues...))
-			})
+		q = q.Where(order.HasCurrentStatusWith(orderstatusname.StatusIn(statuses...)))
 	}
 	return q
 }

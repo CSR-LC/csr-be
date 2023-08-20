@@ -162,24 +162,25 @@ func (s *OrderSuite) SetupTest() {
 		t.Fatal(err)
 	}
 	for i, order := range s.orders {
+		statusName, err := s.client.OrderStatusName.Query().
+			Where(orderstatusname.StatusEQ(statusNameMap[i+1])).Only(s.ctx)
+		if err != nil {
+			t.Fatal(err)
+		}
+
 		o, err := s.client.Order.Create().
 			SetDescription(order.Description).
 			SetQuantity(order.Quantity).
 			SetRentStart(order.RentStart).
 			SetRentEnd(order.RentEnd).
 			SetUsers(order.Edges.Users).
+			SetCurrentStatus(statusName).
 			Save(s.ctx)
 		if err != nil {
 			t.Fatal(err)
 		}
 		s.orders[i].ID = o.ID
 		s.orders[i].CreatedAt = o.CreatedAt
-
-		statusName, err := s.client.OrderStatusName.Query().
-			Where(orderstatusname.StatusEQ(statusNameMap[i+1])).Only(s.ctx)
-		if err != nil {
-			t.Fatal(err)
-		}
 
 		_, err = s.client.OrderStatus.Create().
 			SetComment("Test order status").

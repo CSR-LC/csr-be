@@ -29,16 +29,16 @@ func (r *orderStatusRepository) ApproveOrRejectOrder(ctx context.Context, userID
 	}
 	order, err := tx.Order.Get(ctx, int(*status.OrderID))
 	if err != nil {
-		return fmt.Errorf("status history error, failed to get order: %s", err)
+		return fmt.Errorf("status approve or reject error, failed to get order: %s", err)
 	}
 
 	statusName, err := tx.OrderStatusName.Query().Where(orderstatusname.Status(*status.Status)).Only(ctx)
 	if err != nil {
-		return fmt.Errorf("status history error, failed to get status name: %s", err)
+		return fmt.Errorf("status approve or reject error, failed to get status name: %s", err)
 	}
 	user, err := tx.User.Get(ctx, userID)
 	if err != nil {
-		return fmt.Errorf("status history error, failed to get user: %s", err)
+		return fmt.Errorf("status approve or reject error, failed to get user: %s", err)
 	}
 	_, err = tx.OrderStatus.Create().
 		SetComment(*status.Comment).
@@ -48,8 +48,14 @@ func (r *orderStatusRepository) ApproveOrRejectOrder(ctx context.Context, userID
 		SetUsers(user).Save(ctx)
 
 	if err != nil {
-		return fmt.Errorf("status history error, failed to create order status: %s", err)
+		return fmt.Errorf("status approve or reject error, failed to create order status: %s", err)
 	}
+
+	_, err = order.Update().SetCurrentStatus(statusName).Save(ctx)
+	if err != nil {
+		return fmt.Errorf("status approve or reject error, unable to update order: %s", err)
+	}
+
 	return nil
 }
 
@@ -99,15 +105,15 @@ func (r *orderStatusRepository) UpdateStatus(ctx context.Context, userID int, st
 		return fmt.Errorf("status history error, failed to create order status: %s", err)
 	}
 
-	if *status.Status == domain.OrderStatusApproved {
-		_, err = tx.Order.Update().Where(order.IsFirstEQ(true)).
-			Where(order.HasUsersWith(user.ID(userID))).
-			SetIsFirst(false).
-			Save(ctx)
+	orderUpdate := tx.Order.Update().Where(order.HasUsersWith(user.ID(userID))).SetCurrentStatus(statusName)
 
-		if err != nil {
-			return fmt.Errorf("unable to update is_first field for orders: %s", err)
-		}
+	if *status.Status == domain.OrderStatusApproved {
+		orderUpdate = orderUpdate.SetIsFirst(false)
+	}
+
+	_, err = orderUpdate.Save(ctx)
+	if err != nil {
+		return fmt.Errorf("unable to update order: %s", err)
 	}
 
 	return nil
