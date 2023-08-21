@@ -7,12 +7,10 @@ import (
 	"time"
 
 	"entgo.io/ent/dialect/sql"
-	"github.com/go-openapi/strfmt"
 
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/ent"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/ent/category"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/ent/equipment"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/ent/equipmentstatus"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/ent/equipmentstatusname"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/ent/order"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/ent/orderstatusname"
@@ -519,18 +517,10 @@ func (r *equipmentRepository) BlockEquipment(ctx context.Context, id int, startD
 		return err
 	}
 
-	// check if EquipnmentStatus with the same date interval and equipmentId exists
-	fmt.Println(eqToBlock.QueryEquipmentStatus().All(ctx))
-	fmt.Println("11111111")
-	fmt.Println(strfmt.DateTime(*start))
-	fmt.Println(eqToBlock.QueryEquipmentStatus().Where(equipmentstatus.StartDateEQ(startDate)).All(ctx))
-	fmt.Println("11111111")
-	fmt.Println(eqToBlock.QueryEquipmentStatus().Where(equipmentstatus.StartDateEQ(*start)).Only(ctx))
-
 	// Create a new EquipmentStatus and set startDate, endDate, Equipment and EquipmentStatusName
 	_, err = tx.EquipmentStatus.Create().
 		SetCreatedAt(time.Now()).
-		SetComment("Блокировка").
+		SetComment(domain.BlockingReason).
 		SetEndDate(*end).
 		SetStartDate(*start).
 		SetEquipments(eqToBlock).
@@ -550,16 +540,19 @@ func (r *equipmentRepository) BlockEquipment(ctx context.Context, id int, startD
 		return err
 	}
 
-	// Find all Orders which start from startDate and later
+	// Find all Orders which have OrderStatusName booked and start from startDate and later
 	orders, err := eqToBlock.QueryOrder().Where(order.RentStartGTE(*start)).All(ctx)
 
-	// Set a new OrderStatusName for these Orders
+	// Set a new OrderStatusName for these Orders Create new OrderStatus
 	for _, order := range orders {
-		order.Update().SetCurrentStatus(orStatusBlocked)
-		if err != nil {
-			return err
-		}
+		tx.OrderStatus.Create().
+			SetCurrentDate(time.Now()).
+			SetComment(domain.BlockingReason).
+			SetOrder(order).
+			SetOrderStatusName(orStatusBlocked).
+			Save(ctx)
 	}
+
 	fmt.Println(orders)
 	return err
 }

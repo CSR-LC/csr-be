@@ -21,7 +21,6 @@ func (OrderStatusName) Fields() []ent.Field {
 // Edges of the OrderStatusName.
 func (OrderStatusName) Edges() []ent.Edge {
 	return []ent.Edge{
-		edge.To("order", Order.Type),
 		edge.To("order_status", OrderStatus.Type),
 	}
 }
