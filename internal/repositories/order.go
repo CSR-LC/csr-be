@@ -2,10 +2,12 @@ package repositories
 
 import (
 	"context"
+	"database/sql/driver"
 	"errors"
 	"fmt"
 	"time"
 
+	"entgo.io/ent/dialect/sql"
 	"github.com/go-openapi/strfmt"
 
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/ent"
@@ -82,13 +84,12 @@ func (r *orderRepository) List(ctx context.Context, ownerId int, filter domain.O
 		return nil, err
 	}
 	query := tx.Order.Query().
-		Where(order.HasUsersWith(user.ID(ownerId))).
-		Order(orderFunc).
-		Limit(filter.Limit).Offset(filter.Offset).
-		WithUsers().WithOrderStatus().WithEquipments()
-	query = r.applyListFilters(query, filter)
+		Where(order.HasUsersWith(user.ID(ownerId)))
+		
+	query = r.applyListFilters(query, filter).
+		Order(orderFunc).Limit(filter.Limit).Offset(filter.Offset)
 
-	items, err := query.All(ctx)
+	items, err := query.WithUsers().WithOrderStatus().WithEquipments().All(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -261,7 +262,13 @@ func (r *orderRepository) applyListFilters(q *ent.OrderQuery, filter domain.Orde
 		if !isAggregated {
 			statuses = []string{*filter.Status}
 		}
-		q = q.Where(order.HasCurrentStatusWith(orderstatusname.StatusIn(statuses...)))
+		statusValues := make([]driver.Value, len(statuses))
+		for i, s := range statuses {
+			statusValues[i] = s
+		}
+		q = q.Where(order.HasCurrentStatusWith(func(s *sql.Selector) {
+			s.Where(sql.InValues(s.C(orderstatusname.FieldStatus), statusValues...))
+		}))
 	}
 	return q
 }

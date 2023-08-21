@@ -105,15 +105,20 @@ func (r *orderStatusRepository) UpdateStatus(ctx context.Context, userID int, st
 		return fmt.Errorf("status history error, failed to create order status: %s", err)
 	}
 
-	orderUpdate := tx.Order.Update().Where(order.HasUsersWith(user.ID(userID))).SetCurrentStatus(statusName)
-
-	if *status.Status == domain.OrderStatusApproved {
-		orderUpdate = orderUpdate.SetIsFirst(false)
+	_, err = receivedOrder.Update().SetCurrentStatus(statusName).Save(ctx)
+	if err != nil {
+		return fmt.Errorf("unable to update current_status field for order: %s", err)
 	}
 
-	_, err = orderUpdate.Save(ctx)
-	if err != nil {
-		return fmt.Errorf("unable to update order: %s", err)
+	if *status.Status == domain.OrderStatusApproved {
+		_, err = tx.Order.Update().Where(order.IsFirstEQ(true)).
+			Where(order.HasUsersWith(user.ID(userID))).
+			SetIsFirst(false).
+			Save(ctx)
+
+		if err != nil {
+			return fmt.Errorf("unable to update is_first field for orders: %s", err)
+		}
 	}
 
 	return nil

@@ -424,30 +424,107 @@ func TestIntegration_List_Filtered(t *testing.T) {
 		require.NoError(t, err)
 	}
 
-	// TBD
-	// t.Run("Get Orders 7 Active Ok", func(t *testing.T) {
-	// 	listParams := orders.NewGetAllOrdersParamsWithContext(ctx)
-	// 	listParams.Status = &domain.OrderStatusActive
-	// 	// filter 'active', still  7 (5+2) orders
-	// 	res, err := client.Orders.GetAllOrders(listParams, auth)
-	// 	require.NoError(t, err)
-	// 	for i, o := range res.Payload.Items {
-	// 		fmt.Println("WTF active only", i, *o.LastStatus.Status)
-	// 	}
-	// 	assert.Equal(t, 7, len(res.GetPayload().Items))
-	// })
+	t.Run("Get Orders 7 Active Ok", func(t *testing.T) {
+		listParams := orders.NewGetAllOrdersParamsWithContext(ctx)
+		listParams.Status = &domain.OrderStatusActive
+		// filter 'active', still  7 (5+2) orders
+		res, err := client.Orders.GetAllOrders(listParams, auth)
+		require.NoError(t, err)
+		assert.Equal(t, 7, len(res.GetPayload().Items))
+	})
 
-	// t.Run("Get Orders 1 Finished Ok", func(t *testing.T) {
-	// 	listParams := orders.NewGetAllOrdersParamsWithContext(ctx)
-	// 	listParams.Status = &domain.OrderStatusFinished
-	// 	// filter 'active', still  7 (5+2) orders
-	// 	res, err := client.Orders.GetAllOrders(listParams, auth)
-	// 	require.NoError(t, err)
-	// 	for i, o := range res.Payload.Items {
-	// 		fmt.Println("WTF finished only", i, *o.LastStatus.Status)
-	// 	}
-	// 	assert.Equal(t, 1, len(res.GetPayload().Items))
-	// })
+	t.Run("Get Orders 6 Approved Ok", func(t *testing.T) {
+		listParams := orders.NewGetAllOrdersParamsWithContext(ctx)
+		listParams.Status = &domain.OrderStatusApproved
+		// filter 'active', still  7 (5+2) orders
+		res, err := client.Orders.GetAllOrders(listParams, auth)
+		require.NoError(t, err)
+		assert.Equal(t, 6, len(res.GetPayload().Items))
+	})
+
+	t.Run("Get Orders 1 In_Review Ok", func(t *testing.T) {
+		listParams := orders.NewGetAllOrdersParamsWithContext(ctx)
+		listParams.Status = &domain.OrderStatusInReview
+		// filter 'active', still  7 (5+2) orders
+		res, err := client.Orders.GetAllOrders(listParams, auth)
+		require.NoError(t, err)
+		assert.Equal(t, 1, len(res.GetPayload().Items))
+	})
+
+	t.Run("Get Orders 1 Finished Ok", func(t *testing.T) {
+		listParams := orders.NewGetAllOrdersParamsWithContext(ctx)
+		listParams.Status = &domain.OrderStatusFinished
+		// filter 'active', still  7 (5+2) orders
+		res, err := client.Orders.GetAllOrders(listParams, auth)
+		require.NoError(t, err)
+		assert.Equal(t, 1, len(res.GetPayload().Items))
+	})
+
+	t.Run("Get Orders 1 Rejected Ok", func(t *testing.T) {
+		listParams := orders.NewGetAllOrdersParamsWithContext(ctx)
+		listParams.Status = &domain.OrderStatusRejected
+		// filter 'active', still  7 (5+2) orders
+		res, err := client.Orders.GetAllOrders(listParams, auth)
+		require.NoError(t, err)
+		assert.Equal(t, 1, len(res.GetPayload().Items))
+	})
+
+	t.Run("Get Orders 0 Closed Ok", func(t *testing.T) {
+		listParams := orders.NewGetAllOrdersParamsWithContext(ctx)
+		listParams.Status = &domain.OrderStatusClosed
+		// filter 'active', still  7 (5+2) orders
+		res, err := client.Orders.GetAllOrders(listParams, auth)
+		require.NoError(t, err)
+		assert.Equal(t, 0, len(res.GetPayload().Items))
+	})
+
+	// Close 1st Order
+	dt := strfmt.DateTime(time.Now())
+	osp := orders.NewAddNewOrderStatusParamsWithContext(ctx)
+	osp.Data = &models.NewOrderStatus{
+		OrderID: res.Payload.Items[0].ID,
+		CreatedAt: &dt,
+		Status: &domain.OrderStatusClosed,
+		Comment: &domain.OrderStatusClosed,
+	}
+	_, err = client.Orders.AddNewOrderStatus(osp, auth)
+	require.NoError(t, err)
+
+	t.Run("Get Orders 6 Active Ok", func(t *testing.T) {
+		listParams := orders.NewGetAllOrdersParamsWithContext(ctx)
+		listParams.Status = &domain.OrderStatusActive
+		// filter 'active', still  7 (5+2) orders
+		res, err := client.Orders.GetAllOrders(listParams, auth)
+		require.NoError(t, err)
+		assert.Equal(t, 6, len(res.GetPayload().Items))
+	})	
+
+	t.Run("Get Orders 2 Finished Ok", func(t *testing.T) {
+		listParams := orders.NewGetAllOrdersParamsWithContext(ctx)
+		listParams.Status = &domain.OrderStatusFinished
+		// filter 'active', still  7 (5+2) orders
+		res, err := client.Orders.GetAllOrders(listParams, auth)
+		require.NoError(t, err)
+		assert.Equal(t, 2, len(res.GetPayload().Items))
+	})	
+
+	t.Run("Get Orders 1 Closed Ok", func(t *testing.T) {
+		listParams := orders.NewGetAllOrdersParamsWithContext(ctx)
+		listParams.Status = &domain.OrderStatusClosed
+		// filter 'active', still  7 (5+2) orders
+		res, err := client.Orders.GetAllOrders(listParams, auth)
+		require.NoError(t, err)
+		assert.Equal(t, 1, len(res.GetPayload().Items))
+	})
+
+	t.Run("Get Orders 0 In_Review Ok", func(t *testing.T) {
+		listParams := orders.NewGetAllOrdersParamsWithContext(ctx)
+		listParams.Status = &domain.OrderStatusInReview
+		// filter 'active', still  7 (5+2) orders
+		res, err := client.Orders.GetAllOrders(listParams, auth)
+		require.NoError(t, err)
+		assert.Equal(t, 0, len(res.GetPayload().Items))
+	})
 }
 
 func TestIntegration_UpdateOrder(t *testing.T) {
