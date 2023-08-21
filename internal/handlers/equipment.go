@@ -15,6 +15,7 @@ import (
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/swagger/restapi/operations"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/swagger/restapi/operations/equipment"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/repositories"
+	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/roles"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/utils"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/pkg/domain"
 )
@@ -303,10 +304,19 @@ func mapEquipmentResponse(eq *ent.Equipment) (*models.EquipmentResponse, error) 
 }
 
 func (c Equipment) BlockEquipmentFunc(repository domain.EquipmentRepository) equipment.BlockEquipmentHandlerFunc {
-	return func(s equipment.BlockEquipmentParams, _ *models.Principal) middleware.Responder {
+	return func(s equipment.BlockEquipmentParams, principal *models.Principal) middleware.Responder {
 		ctx := s.HTTPRequest.Context()
+		userID := int(principal.ID)
+		role := principal.Role
+
+		if role != roles.Manager {
+			c.logger.Warn("User have no right to block equipment", zap.Any("principal", principal))
+			return equipment.NewBlockEquipmentDefault(http.StatusForbidden).
+				WithPayload(&models.Error{Data: &models.ErrorData{Message: "You don't have rights to block this equipment"}})
+		}
+
 		err := repository.BlockEquipment(
-			ctx, int(s.EquipmentID), time.Time(s.Data.StartDate), time.Time(s.Data.EndDate),
+			ctx, int(s.EquipmentID), time.Time(s.Data.StartDate), time.Time(s.Data.EndDate), userID,
 		)
 		if err != nil {
 			if ent.IsNotFound(err) {

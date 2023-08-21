@@ -3,7 +3,6 @@ package repositories
 import (
 	"context"
 	"errors"
-	"fmt"
 	"time"
 
 	"entgo.io/ent/dialect/sql"
@@ -486,7 +485,8 @@ func OptionalIntsPetKind(k []int64, field string) predicate.PetKind {
 	}
 }
 
-func (r *equipmentRepository) BlockEquipment(ctx context.Context, id int, startDate, endDate time.Time) error {
+func (r *equipmentRepository) BlockEquipment(
+	ctx context.Context, id int, startDate, endDate time.Time, userID int) error {
 	tx, err := middlewares.TxFromContext(ctx)
 	if err != nil {
 		return err
@@ -520,7 +520,6 @@ func (r *equipmentRepository) BlockEquipment(ctx context.Context, id int, startD
 	// Create a new EquipmentStatus and set startDate, endDate, Equipment and EquipmentStatusName
 	_, err = tx.EquipmentStatus.Create().
 		SetCreatedAt(time.Now()).
-		SetComment(domain.BlockingReason).
 		SetEndDate(*end).
 		SetStartDate(*start).
 		SetEquipments(eqToBlock).
@@ -543,17 +542,15 @@ func (r *equipmentRepository) BlockEquipment(ctx context.Context, id int, startD
 	// Find all Orders which have OrderStatusName booked and start from startDate and later
 	orders, err := eqToBlock.QueryOrder().Where(order.RentStartGTE(*start)).All(ctx)
 
-	// Set a new OrderStatusName for these Orders Create new OrderStatus
+	// Set a new OrderStatusName for these Orders and create new OrderStatus for each Order
 	for _, order := range orders {
 		tx.OrderStatus.Create().
 			SetCurrentDate(time.Now()).
-			SetComment(domain.BlockingReason).
 			SetOrder(order).
+			SetUsersID(userID).
 			SetOrderStatusName(orStatusBlocked).
 			Save(ctx)
 	}
-
-	fmt.Println(orders)
 	return err
 }
 

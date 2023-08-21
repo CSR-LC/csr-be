@@ -44,7 +44,7 @@ type EquipmentRepository interface {
 	AllEquipmentsTotal(ctx context.Context) (int, error)
 	EquipmentsByFilterTotal(ctx context.Context, filter models.EquipmentFilter) (int, error)
 	ArchiveEquipment(ctx context.Context, id int) error
-	BlockEquipment(ctx context.Context, id int, startDate, endDate time.Time) error
+	BlockEquipment(ctx context.Context, id int, startDate, endDate time.Time, userID int) error
 }
 
 type EquipmentStatusRepository interface {
