@@ -94,13 +94,6 @@ func (r *orderRepository) List(ctx context.Context, ownerId int, filter domain.O
 		return nil, err
 	}
 
-	for i, item := range items { // get order status relations
-		items[i], err = r.getFullOrder(ctx, item)
-		if err != nil {
-			return nil, err
-		}
-	}
-
 	return items, err
 }
 
