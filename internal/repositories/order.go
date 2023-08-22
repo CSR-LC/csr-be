@@ -84,14 +84,21 @@ func (r *orderRepository) List(ctx context.Context, ownerId int, filter domain.O
 		return nil, err
 	}
 	query := tx.Order.Query().
-		Where(order.HasUsersWith(user.ID(ownerId)))
-		
-	query = r.applyListFilters(query, filter).
+		Where(order.HasUsersWith(user.ID(ownerId))).
 		Order(orderFunc).Limit(filter.Limit).Offset(filter.Offset)
+		
+	query = r.applyListFilters(query, filter)
 
 	items, err := query.WithUsers().WithOrderStatus().WithEquipments().All(ctx)
 	if err != nil {
 		return nil, err
+	}
+
+	for i, item := range items { // get order status relations
+		items[i], err = r.getFullOrder(ctx, item)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return items, err
