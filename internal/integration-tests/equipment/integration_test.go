@@ -512,6 +512,58 @@ func TestIntegration_DeleteEquipment(t *testing.T) {
 	})
 }
 
+func TestIntegration_BlockEquipment(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping integration test")
+	}
+	ctx := context.Background()
+	client := utils.SetupClient()
+	//startDate := time.Time(strfmt.DateTime(time.Now()))
+	//endDate := time.Time(strfmt.DateTime(time.Now().AddDate(0, 0, 1)))
+
+	t.Run("Block Equipment is prohibited for operators", func(t *testing.T) {
+		tokens := utils.OperatorUserLogin(t)
+		auth := utils.AuthInfoFunc(tokens.GetPayload().AccessToken)
+		model, err := setParameters(ctx, client, auth)
+		require.NoError(t, err)
+
+		created, err := createEquipment(ctx, client, auth, model)
+		fmt.Println("23423423424323", created)
+		require.NoError(t, err)
+		params := equipment.NewBlockEquipmentParamsWithContext(ctx).WithEquipmentID(*created.Payload.ID)
+		fmt.Println("123123132132123", params)
+		res, gotError := client.Equipment.BlockEquipment(params, auth)
+		fmt.Println("123123132132123", res)
+		require.NoError(t, gotError)
+		require.True(t, res.IsCode(http.StatusForbidden))
+	})
+
+	t.Run("Block Equipment is prohibited for admins", func(t *testing.T) {
+		tokens := utils.AdminUserLogin(t)
+		auth := utils.AuthInfoFunc(tokens.GetPayload().AccessToken)
+		model, err := setParameters(ctx, client, auth)
+		require.NoError(t, err)
+
+		created, err := createEquipment(ctx, client, auth, model)
+		require.NoError(t, err)
+		params := equipment.NewBlockEquipmentParamsWithContext(ctx).WithEquipmentID(*created.Payload.ID)
+		res, gotError := client.Equipment.BlockEquipment(params, auth)
+		require.NoError(t, gotError)
+		require.True(t, res.IsCode(http.StatusForbidden))
+	})
+
+	t.Run("Block Equipment is allowed for managers", func(t *testing.T) {
+		//params := equipment.NewBlockEquipmentParamsWithContext(ctx).WithEquipmentID(*created.Payload.ID)
+		//res, gotError := client.Equipment.BlockEquipment(params, auth)
+		//require.NoError(t, gotError)
+
+		//require.True(t, res.IsCode(http.StatusNoContent))
+	})
+
+	t.Run("Block Equipment failed: equipment not found", func(t *testing.T) {
+	})
+}
+
 func createOrder(ctx context.Context, be *client.Be, auth runtime.ClientAuthInfoWriterFunc, id *int64) (*int64, error) {
 	rentStart := strfmt.NewDateTime()
 	dateTimeFmt := "2006-01-02 15:04:05"

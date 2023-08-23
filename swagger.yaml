@@ -1552,7 +1552,7 @@ paths:
             description: Unexpected error.
             schema:
                 $ref: "#/definitions/Error"
-  /v1/equipment/{equipmentId}/blocking:
+  /equipment/{equipmentId}/blocking:
     parameters:
       - name: equipmentId
         in: path
