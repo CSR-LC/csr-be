@@ -559,7 +559,12 @@ func (s *EquipmentSuite) TestEquipmentRepository_BlockEquipment() {
 	startDate := time.Time(strfmt.DateTime(time.Now()))
 	endDate := time.Time(strfmt.DateTime(time.Now().AddDate(0, 0, 1)))
 	fmt.Println(startDate, endDate)
-	eqToBlock, err := tx.Equipment.Get(ctx, 1)
+	//eqToBlock, err := s.repository.EquipmentByID(ctx, 1)
+	eqToBlock, err := tx.Equipment.Query().WithEquipmentStatus().WithCurrentStatus().First(ctx)
+
+	fmt.Println(eqToBlock)
+
+	fmt.Println(err)
 	//fmt.Println(eqToBlock)
 	err = s.repository.BlockEquipment(ctx, eqToBlock.ID, startDate, endDate, s.user.ID)
 	//equipment, err := s.repository.EquipmentByID(ctx, eqToBlock.ID)
@@ -569,6 +574,11 @@ func (s *EquipmentSuite) TestEquipmentRepository_BlockEquipment() {
 	//require.NoError(t, tx.Rollback())
 	//require.Nil(t, equipments)
 }
+
+//////
+// [13:26] Kirill Kuzmin
+//tx.Equipment.Query().WithEquipmentStatus().WithCurrentStatus().Only(ctx)
+//////
 
 func mapContainsEquipment(eq *ent.Equipment, m map[int]*ent.Equipment) bool {
 	for _, v := range m {
