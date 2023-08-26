@@ -554,31 +554,26 @@ func (s *EquipmentSuite) TestEquipmentRepository_FindEquipmentsTotal() {
 func (s *EquipmentSuite) TestEquipmentRepository_BlockEquipment() {
 	t := s.T()
 	ctx := s.ctx
-	tx, err := s.client.Tx(ctx)
-	require.NoError(t, err)
 	startDate := time.Time(strfmt.DateTime(time.Now()))
 	endDate := time.Time(strfmt.DateTime(time.Now().AddDate(0, 0, 1)))
-	fmt.Println(startDate, endDate)
-	//eqToBlock, err := s.repository.EquipmentByID(ctx, 1)
-	eqToBlock, err := tx.Equipment.Query().WithEquipmentStatus().WithCurrentStatus().First(ctx)
+	tx, err := s.client.Tx(ctx)
+	tx.Order.Create().SetRentStart(startDate).SetRentEnd(endDate)
+	tx.Order.Create().SetRentStart(endDate).SetRentEnd(endDate.AddDate(0, 0, 2))
+	tx.OrderStatusName.Create().SetStatus(domain.OrderStatusBlocked).Save(s.ctx)
+	require.NoError(t, err)
 
-	fmt.Println(eqToBlock)
-
-	fmt.Println(err)
-	//fmt.Println(eqToBlock)
-	err = s.repository.BlockEquipment(ctx, eqToBlock.ID, startDate, endDate, s.user.ID)
-	//equipment, err := s.repository.EquipmentByID(ctx, eqToBlock.ID)
+	eqToBlock, err := tx.Equipment.Query().WithCurrentStatus().First(ctx)
 	fmt.Println(eqToBlock.Edges.CurrentStatus)
-	//EquipmentStatus.Query().All(ctx))
-	//fmt.Println(equipment)
-	//require.NoError(t, tx.Rollback())
-	//require.Nil(t, equipments)
-}
+	fmt.Println(eqToBlock.Edges.Order)
+	ctx = context.WithValue(ctx, middlewares.TxContextKey, tx)
+	err = s.repository.BlockEquipment(ctx, eqToBlock.ID, startDate, endDate, s.user.ID)
+	require.NoError(t, err)
+	fmt.Println(eqToBlock.Edges.Order)
+	//equipment, err := s.repository.EquipmentByID(ctx, eqToBlock.ID)
+	eqBlocked, err := tx.Equipment.Query().WithEquipmentStatus().WithCurrentStatus().First(ctx)
+	fmt.Println(eqBlocked.Edges.CurrentStatus)
 
-//////
-// [13:26] Kirill Kuzmin
-//tx.Equipment.Query().WithEquipmentStatus().WithCurrentStatus().Only(ctx)
-//////
+}
 
 func mapContainsEquipment(eq *ent.Equipment, m map[int]*ent.Equipment) bool {
 	for _, v := range m {

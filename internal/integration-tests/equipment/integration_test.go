@@ -25,7 +25,6 @@ import (
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/swagger/models"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/handlers"
 	utils "git.epam.com/epm-lstr/epm-lstr-lc/be/internal/integration-tests/common"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/roles"
 )
 
 func TestIntegration_CreateEquipment(t *testing.T) {
@@ -537,10 +536,14 @@ func TestIntegration_BlockEquipment(t *testing.T) {
 			EndDate:   strfmt.DateTime(endDate),
 		}
 
-		res, err := client.Equipment.BlockEquipment(params, auth)
-		require.NoError(t, err)
+		_, err = client.Equipment.BlockEquipment(params, auth)
+		require.Error(t, err)
 
-		require.Equal(t, http.StatusForbidden, res.Code())
+		wantErr := equipment.NewBlockEquipmentDefault(http.StatusForbidden)
+		wantErr.Payload = &models.Error{Data: &models.ErrorData{
+			Message: "You don't have rights to block this equipment",
+		}}
+		assert.Equal(t, wantErr, err)
 	})
 
 	t.Run("Block Equipment is prohibited for admins", func(t *testing.T) {
@@ -551,7 +554,30 @@ func TestIntegration_BlockEquipment(t *testing.T) {
 		eq, err := createEquipment(ctx, client, auth, model)
 		require.NoError(t, err)
 
-		principal := &models.Principal{Role: roles.Operator}
+		params := equipment.NewBlockEquipmentParamsWithContext(ctx).WithEquipmentID(*eq.Payload.ID)
+		params.Data = &models.ChangeEquipmentStatusToBlockedRequest{
+			StartDate: strfmt.DateTime(startDate),
+			EndDate:   strfmt.DateTime(endDate),
+		}
+
+		_, err = client.Equipment.BlockEquipment(params, auth)
+		require.Error(t, err)
+
+		wantErr := equipment.NewBlockEquipmentDefault(http.StatusForbidden)
+		wantErr.Payload = &models.Error{Data: &models.ErrorData{
+			Message: "You don't have rights to block this equipment",
+		}}
+		assert.Equal(t, wantErr, err)
+	})
+
+	t.Run("Block Equipment is permitted for managers", func(t *testing.T) {
+		tokens := utils.ManagerUserLogin(t)
+		auth := utils.AuthInfoFunc(tokens.GetPayload().AccessToken)
+		model, err := setParameters(ctx, client, auth)
+		require.NoError(t, err)
+		eq, err := createEquipment(ctx, client, auth, model)
+		require.NoError(t, err)
+
 		params := equipment.NewBlockEquipmentParamsWithContext(ctx).WithEquipmentID(*eq.Payload.ID)
 		params.Data = &models.ChangeEquipmentStatusToBlockedRequest{
 			StartDate: strfmt.DateTime(startDate),
@@ -560,19 +586,26 @@ func TestIntegration_BlockEquipment(t *testing.T) {
 
 		res, err := client.Equipment.BlockEquipment(params, auth)
 		require.NoError(t, err)
-
-		require.Equal(t, http.StatusForbidden, res.Code())
+		require.True(t, res.IsCode(http.StatusNoContent))
 	})
 
-	t.Run("Block Equipment is allowed for managers", func(t *testing.T) {
-		//params := equipment.NewBlockEquipmentParamsWithContext(ctx).WithEquipmentID(*created.Payload.ID)
-		//res, gotError := client.Equipment.BlockEquipment(params, auth)
-		//require.NoError(t, gotError)
+	t.Run("Block Equipment is failed, equipment not found", func(t *testing.T) {
+		tokens := utils.ManagerUserLogin(t)
+		auth := utils.AuthInfoFunc(tokens.GetPayload().AccessToken)
+		var fakeID int64 = 111
 
-		//require.True(t, res.IsCode(http.StatusNoContent))
-	})
+		params := equipment.NewBlockEquipmentParamsWithContext(ctx).WithEquipmentID(fakeID)
+		params.Data = &models.ChangeEquipmentStatusToBlockedRequest{
+			StartDate: strfmt.DateTime(startDate),
+			EndDate:   strfmt.DateTime(endDate),
+		}
 
-	t.Run("Block Equipment failed: equipment not found", func(t *testing.T) {
+		_, err := client.Equipment.BlockEquipment(params, auth)
+		require.Error(t, err)
+
+		wantErr := equipment.NewBlockEquipmentNotFound()
+		wantErr.Payload = &models.Error{Data: &models.ErrorData{Message: handlers.EquipmentNotFoundMsg}}
+		assert.Equal(t, wantErr, err)
 	})
 }
 

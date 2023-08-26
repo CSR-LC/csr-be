@@ -8,14 +8,8 @@ import (
 	"math"
 	"net/http"
 	"net/http/httptest"
+	"reflect"
 	"testing"
-
-	"github.com/go-openapi/loads"
-	"github.com/go-openapi/runtime"
-	_ "github.com/mattn/go-sqlite3"
-	"github.com/stretchr/testify/require"
-	"github.com/stretchr/testify/suite"
-	"go.uber.org/zap"
 
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/ent"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/ent/enttest"
@@ -24,6 +18,13 @@ import (
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/swagger/restapi"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/swagger/restapi/operations"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/swagger/restapi/operations/equipment"
+	"git.epam.com/epm-lstr/epm-lstr-lc/be/pkg/domain"
+	"github.com/go-openapi/loads"
+	"github.com/go-openapi/runtime"
+	_ "github.com/mattn/go-sqlite3"
+	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/suite"
+	"go.uber.org/zap"
 )
 
 func TestSetEquipmentHandler(t *testing.T) {
@@ -47,6 +48,7 @@ func TestSetEquipmentHandler(t *testing.T) {
 	require.NotEmpty(t, api.EquipmentGetAllEquipmentHandler)
 	require.NotEmpty(t, api.EquipmentFindEquipmentHandler)
 	require.NotEmpty(t, api.EquipmentArchiveEquipmentHandler)
+	require.NotEmpty(t, api.EquipmentBlockEquipmentHandler)
 }
 
 type EquipmentTestSuite struct {
@@ -1097,6 +1099,29 @@ func (s *EquipmentTestSuite) TestEquipment_EditEquipmentFunc_OK() {
 	s.equipmentRepo.AssertExpectations(t)
 }
 
+func (s *EquipmentTestSuite) TestEquipment_BlockEquipmentFunc() {
+	t := s.T()
+	request := http.Request{}
+	ctx := context.Background()
+
+	handlerFunc := s.equipment.BlockEquipmentFunc(s.equipmentRepo)
+	id := 1
+	data := equipment.BlockEquipmentParams{
+		HTTPRequest: request.WithContext(ctx),
+		EquipmentID: int64(id),
+	}
+	err := &ent.NotFoundError{}
+
+	s.equipmentRepo.On("BlockEquipment", ctx, id).Return(err)
+
+	resp := handlerFunc(data, nil)
+	responseRecorder := httptest.NewRecorder()
+	producer := runtime.JSONProducer()
+	resp.WriteResponse(responseRecorder, producer)
+	require.Equal(t, http.StatusNotFound, responseRecorder.Code)
+	//s.equipmentRepo.AssertExpectations(t)
+}
+
 func containsEquipment(t *testing.T, array []*ent.Equipment, item *models.EquipmentResponse) bool {
 	t.Helper()
 	for _, v := range array {
@@ -1119,4 +1144,31 @@ func equipmentsDuplicated(t *testing.T, array1, array2 []*models.EquipmentRespon
 		}
 	}
 	return false
+}
+
+func TestEquipment_BlockEquipmentFunc(t *testing.T) {
+	type fields struct {
+		logger *zap.Logger
+	}
+	type args struct {
+		repository domain.EquipmentRepository
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		args   args
+		want   equipment.BlockEquipmentHandlerFunc
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			c := Equipment{
+				logger: tt.fields.logger,
+			}
+			if got := c.BlockEquipmentFunc(tt.args.repository); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Equipment.BlockEquipmentFunc() = %v, want %v", got, tt.want)
+			}
+		})
+	}
 }

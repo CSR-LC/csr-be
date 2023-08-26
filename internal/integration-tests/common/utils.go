@@ -227,8 +227,8 @@ func OperatorUserLogin(t *testing.T) *users.LoginOK {
 	t.Helper()
 	ctx := context.Background()
 	client := SetupClient()
-	l, p, _ := ManagerLoginPassword(t)
-	// login and get token with admin role
+	l, p, _ := OperatorLoginPassword(t)
+	// login and get token with operator role
 	loginUser, err := LoginUser(ctx, client, l, p)
 	require.NoError(t, err)
 	return loginUser
