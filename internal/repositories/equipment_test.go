@@ -2,7 +2,6 @@ package repositories
 
 import (
 	"context"
-	"fmt"
 	"math"
 	"testing"
 	"time"
@@ -570,17 +569,13 @@ func (s *EquipmentSuite) TestEquipmentRepository_BlockEquipment() {
 		SetUsers(s.user).
 		SetCurrentStatus(as).
 		Save(ctx)
-	der1, err := tx.Order.Query().WithCurrentStatus().WithOrderStatus().Only(ctx)
-	fmt.Println(der1.Edges.OrderStatus)
-	//fmt.Println("order before", eqToBlock.Edges.Order)
+
 	ctx = context.WithValue(ctx, middlewares.TxContextKey, tx)
 	err = s.repository.BlockEquipment(ctx, eqToBlock.ID, startDate, endDate, s.user.ID)
 	require.NoError(t, err)
 	eqBlocked, err := tx.Equipment.Query().WithEquipmentStatus().WithCurrentStatus().First(ctx)
 	require.NotEqual(t, eqToBlock.Edges.CurrentStatus.Name, eqBlocked.Edges.CurrentStatus.Name)
-	//fmt.Println("order after", eqToBlock.Edges.Order)
-	der2, err := tx.Order.Query().WithCurrentStatus().WithOrderStatus().Only(ctx)
-	fmt.Println(der2.Edges.OrderStatus)
+
 }
 
 func mapContainsEquipment(eq *ent.Equipment, m map[int]*ent.Equipment) bool {
