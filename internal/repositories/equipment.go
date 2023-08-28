@@ -543,7 +543,9 @@ func (r *equipmentRepository) BlockEquipment(
 	// Find all Orders which have OrderStatusName booked and start from startDate and later
 	orders, err := eqToBlock.QueryOrder().
 		Where(order.RentStartGTE(*start), order.RentStartLTE(*end)). // rentStart must be in range of startDate..endDate
-		Where(order.RentEndGTE(*start)).                             // rentEnd must be greater that startDate
+		Where(order.RentEndGTE(*start)).                             // rentEnd must be equal or greater that startDate
+		Where(order.HasOrderStatusWith(orderstatus.
+			HasOrderStatusNameWith(orderstatusname.StatusEQ(domain.OrderStatusPrepared)))).
 		Where(order.HasOrderStatusWith(orderstatus.
 			HasOrderStatusNameWith(orderstatusname.StatusEQ(domain.OrderStatusApproved)))).
 		All(ctx)
