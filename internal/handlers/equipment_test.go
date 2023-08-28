@@ -11,6 +11,14 @@ import (
 	"testing"
 	"time"
 
+	"github.com/go-openapi/loads"
+	"github.com/go-openapi/runtime"
+	"github.com/go-openapi/strfmt"
+	_ "github.com/mattn/go-sqlite3"
+	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/suite"
+	"go.uber.org/zap"
+
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/ent"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/ent/enttest"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/mocks"
@@ -19,13 +27,6 @@ import (
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/swagger/restapi/operations"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/swagger/restapi/operations/equipment"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/roles"
-	"github.com/go-openapi/loads"
-	"github.com/go-openapi/runtime"
-	"github.com/go-openapi/strfmt"
-	_ "github.com/mattn/go-sqlite3"
-	"github.com/stretchr/testify/require"
-	"github.com/stretchr/testify/suite"
-	"go.uber.org/zap"
 )
 
 func TestSetEquipmentHandler(t *testing.T) {

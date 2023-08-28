@@ -541,20 +541,28 @@ func (r *equipmentRepository) BlockEquipment(
 	}
 
 	// Find all Orders which have OrderStatusName booked and start from startDate and later
-	orders, err := eqToBlock.QueryOrder().
+	orderIDs, err := eqToBlock.QueryOrder().
 		Where(order.RentStartGTE(*start), order.RentStartLTE(*end)). // rentStart must be in range of startDate..endDate
 		Where(order.RentEndGTE(*start)).                             // rentEnd must be equal or greater that startDate
 		Where(order.HasOrderStatusWith(orderstatus.
-			HasOrderStatusNameWith(orderstatusname.StatusEQ(domain.OrderStatusPrepared)))).
-		Where(order.HasOrderStatusWith(orderstatus.
-			HasOrderStatusNameWith(orderstatusname.StatusEQ(domain.OrderStatusApproved)))).
-		All(ctx)
+			HasOrderStatusNameWith(orderstatusname.StatusIn(
+				domain.OrderStatusPrepared,
+				domain.OrderStatusApproved)))).
+		IDs(ctx)
+	if err != nil {
+		return err
+	}
 
-	// Set a new OrderStatusName for these Orders and create new OrderStatus for each Order
-	for _, order := range orders {
+	// Set a new OrderStatusName for these Orders
+	_, err = tx.Order.Update().Where(order.IDIn(orderIDs...)).SetCurrentStatus(orStatusBlocked).Save(ctx)
+	if err != nil {
+		return err
+	}
+
+	for _, order := range orderIDs {
 		tx.OrderStatus.Create().
 			SetCurrentDate(time.Now()).
-			SetOrder(order).
+			SetOrderID(order).
 			SetUsersID(userID).
 			SetOrderStatusName(orStatusBlocked).
 			Save(ctx)
