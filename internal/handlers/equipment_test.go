@@ -8,8 +8,8 @@ import (
 	"math"
 	"net/http"
 	"net/http/httptest"
-	"reflect"
 	"testing"
+	"time"
 
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/ent"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/ent/enttest"
@@ -18,9 +18,10 @@ import (
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/swagger/restapi"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/swagger/restapi/operations"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/swagger/restapi/operations/equipment"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/pkg/domain"
+	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/roles"
 	"github.com/go-openapi/loads"
 	"github.com/go-openapi/runtime"
+	"github.com/go-openapi/strfmt"
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
@@ -1099,27 +1100,76 @@ func (s *EquipmentTestSuite) TestEquipment_EditEquipmentFunc_OK() {
 	s.equipmentRepo.AssertExpectations(t)
 }
 
-func (s *EquipmentTestSuite) TestEquipment_BlockEquipmentFunc() {
+func (s *EquipmentTestSuite) TestEquipment_BlockEquipmentFunc_RepoNotFoundErr() {
 	t := s.T()
 	request := http.Request{}
 	ctx := context.Background()
 
 	handlerFunc := s.equipment.BlockEquipmentFunc(s.equipmentRepo)
-	id := 1
-	data := equipment.BlockEquipmentParams{
+	userID, equipmentID := 1, 1
+	startDate, endDate := time.Now(), time.Now().Add(time.Hour*24)
+	params := equipment.BlockEquipmentParams{
 		HTTPRequest: request.WithContext(ctx),
-		EquipmentID: int64(id),
+		EquipmentID: int64(equipmentID),
+		Data: &models.ChangeEquipmentStatusToBlockedRequest{
+			StartDate: strfmt.DateTime(startDate),
+			EndDate:   strfmt.DateTime(endDate),
+		},
 	}
 	err := &ent.NotFoundError{}
 
-	s.equipmentRepo.On("BlockEquipment", ctx, id).Return(err)
+	s.equipmentRepo.On("BlockEquipment", ctx, equipmentID, startDate, endDate, userID).Return(err)
+	responseRecorder := httptest.NewRecorder()
+	producer := runtime.JSONProducer()
+	principal := &models.Principal{ID: int64(userID), Role: roles.Manager}
+	resp := handlerFunc(params, principal)
+	resp.WriteResponse(responseRecorder, producer)
+	require.Equal(t, http.StatusNotFound, responseRecorder.Code)
+	s.equipmentRepo.AssertExpectations(t)
 
-	resp := handlerFunc(data, nil)
+	responseRecorder = httptest.NewRecorder()
+	producer = runtime.JSONProducer()
+	principal = &models.Principal{ID: int64(userID), Role: roles.Admin}
+	resp = handlerFunc(params, principal)
+	resp.WriteResponse(responseRecorder, producer)
+	require.Equal(t, http.StatusForbidden, responseRecorder.Code)
+	s.equipmentRepo.AssertExpectations(t)
+}
+
+func (s *EquipmentTestSuite) TestEquipment_BlockEquipmentFunc_OK() {
+	t := s.T()
+	request := http.Request{}
+	ctx := context.Background()
+
+	handlerFunc := s.equipment.BlockEquipmentFunc(s.equipmentRepo)
+	userID, equipmentID := 1, 1
+	startDate, endDate := time.Now(), time.Now().Add(time.Hour*24)
+	params := equipment.BlockEquipmentParams{
+		HTTPRequest: request.WithContext(ctx),
+		EquipmentID: int64(equipmentID),
+		Data: &models.ChangeEquipmentStatusToBlockedRequest{
+			StartDate: strfmt.DateTime(startDate),
+			EndDate:   strfmt.DateTime(endDate),
+		},
+	}
+
+	s.equipmentRepo.On("BlockEquipment", ctx, equipmentID, startDate, endDate, userID).Return(nil)
+	principal := &models.Principal{ID: int64(userID), Role: roles.Manager}
+	resp := handlerFunc(params, principal)
 	responseRecorder := httptest.NewRecorder()
 	producer := runtime.JSONProducer()
 	resp.WriteResponse(responseRecorder, producer)
-	require.Equal(t, http.StatusNotFound, responseRecorder.Code)
-	//s.equipmentRepo.AssertExpectations(t)
+	require.Equal(t, http.StatusNoContent, responseRecorder.Code)
+	s.equipmentRepo.AssertExpectations(t)
+
+	s.equipmentRepo.On("BlockEquipment", ctx, equipmentID, startDate, endDate, userID).Return(nil)
+	principal = &models.Principal{ID: int64(userID), Role: roles.Operator}
+	resp = handlerFunc(params, principal)
+	responseRecorder = httptest.NewRecorder()
+	producer = runtime.JSONProducer()
+	resp.WriteResponse(responseRecorder, producer)
+	require.Equal(t, http.StatusForbidden, responseRecorder.Code)
+	s.equipmentRepo.AssertExpectations(t)
 }
 
 func containsEquipment(t *testing.T, array []*ent.Equipment, item *models.EquipmentResponse) bool {
@@ -1144,31 +1194,4 @@ func equipmentsDuplicated(t *testing.T, array1, array2 []*models.EquipmentRespon
 		}
 	}
 	return false
-}
-
-func TestEquipment_BlockEquipmentFunc(t *testing.T) {
-	type fields struct {
-		logger *zap.Logger
-	}
-	type args struct {
-		repository domain.EquipmentRepository
-	}
-	tests := []struct {
-		name   string
-		fields fields
-		args   args
-		want   equipment.BlockEquipmentHandlerFunc
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			c := Equipment{
-				logger: tt.fields.logger,
-			}
-			if got := c.BlockEquipmentFunc(tt.args.repository); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("Equipment.BlockEquipmentFunc() = %v, want %v", got, tt.want)
-			}
-		})
-	}
 }

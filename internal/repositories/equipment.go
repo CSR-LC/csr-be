@@ -12,6 +12,7 @@ import (
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/ent/equipment"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/ent/equipmentstatusname"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/ent/order"
+	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/ent/orderstatus"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/ent/orderstatusname"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/ent/petkind"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/ent/petsize"
@@ -541,8 +542,10 @@ func (r *equipmentRepository) BlockEquipment(
 
 	// Find all Orders which have OrderStatusName booked and start from startDate and later
 	orders, err := eqToBlock.QueryOrder().
-		Where(order.RentStartGTE(*start)).
-		Where(order.Not(order.CurrentStatus(domain.OrderStatusBlocked))).
+		Where(order.RentStartGTE(*start), order.RentStartLTE(*end)). // rentStart must be in range of startDate..endDate
+		Where(order.RentEndGTE(*start), order.RentEndLTE(*end)).     // rentEnd must be in range of startDate..endDate
+		Where(order.HasOrderStatusWith(orderstatus.
+			HasOrderStatusNameWith(orderstatusname.StatusEQ(domain.OrderStatusApproved)))).
 		All(ctx)
 
 	// Set a new OrderStatusName for these Orders and create new OrderStatus for each Order

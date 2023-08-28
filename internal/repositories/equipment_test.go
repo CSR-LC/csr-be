@@ -557,22 +557,30 @@ func (s *EquipmentSuite) TestEquipmentRepository_BlockEquipment() {
 	startDate := time.Time(strfmt.DateTime(time.Now()))
 	endDate := time.Time(strfmt.DateTime(time.Now().AddDate(0, 0, 1)))
 	tx, err := s.client.Tx(ctx)
-	tx.Order.Create().SetRentStart(startDate).SetRentEnd(endDate)
-	tx.Order.Create().SetRentStart(endDate).SetRentEnd(endDate.AddDate(0, 0, 2))
-	tx.OrderStatusName.Create().SetStatus(domain.OrderStatusBlocked).Save(s.ctx)
 	require.NoError(t, err)
-
+	as, _ := tx.OrderStatusName.Create().SetStatus(domain.EquipmentStatusAvailable).Save(ctx)
+	tx.OrderStatusName.Create().SetStatus(domain.OrderStatusBlocked).Save(s.ctx)
 	eqToBlock, err := tx.Equipment.Query().WithCurrentStatus().First(ctx)
-	fmt.Println(eqToBlock.Edges.CurrentStatus)
-	fmt.Println(eqToBlock.Edges.Order)
+	_, err = tx.Order.Create().
+		SetRentStart(startDate).
+		SetRentEnd(endDate).
+		SetDescription("test order").
+		SetQuantity(1).
+		AddEquipments(eqToBlock).
+		SetUsers(s.user).
+		SetCurrentStatus(as).
+		Save(ctx)
+	der1, err := tx.Order.Query().WithCurrentStatus().WithOrderStatus().Only(ctx)
+	fmt.Println(der1.Edges.OrderStatus)
+	//fmt.Println("order before", eqToBlock.Edges.Order)
 	ctx = context.WithValue(ctx, middlewares.TxContextKey, tx)
 	err = s.repository.BlockEquipment(ctx, eqToBlock.ID, startDate, endDate, s.user.ID)
 	require.NoError(t, err)
-	fmt.Println(eqToBlock.Edges.Order)
-	//equipment, err := s.repository.EquipmentByID(ctx, eqToBlock.ID)
 	eqBlocked, err := tx.Equipment.Query().WithEquipmentStatus().WithCurrentStatus().First(ctx)
-	fmt.Println(eqBlocked.Edges.CurrentStatus)
-
+	require.NotEqual(t, eqToBlock.Edges.CurrentStatus.Name, eqBlocked.Edges.CurrentStatus.Name)
+	//fmt.Println("order after", eqToBlock.Edges.Order)
+	der2, err := tx.Order.Query().WithCurrentStatus().WithOrderStatus().Only(ctx)
+	fmt.Println(der2.Edges.OrderStatus)
 }
 
 func mapContainsEquipment(eq *ent.Equipment, m map[int]*ent.Equipment) bool {
