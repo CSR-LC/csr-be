@@ -3,6 +3,7 @@ package repositories
 import (
 	"context"
 	"math"
+	"reflect"
 	"testing"
 	"time"
 
@@ -585,4 +586,58 @@ func mapContainsEquipment(eq *ent.Equipment, m map[int]*ent.Equipment) bool {
 		}
 	}
 	return false
+}
+
+func Test_checkDates(t *testing.T) {
+	start := time.Now()
+	end := time.Now().Add(time.Hour * 24)
+	var blankTime time.Time
+	type args struct {
+		start *time.Time
+		end   *time.Time
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    *time.Time
+		want1   *time.Time
+		wantErr bool
+	}{
+		{
+			name:    "When correct time",
+			args:    args{start: &start, end: &end},
+			want:    &start,
+			want1:   &end,
+			wantErr: false,
+		},
+		{
+			name:    "When incorrect time",
+			args:    args{start: &end, end: &start},
+			want:    nil,
+			want1:   nil,
+			wantErr: true,
+		},
+		{
+			name:    "When incorrect time 2",
+			args:    args{start: &blankTime, end: &blankTime},
+			want:    &blankTime,
+			want1:   &blankTime,
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, got1, err := checkDates(tt.args.start, tt.args.end)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("checkDates() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("checkDates() got = %v, want %v", got, tt.want)
+			}
+			if !reflect.DeepEqual(got1, tt.want1) {
+				t.Errorf("checkDates() got1 = %v, want %v", got1, tt.want1)
+			}
+		})
+	}
 }
