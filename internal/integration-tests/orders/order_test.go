@@ -31,12 +31,12 @@ import (
 )
 
 var (
-	auth  runtime.ClientAuthInfoWriterFunc
+	auth         runtime.ClientAuthInfoWriterFunc
 	operatorAuth runtime.ClientAuthInfoWriterFunc
-	managerAuth runtime.ClientAuthInfoWriterFunc
-	userAuth runtime.ClientAuthInfoWriterFunc
-	eq    *models.EquipmentResponse
-	token *string
+	managerAuth  runtime.ClientAuthInfoWriterFunc
+	userAuth     runtime.ClientAuthInfoWriterFunc
+	eq           *models.EquipmentResponse
+	token        *string
 )
 
 func TestIntegration_BeforeOrderSetup(t *testing.T) {
@@ -545,7 +545,28 @@ func TestIntegration_ListAllOrders(t *testing.T) {
 	equip, err := createEquipment(ctx, client, auth)
 	assert.NoError(t, err)
 
-	existingOrders := 8 // Amount of already created orders from the tests above
+	// Check all existing orders. We're going to use them in this case
+	listParams := orders.NewGetAllOrdersParamsWithContext(ctx)
+	res, err := client.Orders.GetAllOrders(listParams, auth)
+	assert.NoError(t, err)
+
+	// We'll track only finished and 'InReview' to simplify this test
+	var existingOrders, existingInReview, existingFinished int
+	existingOrders = len(res.Payload.Items)
+	for _, o := range res.Payload.Items {
+		switch *o.LastStatus.Status {
+		case domain.OrderStatusInReview:
+			existingInReview++
+		case domain.OrderStatusClosed:
+			existingFinished++
+		case domain.OrderStatusRejected:
+			existingFinished++
+		case domain.OrderStatusBlocked:
+			existingFinished++
+		default:
+			continue
+		}
+	}
 
 	// Create new user and create 1 Order for him
 	adminLogin2 := common.AdminUserLogin(t)
@@ -605,7 +626,7 @@ func TestIntegration_ListAllOrders(t *testing.T) {
 		listParams.Status = &domain.OrderStatusFinished // we have 2 finished orders from the TC above
 		res, err := client.Orders.GetAllOrders(listParams, auth)
 		require.NoError(t, err)
-		assert.Equal(t, 2, len(res.GetPayload().Items))
+		assert.Equal(t, existingFinished, len(res.GetPayload().Items))
 	})
 
 	t.Run("Get All Orders as Admin, filter by Finished status + equipment", func(t *testing.T) {
@@ -619,10 +640,10 @@ func TestIntegration_ListAllOrders(t *testing.T) {
 
 	t.Run("Get All Orders as Admin, filter by InReview status", func(t *testing.T) {
 		listParams := orders.NewGetAllOrdersParamsWithContext(ctx)
-		listParams.Status = &domain.OrderStatusInReview // we have only 1 new order in Review 
+		listParams.Status = &domain.OrderStatusInReview // we have only 1 new order in Review
 		res, err := client.Orders.GetAllOrders(listParams, auth)
 		require.NoError(t, err)
-		assert.Equal(t, 1, len(res.GetPayload().Items))
+		assert.Equal(t, existingInReview+1, len(res.GetPayload().Items))
 	})
 }
 

@@ -271,7 +271,7 @@ func (o Order) ListAllOrdersFunc(repository domain.OrderRepository) orders.GetAl
 				OrderColumn: orderColumn,
 			},
 		}
-		
+
 		if p.Status != nil {
 			_, ok := domain.AllOrderStatuses[*p.Status]
 			if !ok {
@@ -280,7 +280,7 @@ func (o Order) ListAllOrdersFunc(repository domain.OrderRepository) orders.GetAl
 			}
 			orderFilter.Status = p.Status
 		}
-		
+
 		if p.EquipmentID != nil {
 			eid := int(*p.EquipmentID)
 			orderFilter.EquipmentID = &eid

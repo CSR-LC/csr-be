@@ -806,14 +806,14 @@ func (s *OrderSuite) TestOrderRepository_List_EquipmentFilter() {
 		},
 		"only Equipment ID 1": {
 			fl: domain.OrderFilter{
-				Filter: filter,
+				Filter:      filter,
 				EquipmentID: &s.equipments[0].ID,
 			},
 			expectedIDs: []int{s.orders[0].ID, s.orders[2].ID},
 		},
 		"only Equipment ID 2": {
 			fl: domain.OrderFilter{
-				Filter: filter,
+				Filter:      filter,
 				EquipmentID: &s.equipments[1].ID,
 			},
 			expectedIDs: []int{s.orders[1].ID, s.orders[3].ID},
