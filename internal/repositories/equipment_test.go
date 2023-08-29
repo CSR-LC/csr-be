@@ -611,14 +611,14 @@ func Test_checkDates(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name:    "When incorrect time",
+			name:    "When end date becomes earlier thar start date",
 			args:    args{start: &end, end: &start},
 			want:    nil,
 			want1:   nil,
 			wantErr: true,
 		},
 		{
-			name:    "When incorrect time 2",
+			name:    "When default time",
 			args:    args{start: &blankTime, end: &blankTime},
 			want:    &blankTime,
 			want1:   &blankTime,
