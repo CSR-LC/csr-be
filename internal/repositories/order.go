@@ -84,9 +84,12 @@ func (r *orderRepository) List(ctx context.Context, ownerId int, filter domain.O
 		return nil, err
 	}
 	query := tx.Order.Query().
-		Where(order.HasUsersWith(user.ID(ownerId))).
 		Order(orderFunc).Limit(filter.Limit).Offset(filter.Offset)
-		
+
+	if ownerId > 0 {
+		query = query.Where(order.HasUsersWith(user.ID(ownerId)))
+	}
+
 	query = r.applyListFilters(query, filter)
 
 	items, err := query.WithUsers().WithOrderStatus().WithEquipments().All(ctx)
@@ -102,7 +105,11 @@ func (r *orderRepository) OrdersTotal(ctx context.Context, ownerId int) (int, er
 	if err != nil {
 		return 0, err
 	}
-	return tx.Order.Query().Where(order.HasUsersWith(user.ID(ownerId))).Count(ctx)
+	query := tx.Order.Query()
+	if ownerId > 0 {
+		query = query.Where(order.HasUsersWith(user.ID(ownerId)))
+	}
+	return query.Count(ctx)
 }
 
 func (r *orderRepository) Create(ctx context.Context, data *models.OrderCreateRequest, ownerId int, equipmentIDs []int) (*ent.Order, error) {
@@ -269,6 +276,9 @@ func (r *orderRepository) applyListFilters(q *ent.OrderQuery, filter domain.Orde
 		q = q.Where(order.HasCurrentStatusWith(func(s *sql.Selector) {
 			s.Where(sql.InValues(s.C(orderstatusname.FieldStatus), statusValues...))
 		}))
+	}
+	if filter.EquipmentID != nil {
+		q = q.Where(order.HasEquipmentsWith(equipment.ID(*filter.EquipmentID)))
 	}
 	return q
 }

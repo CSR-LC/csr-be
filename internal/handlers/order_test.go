@@ -42,7 +42,7 @@ func TestSetOrderHandler(t *testing.T) {
 	}
 	api := operations.NewBeAPI(swaggerSpec)
 	SetOrderHandler(logger, api)
-	require.NotEmpty(t, api.OrdersGetAllOrdersHandler)
+	require.NotEmpty(t, api.OrdersGetUserOrdersHandler)
 	require.NotEmpty(t, api.OrdersCreateOrderHandler)
 	require.NotEmpty(t, api.OrdersUpdateOrderHandler)
 }
@@ -120,8 +120,8 @@ func (s *orderTestSuite) TestOrder_ListOrder_RepoErr() {
 	err := errors.New("error")
 	s.orderRepository.On("OrdersTotal", ctx, userID).Return(0, err)
 
-	handlerFunc := s.orderHandler.ListOrderFunc(s.orderRepository)
-	data := orders.GetAllOrdersParams{HTTPRequest: &request}
+	handlerFunc := s.orderHandler.ListUserOrdersFunc(s.orderRepository)
+	data := orders.GetUserOrdersParams{HTTPRequest: &request}
 
 	principal := &models.Principal{ID: int64(userID)}
 	resp := handlerFunc.Handle(data, principal)
@@ -138,8 +138,8 @@ func (s *orderTestSuite) TestOrder_ListOrder_WrongStatus() {
 	userID := 1
 	st := "qwe"
 
-	handlerFunc := s.orderHandler.ListOrderFunc(s.orderRepository)
-	data := orders.GetAllOrdersParams{
+	handlerFunc := s.orderHandler.ListUserOrdersFunc(s.orderRepository)
+	data := orders.GetUserOrdersParams{
 		HTTPRequest: &request,
 		Status:      &st,
 	}
@@ -181,8 +181,8 @@ func (s *orderTestSuite) TestOrder_ListOrder_MapErr() {
 	s.orderRepository.On("List", ctx, userID, filter).
 		Return(orderList, nil)
 
-	handlerFunc := s.orderHandler.ListOrderFunc(s.orderRepository)
-	data := orders.GetAllOrdersParams{HTTPRequest: &request}
+	handlerFunc := s.orderHandler.ListUserOrdersFunc(s.orderRepository)
+	data := orders.GetUserOrdersParams{HTTPRequest: &request}
 	principal := &models.Principal{ID: int64(userID)}
 	resp := handlerFunc.Handle(data, principal)
 
@@ -200,8 +200,8 @@ func (s *orderTestSuite) TestOrder_ListOrder_NotFound() {
 	userID := 1
 	s.orderRepository.On("OrdersTotal", ctx, userID).Return(0, nil)
 
-	handlerFunc := s.orderHandler.ListOrderFunc(s.orderRepository)
-	data := orders.GetAllOrdersParams{HTTPRequest: &request}
+	handlerFunc := s.orderHandler.ListUserOrdersFunc(s.orderRepository)
+	data := orders.GetUserOrdersParams{HTTPRequest: &request}
 	principal := &models.Principal{ID: int64(userID)}
 	resp := handlerFunc.Handle(data, principal)
 
@@ -210,7 +210,7 @@ func (s *orderTestSuite) TestOrder_ListOrder_NotFound() {
 	resp.WriteResponse(responseRecorder, producer)
 	require.Equal(t, http.StatusOK, responseRecorder.Code)
 
-	var response models.OrderList
+	var response models.UserOrdersList
 	err := json.Unmarshal(responseRecorder.Body.Bytes(), &response)
 	if err != nil {
 		t.Fatal(err)
@@ -240,8 +240,8 @@ func (s *orderTestSuite) TestOrder_ListOrder_EmptyParams() {
 	s.orderRepository.On("List", ctx, userID, filter).
 		Return(orderList, nil)
 
-	handlerFunc := s.orderHandler.ListOrderFunc(s.orderRepository)
-	data := orders.GetAllOrdersParams{HTTPRequest: &request}
+	handlerFunc := s.orderHandler.ListUserOrdersFunc(s.orderRepository)
+	data := orders.GetUserOrdersParams{HTTPRequest: &request}
 	principal := &models.Principal{ID: int64(userID)}
 	resp := handlerFunc.Handle(data, principal)
 
@@ -250,7 +250,7 @@ func (s *orderTestSuite) TestOrder_ListOrder_EmptyParams() {
 	resp.WriteResponse(responseRecorder, producer)
 	require.Equal(t, http.StatusOK, responseRecorder.Code)
 
-	var response models.OrderList
+	var response models.UserOrdersList
 	err := json.Unmarshal(responseRecorder.Body.Bytes(), &response)
 	if err != nil {
 		t.Fatal(err)
@@ -288,8 +288,8 @@ func (s *orderTestSuite) TestOrder_ListOrder_LimitGreaterThanTotal() {
 	s.orderRepository.On("List", ctx, userID, filter).
 		Return(orderList, nil)
 
-	handlerFunc := s.orderHandler.ListOrderFunc(s.orderRepository)
-	data := orders.GetAllOrdersParams{
+	handlerFunc := s.orderHandler.ListUserOrdersFunc(s.orderRepository)
+	data := orders.GetUserOrdersParams{
 		HTTPRequest: &request,
 		Limit:       &limit,
 		Offset:      &offset,
@@ -304,7 +304,7 @@ func (s *orderTestSuite) TestOrder_ListOrder_LimitGreaterThanTotal() {
 	resp.WriteResponse(responseRecorder, producer)
 	require.Equal(t, http.StatusOK, responseRecorder.Code)
 
-	var response models.OrderList
+	var response models.UserOrdersList
 	err := json.Unmarshal(responseRecorder.Body.Bytes(), &response)
 	if err != nil {
 		t.Fatal(err)
@@ -344,8 +344,8 @@ func (s *orderTestSuite) TestOrder_ListOrder_LimitLessThanTotal() {
 	s.orderRepository.On("List", ctx, userID, filter).
 		Return(orderList[:limit], nil)
 
-	handlerFunc := s.orderHandler.ListOrderFunc(s.orderRepository)
-	data := orders.GetAllOrdersParams{
+	handlerFunc := s.orderHandler.ListUserOrdersFunc(s.orderRepository)
+	data := orders.GetUserOrdersParams{
 		HTTPRequest: &request,
 		Limit:       &limit,
 		Offset:      &offset,
@@ -360,7 +360,7 @@ func (s *orderTestSuite) TestOrder_ListOrder_LimitLessThanTotal() {
 	resp.WriteResponse(responseRecorder, producer)
 	require.Equal(t, http.StatusOK, responseRecorder.Code)
 
-	var response models.OrderList
+	var response models.UserOrdersList
 	err := json.Unmarshal(responseRecorder.Body.Bytes(), &response)
 	if err != nil {
 		t.Fatal(err)
@@ -400,8 +400,8 @@ func (s *orderTestSuite) TestOrder_ListOrder_SecondPage() {
 	s.orderRepository.On("List", ctx, userID, filter).
 		Return(orderList[offset:], nil)
 
-	handlerFunc := s.orderHandler.ListOrderFunc(s.orderRepository)
-	data := orders.GetAllOrdersParams{
+	handlerFunc := s.orderHandler.ListUserOrdersFunc(s.orderRepository)
+	data := orders.GetUserOrdersParams{
 		HTTPRequest: &request,
 		Limit:       &limit,
 		Offset:      &offset,
@@ -416,7 +416,7 @@ func (s *orderTestSuite) TestOrder_ListOrder_SecondPage() {
 	resp.WriteResponse(responseRecorder, producer)
 	require.Equal(t, http.StatusOK, responseRecorder.Code)
 
-	var response models.OrderList
+	var response models.UserOrdersList
 	err := json.Unmarshal(responseRecorder.Body.Bytes(), &response)
 	if err != nil {
 		t.Fatal(err)
@@ -456,8 +456,8 @@ func (s *orderTestSuite) TestOrder_ListOrder_SeveralPages() {
 	s.orderRepository.On("List", ctx, userID, filter).
 		Return(orderList[:limit], nil)
 
-	handlerFunc := s.orderHandler.ListOrderFunc(s.orderRepository)
-	data := orders.GetAllOrdersParams{
+	handlerFunc := s.orderHandler.ListUserOrdersFunc(s.orderRepository)
+	data := orders.GetUserOrdersParams{
 		HTTPRequest: &request,
 		Limit:       &limit,
 		Offset:      &offset,
@@ -472,7 +472,7 @@ func (s *orderTestSuite) TestOrder_ListOrder_SeveralPages() {
 	resp.WriteResponse(responseRecorder, producer)
 	require.Equal(t, http.StatusOK, responseRecorder.Code)
 
-	var firstPage models.OrderList
+	var firstPage models.UserOrdersList
 	err := json.Unmarshal(responseRecorder.Body.Bytes(), &firstPage)
 	if err != nil {
 		t.Fatal(err)
@@ -489,7 +489,7 @@ func (s *orderTestSuite) TestOrder_ListOrder_SeveralPages() {
 	s.orderRepository.On("List", ctx, userID, filter).
 		Return(orderList[offset:], nil)
 
-	data = orders.GetAllOrdersParams{
+	data = orders.GetUserOrdersParams{
 		HTTPRequest: &request,
 		Limit:       &limit,
 		Offset:      &offset,
@@ -503,7 +503,7 @@ func (s *orderTestSuite) TestOrder_ListOrder_SeveralPages() {
 	resp.WriteResponse(responseRecorder, producer)
 	require.Equal(t, http.StatusOK, responseRecorder.Code)
 
-	var secondPage models.OrderList
+	var secondPage models.UserOrdersList
 	err = json.Unmarshal(responseRecorder.Body.Bytes(), &secondPage)
 	if err != nil {
 		t.Fatal(err)
@@ -544,7 +544,7 @@ func (s *orderTestSuite) TestOrder_ListOrder_StatusFilter() {
 	orderList[2].Edges.OrderStatus[0].ID = 6 // prepared (active)
 	orderList[3].Edges.OrderStatus[0].ID = 4 // rejected (finished)
 
-	handlerFunc := s.orderHandler.ListOrderFunc(s.orderRepository)
+	handlerFunc := s.orderHandler.ListUserOrdersFunc(s.orderRepository)
 	tests := map[string]struct {
 		fl   domain.OrderFilter
 		ords []*ent.Order
@@ -584,7 +584,7 @@ func (s *orderTestSuite) TestOrder_ListOrder_StatusFilter() {
 			s.orderRepository.On("List", ctx, userID, tc.fl).
 				Return(tc.ords, nil)
 
-			data := orders.GetAllOrdersParams{
+			data := orders.GetUserOrdersParams{
 				HTTPRequest: &request,
 				Limit:       &limit,
 				Offset:      &offset,
@@ -600,7 +600,7 @@ func (s *orderTestSuite) TestOrder_ListOrder_StatusFilter() {
 			resp.WriteResponse(responseRecorder, producer)
 			require.Equal(t, http.StatusOK, responseRecorder.Code)
 
-			var response models.OrderList
+			var response models.UserOrdersList
 			err := json.Unmarshal(responseRecorder.Body.Bytes(), &response)
 			if err != nil {
 				t.Fatal(err)
@@ -914,7 +914,7 @@ func (s *orderTestSuite) TestOrder_UpdateOrder_OK() {
 	require.Equal(t, orderToReturn.ID, int(*responseOrder.ID))
 }
 
-func containsOrder(t *testing.T, list []*ent.Order, order *models.Order) bool {
+func containsOrder(t *testing.T, list []*ent.Order, order *models.UserOrder) bool {
 	t.Helper()
 	for _, v := range list {
 		if v.ID == int(*order.ID) && v.Description == *order.Description &&
@@ -929,7 +929,7 @@ func containsOrder(t *testing.T, list []*ent.Order, order *models.Order) bool {
 	return false
 }
 
-func ordersDuplicated(t *testing.T, array1, array2 []*models.Order) bool {
+func ordersDuplicated(t *testing.T, array1, array2 []*models.UserOrder) bool {
 	t.Helper()
 	diff := make(map[int64]int, len(array1))
 	for _, v := range array1 {

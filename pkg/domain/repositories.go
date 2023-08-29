@@ -25,7 +25,8 @@ type CategoryFilter struct {
 
 type OrderFilter struct {
 	Filter
-	Status *string
+	Status      *string
+	EquipmentID *int
 }
 
 type CategoryRepository interface {
