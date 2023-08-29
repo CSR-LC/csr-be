@@ -85,7 +85,14 @@ func (s *OrderSuite) SetupTest() {
 			Name:        "equipment 1",
 			Title:       "equipment1",
 			TechIssue:   false,
-			Description: "test equipment",
+			Description: "test equipment 1",
+		},
+		{
+			TermsOfUse:  "http://localhost",
+			Name:        "equipment 2",
+			Title:       "equipment2",
+			TechIssue:   false,
+			Description: "test equipment 2",
 		},
 	}
 	_, err = s.client.Equipment.Delete().Exec(s.ctx)
@@ -175,6 +182,8 @@ func (s *OrderSuite) SetupTest() {
 			SetRentEnd(order.RentEnd).
 			SetUsers(order.Edges.Users).
 			SetCurrentStatus(statusName).
+			AddEquipments(s.equipments[i%2]).
+			AddEquipmentIDs(s.equipments[i%2].ID).
 			Save(s.ctx)
 		if err != nil {
 			t.Fatal(err)
@@ -773,6 +782,57 @@ func (s *OrderSuite) TestOrderRepository_List_StatusFilter() {
 				}
 				require.Equal(t, tc.expectedIDs, ids)
 			}
+		})
+	}
+}
+
+func (s *OrderSuite) TestOrderRepository_List_EquipmentFilter() {
+	t := s.T()
+	filter := domain.Filter{
+		Limit:       10,
+		Offset:      0,
+		OrderBy:     utils.AscOrder,
+		OrderColumn: order.FieldID,
+	}
+	tests := map[string]struct {
+		fl          domain.OrderFilter
+		expectedIDs []int // in AscOrder
+	}{
+		"all": {
+			fl: domain.OrderFilter{
+				Filter: filter,
+			},
+			expectedIDs: []int{s.orders[0].ID, s.orders[1].ID, s.orders[2].ID, s.orders[3].ID},
+		},
+		"only Equipment ID 1": {
+			fl: domain.OrderFilter{
+				Filter: filter,
+				EquipmentID: &s.equipments[0].ID,
+			},
+			expectedIDs: []int{s.orders[0].ID, s.orders[2].ID},
+		},
+		"only Equipment ID 2": {
+			fl: domain.OrderFilter{
+				Filter: filter,
+				EquipmentID: &s.equipments[1].ID,
+			},
+			expectedIDs: []int{s.orders[1].ID, s.orders[3].ID},
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			ctx := s.ctx
+			tx, err := s.client.Tx(ctx)
+			require.NoError(t, err)
+			ctx = context.WithValue(ctx, middlewares.TxContextKey, tx)
+			orders, err := s.orderRepository.List(ctx, s.user.ID, tc.fl)
+			require.NoError(t, err)
+			ids := make([]int, 0, len(orders))
+			for _, o := range orders {
+				ids = append(ids, o.ID)
+			}
+			require.Equal(t, tc.expectedIDs, ids)
+			require.NoError(t, tx.Rollback())
 		})
 	}
 }

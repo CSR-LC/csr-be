@@ -32,6 +32,9 @@ import (
 
 var (
 	auth  runtime.ClientAuthInfoWriterFunc
+	operatorAuth runtime.ClientAuthInfoWriterFunc
+	managerAuth runtime.ClientAuthInfoWriterFunc
+	userAuth runtime.ClientAuthInfoWriterFunc
 	eq    *models.EquipmentResponse
 	token *string
 )
@@ -46,6 +49,18 @@ func TestIntegration_BeforeOrderSetup(t *testing.T) {
 	login := common.AdminUserLogin(t)
 	token = login.GetPayload().AccessToken
 	auth = common.AuthInfoFunc(token)
+
+	managerLogin := common.ManagerUserLogin(t)
+	managerToken := managerLogin.GetPayload().AccessToken
+	managerAuth = common.AuthInfoFunc(managerToken)
+
+	operatorLogin := common.OperatorUserLogin(t)
+	operatorToken := operatorLogin.GetPayload().AccessToken
+	operatorAuth = common.AuthInfoFunc(operatorToken)
+
+	userLogin := common.UserLogin(t)
+	userToken := userLogin.GetPayload().AccessToken
+	userAuth = common.AuthInfoFunc(userToken)
 
 	var err error
 	eq, err = createEquipment(ctx, client, auth)
@@ -332,7 +347,7 @@ func TestIntegration_GetUserOrders(t *testing.T) {
 	})
 }
 
-func TestIntegration_List_Filtered(t *testing.T) {
+func TestIntegration_UserOrdersList_Filtered(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping integration test")
 	}
@@ -361,7 +376,7 @@ func TestIntegration_List_Filtered(t *testing.T) {
 		require.NoError(t, err)
 	}
 
-	t.Run("Get Orders All Ok", func(t *testing.T) {
+	t.Run("Get User Orders Ok", func(t *testing.T) {
 		listParams := orders.NewGetUserOrdersParamsWithContext(ctx)
 		listParams.Status = &domain.OrderStatusAll
 		// filter 'all', get all 7 (5+2) orders
@@ -398,9 +413,6 @@ func TestIntegration_List_Filtered(t *testing.T) {
 	res, err := client.Orders.GetUserOrders(listParams, auth)
 	require.NoError(t, err)
 
-	managerLogin := common.ManagerUserLogin(t)
-	managerToken := managerLogin.GetPayload().AccessToken
-	managerAuth := common.AuthInfoFunc(managerToken)
 	// approve all except the last one and leave the 1st in 'in review'
 	for i, o := range res.Payload.Items {
 		if i == 0 {
@@ -493,7 +505,6 @@ func TestIntegration_List_Filtered(t *testing.T) {
 	t.Run("Get Orders 6 Active Ok", func(t *testing.T) {
 		listParams := orders.NewGetUserOrdersParamsWithContext(ctx)
 		listParams.Status = &domain.OrderStatusActive
-		// filter 'active', still  7 (5+2) orders
 		res, err := client.Orders.GetUserOrders(listParams, auth)
 		require.NoError(t, err)
 		assert.Equal(t, 6, len(res.GetPayload().Items))
@@ -502,7 +513,6 @@ func TestIntegration_List_Filtered(t *testing.T) {
 	t.Run("Get Orders 2 Finished Ok", func(t *testing.T) {
 		listParams := orders.NewGetUserOrdersParamsWithContext(ctx)
 		listParams.Status = &domain.OrderStatusFinished
-		// filter 'active', still  7 (5+2) orders
 		res, err := client.Orders.GetUserOrders(listParams, auth)
 		require.NoError(t, err)
 		assert.Equal(t, 2, len(res.GetPayload().Items))
@@ -511,7 +521,6 @@ func TestIntegration_List_Filtered(t *testing.T) {
 	t.Run("Get Orders 1 Closed Ok", func(t *testing.T) {
 		listParams := orders.NewGetUserOrdersParamsWithContext(ctx)
 		listParams.Status = &domain.OrderStatusClosed
-		// filter 'active', still  7 (5+2) orders
 		res, err := client.Orders.GetUserOrders(listParams, auth)
 		require.NoError(t, err)
 		assert.Equal(t, 1, len(res.GetPayload().Items))
@@ -520,10 +529,100 @@ func TestIntegration_List_Filtered(t *testing.T) {
 	t.Run("Get Orders 0 In_Review Ok", func(t *testing.T) {
 		listParams := orders.NewGetUserOrdersParamsWithContext(ctx)
 		listParams.Status = &domain.OrderStatusInReview
-		// filter 'active', still  7 (5+2) orders
 		res, err := client.Orders.GetUserOrders(listParams, auth)
 		require.NoError(t, err)
 		assert.Equal(t, 0, len(res.GetPayload().Items))
+	})
+}
+
+func TestIntegration_ListAllOrders(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping integration test")
+	}
+
+	ctx := context.Background()
+	client := common.SetupClient()
+	equip, err := createEquipment(ctx, client, auth)
+	assert.NoError(t, err)
+
+	existingOrders := 8 // Amount of already created orders from the tests above
+
+	// Create new user and create 1 Order for him
+	adminLogin2 := common.AdminUserLogin(t)
+	adminToken2 := adminLogin2.GetPayload().AccessToken
+	auth2 := common.AuthInfoFunc(adminToken2)
+	createParams := orders.NewCreateOrderParamsWithContext(ctx)
+	desc := "order from admin2"
+	eqID := equip.ID
+	rentStart := strfmt.DateTime(time.Now().Add(time.Hour * time.Duration(2) * 24))
+	rentEnd := strfmt.DateTime(time.Now().Add(time.Hour * time.Duration(3) * 24))
+	createParams.Data = &models.OrderCreateRequest{
+		Description: desc,
+		EquipmentID: eqID,
+		RentStart:   &rentStart,
+		RentEnd:     &rentEnd,
+	}
+	_, err = client.Orders.CreateOrder(createParams, auth2)
+	require.NoError(t, err)
+
+	t.Run("Get All Orders as Admin Ok", func(t *testing.T) {
+		listParams := orders.NewGetAllOrdersParamsWithContext(ctx)
+		res, err := client.Orders.GetAllOrders(listParams, auth)
+		require.NoError(t, err)
+		assert.Equal(t, 1+existingOrders, len(res.GetPayload().Items))
+	})
+
+	t.Run("Get All Orders as Manager Ok", func(t *testing.T) {
+		listParams := orders.NewGetAllOrdersParamsWithContext(ctx)
+		res, err := client.Orders.GetAllOrders(listParams, managerAuth)
+		require.NoError(t, err)
+		assert.Equal(t, 1+existingOrders, len(res.GetPayload().Items))
+	})
+
+	t.Run("Get All Orders as Operator Ok", func(t *testing.T) {
+		listParams := orders.NewGetAllOrdersParamsWithContext(ctx)
+		res, err := client.Orders.GetAllOrders(listParams, operatorAuth)
+		require.NoError(t, err)
+		assert.Equal(t, 1+existingOrders, len(res.GetPayload().Items))
+	})
+
+	t.Run("Get All Orders as User Forbidden", func(t *testing.T) {
+		listParams := orders.NewGetAllOrdersParamsWithContext(ctx)
+		_, err := client.Orders.GetAllOrders(listParams, userAuth)
+		require.ErrorContains(t, err, "[403]")
+	})
+
+	t.Run("Get All Orders as Admin, filter by EquipmentID", func(t *testing.T) {
+		listParams := orders.NewGetAllOrdersParamsWithContext(ctx)
+		listParams.EquipmentID = eqID // we have only 1 order for this fresh equipment
+		res, err := client.Orders.GetAllOrders(listParams, auth)
+		require.NoError(t, err)
+		assert.Equal(t, 1, len(res.GetPayload().Items))
+	})
+
+	t.Run("Get All Orders as Admin, filter by Finished status", func(t *testing.T) {
+		listParams := orders.NewGetAllOrdersParamsWithContext(ctx)
+		listParams.Status = &domain.OrderStatusFinished // we have 2 finished orders from the TC above
+		res, err := client.Orders.GetAllOrders(listParams, auth)
+		require.NoError(t, err)
+		assert.Equal(t, 2, len(res.GetPayload().Items))
+	})
+
+	t.Run("Get All Orders as Admin, filter by Finished status + equipment", func(t *testing.T) {
+		listParams := orders.NewGetAllOrdersParamsWithContext(ctx)
+		listParams.Status = &domain.OrderStatusFinished // we have 2 finished orders from the TC above
+		listParams.EquipmentID = eqID                   // but they are not for this Equipment
+		res, err := client.Orders.GetAllOrders(listParams, auth)
+		require.NoError(t, err)
+		assert.Equal(t, 0, len(res.GetPayload().Items))
+	})
+
+	t.Run("Get All Orders as Admin, filter by InReview status", func(t *testing.T) {
+		listParams := orders.NewGetAllOrdersParamsWithContext(ctx)
+		listParams.Status = &domain.OrderStatusInReview // we have only 1 new order in Review 
+		res, err := client.Orders.GetAllOrders(listParams, auth)
+		require.NoError(t, err)
+		assert.Equal(t, 1, len(res.GetPayload().Items))
 	})
 }
 

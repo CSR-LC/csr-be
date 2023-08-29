@@ -111,7 +111,7 @@ func (s *orderTestSuite) TearDownTest() {
 	s.equipmentRepository.AssertExpectations(s.T())
 }
 
-func (s *orderTestSuite) TestOrder_ListOrder_RepoErr() {
+func (s *orderTestSuite) TestOrder_ListUserOrders_RepoErr() {
 	t := s.T()
 	request := http.Request{}
 	ctx := request.Context()
@@ -132,7 +132,7 @@ func (s *orderTestSuite) TestOrder_ListOrder_RepoErr() {
 	require.Equal(t, http.StatusInternalServerError, responseRecorder.Code)
 }
 
-func (s *orderTestSuite) TestOrder_ListOrder_WrongStatus() {
+func (s *orderTestSuite) TestOrder_ListUserOrders_WrongStatus() {
 	t := s.T()
 	request := http.Request{}
 	userID := 1
@@ -161,7 +161,7 @@ func (s *orderTestSuite) TestOrder_ListOrder_WrongStatus() {
 	require.Equal(t, fmt.Sprintf("Invalid order status '%v'", st), response.Data.Message)
 }
 
-func (s *orderTestSuite) TestOrder_ListOrder_MapErr() {
+func (s *orderTestSuite) TestOrder_ListUserOrders_MapErr() {
 	t := s.T()
 	request := http.Request{}
 	ctx := request.Context()
@@ -192,7 +192,7 @@ func (s *orderTestSuite) TestOrder_ListOrder_MapErr() {
 	require.Equal(t, http.StatusInternalServerError, responseRecorder.Code)
 }
 
-func (s *orderTestSuite) TestOrder_ListOrder_NotFound() {
+func (s *orderTestSuite) TestOrder_ListUserOrders_NotFound() {
 	t := s.T()
 	request := http.Request{}
 	ctx := request.Context()
@@ -219,7 +219,7 @@ func (s *orderTestSuite) TestOrder_ListOrder_NotFound() {
 	require.Equal(t, 0, len(response.Items))
 }
 
-func (s *orderTestSuite) TestOrder_ListOrder_EmptyParams() {
+func (s *orderTestSuite) TestOrder_ListUserOrders_EmptyParams() {
 	t := s.T()
 	request := http.Request{}
 	ctx := request.Context()
@@ -262,7 +262,7 @@ func (s *orderTestSuite) TestOrder_ListOrder_EmptyParams() {
 	}
 }
 
-func (s *orderTestSuite) TestOrder_ListOrder_LimitGreaterThanTotal() {
+func (s *orderTestSuite) TestOrder_ListUserOrders_LimitGreaterThanTotal() {
 	t := s.T()
 	request := http.Request{}
 	ctx := request.Context()
@@ -316,7 +316,7 @@ func (s *orderTestSuite) TestOrder_ListOrder_LimitGreaterThanTotal() {
 	}
 }
 
-func (s *orderTestSuite) TestOrder_ListOrder_LimitLessThanTotal() {
+func (s *orderTestSuite) TestOrder_ListUserOrders_LimitLessThanTotal() {
 	t := s.T()
 	request := http.Request{}
 	ctx := request.Context()
@@ -372,7 +372,7 @@ func (s *orderTestSuite) TestOrder_ListOrder_LimitLessThanTotal() {
 	}
 }
 
-func (s *orderTestSuite) TestOrder_ListOrder_SecondPage() {
+func (s *orderTestSuite) TestOrder_ListUserOrders_SecondPage() {
 	t := s.T()
 	request := http.Request{}
 	ctx := request.Context()
@@ -428,7 +428,7 @@ func (s *orderTestSuite) TestOrder_ListOrder_SecondPage() {
 	}
 }
 
-func (s *orderTestSuite) TestOrder_ListOrder_SeveralPages() {
+func (s *orderTestSuite) TestOrder_ListUserOrders_SeveralPages() {
 	t := s.T()
 	request := http.Request{}
 	ctx := request.Context()
@@ -517,7 +517,7 @@ func (s *orderTestSuite) TestOrder_ListOrder_SeveralPages() {
 	require.False(t, ordersDuplicated(t, firstPage.Items, secondPage.Items))
 }
 
-func (s *orderTestSuite) TestOrder_ListOrder_StatusFilter() {
+func (s *orderTestSuite) TestOrder_ListUserOrders_StatusFilter() {
 	t := s.T()
 	request := http.Request{}
 	ctx := request.Context()
