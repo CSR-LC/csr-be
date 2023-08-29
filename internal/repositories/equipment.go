@@ -12,7 +12,6 @@ import (
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/ent/equipment"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/ent/equipmentstatusname"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/ent/order"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/ent/orderstatus"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/ent/orderstatusname"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/ent/petkind"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/ent/petsize"
@@ -543,11 +542,10 @@ func (r *equipmentRepository) BlockEquipment(
 	// Find all Orders which have OrderStatusName booked and start from startDate and later
 	orderIDs, err := eqToBlock.QueryOrder().
 		Where(order.RentStartGTE(*start), order.RentStartLTE(*end)). // rentStart must be in range of startDate..endDate
-		Where(order.RentEndGTE(*start)).                             // rentEnd must be equal or greater that startDate
-		Where(order.HasOrderStatusWith(orderstatus.
-			HasOrderStatusNameWith(orderstatusname.StatusIn(
-				domain.OrderStatusPrepared,
-				domain.OrderStatusApproved)))).
+		Where(order.RentEndGTE(*start)).                             // rentEnd must be equal or greater than startDate
+		Where(order.HasCurrentStatusWith(orderstatusname.StatusIn(
+			domain.OrderStatusPrepared,
+			domain.OrderStatusApproved))).
 		IDs(ctx)
 	if err != nil {
 		return err
@@ -559,13 +557,19 @@ func (r *equipmentRepository) BlockEquipment(
 		return err
 	}
 
-	for _, order := range orderIDs {
-		tx.OrderStatus.Create().
+	// Create new OrderStatuses for orders
+	oss := make([]*ent.OrderStatusCreate, len(orderIDs))
+	for i, order := range orderIDs {
+		oss[i] = tx.OrderStatus.Create().
 			SetCurrentDate(time.Now()).
 			SetOrderID(order).
 			SetUsersID(userID).
-			SetOrderStatusName(orStatusBlocked).
-			Save(ctx)
+			SetComment("Eqipment blocked").
+			SetOrderStatusName(orStatusBlocked)
+	}
+	_, err = tx.OrderStatus.CreateBulk(oss...).Save(ctx)
+	if err != nil {
+		return err
 	}
 	return err
 }

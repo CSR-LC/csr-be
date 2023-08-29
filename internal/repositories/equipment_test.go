@@ -558,25 +558,16 @@ func (s *EquipmentSuite) TestEquipmentRepository_BlockEquipment() {
 	endDate := time.Time(strfmt.DateTime(time.Now().AddDate(0, 0, 1)))
 	tx, err := s.client.Tx(ctx)
 	require.NoError(t, err)
-	as, _ := tx.OrderStatusName.Create().SetStatus(domain.EquipmentStatusAvailable).Save(ctx)
-	tx.OrderStatusName.Create().SetStatus(domain.OrderStatusBlocked).Save(s.ctx)
+	_, err = tx.OrderStatusName.Create().SetStatus(domain.EquipmentStatusAvailable).Save(ctx)
+	_, err = tx.OrderStatusName.Create().SetStatus(domain.OrderStatusBlocked).Save(s.ctx)
 	eqToBlock, err := tx.Equipment.Query().WithCurrentStatus().First(ctx)
-	_, err = tx.Order.Create().
-		SetRentStart(startDate).
-		SetRentEnd(endDate).
-		SetDescription("test order").
-		SetQuantity(1).
-		AddEquipments(eqToBlock).
-		SetUsers(s.user).
-		SetCurrentStatus(as).
-		Save(ctx)
 
 	ctx = context.WithValue(ctx, middlewares.TxContextKey, tx)
 	err = s.repository.BlockEquipment(ctx, eqToBlock.ID, startDate, endDate, s.user.ID)
 	require.NoError(t, err)
 	eqBlocked, err := tx.Equipment.Query().WithEquipmentStatus().WithCurrentStatus().First(ctx)
 	require.NotEqual(t, eqToBlock.Edges.CurrentStatus.Name, eqBlocked.Edges.CurrentStatus.Name)
-
+	require.NoError(t, tx.Commit())
 }
 
 func mapContainsEquipment(eq *ent.Equipment, m map[int]*ent.Equipment) bool {
