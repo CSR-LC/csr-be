@@ -330,5 +330,4 @@ func (c Equipment) BlockEquipmentFunc(repository domain.EquipmentRepository) equ
 		}
 		return equipment.NewBlockEquipmentNoContent()
 	}
-
 }

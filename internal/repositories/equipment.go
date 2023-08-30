@@ -564,7 +564,6 @@ func (r *equipmentRepository) BlockEquipment(
 			SetCurrentDate(time.Now()).
 			SetOrderID(order).
 			SetUsersID(userID).
-			SetComment("Eqipment blocked").
 			SetOrderStatusName(orStatusBlocked)
 	}
 	_, err = tx.OrderStatus.CreateBulk(oss...).Save(ctx)
