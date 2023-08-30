@@ -541,7 +541,7 @@ func TestIntegration_BlockEquipment(t *testing.T) {
 
 		wantErr := equipment.NewBlockEquipmentDefault(http.StatusForbidden)
 		wantErr.Payload = &models.Error{Data: &models.ErrorData{
-			Message: "You don't have rights to block this equipment",
+			Message: "You don't have rights to block the equipment",
 		}}
 		assert.Equal(t, wantErr, err)
 	})
@@ -565,7 +565,7 @@ func TestIntegration_BlockEquipment(t *testing.T) {
 
 		wantErr := equipment.NewBlockEquipmentDefault(http.StatusForbidden)
 		wantErr.Payload = &models.Error{Data: &models.ErrorData{
-			Message: "You don't have rights to block this equipment",
+			Message: "You don't have rights to block the equipment",
 		}}
 		assert.Equal(t, wantErr, err)
 	})

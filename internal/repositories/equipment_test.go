@@ -3,7 +3,6 @@ package repositories
 import (
 	"context"
 	"math"
-	"reflect"
 	"testing"
 	"time"
 
@@ -561,22 +560,15 @@ func (s *EquipmentSuite) TestEquipmentRepository_BlockEquipment() {
 	_, err = tx.OrderStatusName.Create().SetStatus(domain.EquipmentStatusAvailable).Save(ctx)
 	_, err = tx.OrderStatusName.Create().SetStatus(domain.OrderStatusBlocked).Save(s.ctx)
 	eqToBlock, err := tx.Equipment.Query().WithCurrentStatus().First(ctx)
+	require.Empty(t, eqToBlock.Edges.EquipmentStatus)
 
 	ctx = context.WithValue(ctx, middlewares.TxContextKey, tx)
 	err = s.repository.BlockEquipment(ctx, eqToBlock.ID, startDate, endDate, s.user.ID)
 	require.NoError(t, err)
 	eqBlocked, err := tx.Equipment.Query().WithEquipmentStatus().WithCurrentStatus().First(ctx)
+	require.NotEmpty(t, eqBlocked.Edges.EquipmentStatus)
 	require.NotEqual(t, eqToBlock.Edges.CurrentStatus.Name, eqBlocked.Edges.CurrentStatus.Name)
 	require.NoError(t, tx.Commit())
-}
-
-func mapContainsEquipment(eq *ent.Equipment, m map[int]*ent.Equipment) bool {
-	for _, v := range m {
-		if eq.Name == v.Name && eq.Title == v.Title {
-			return true
-		}
-	}
-	return false
 }
 
 func Test_checkDates(t *testing.T) {
@@ -619,16 +611,21 @@ func Test_checkDates(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got, got1, err := checkDates(tt.args.start, tt.args.end)
+			require.Equal(t, tt.want, got)
+			require.Equal(t, tt.want1, got1)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("checkDates() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("checkDates() got = %v, want %v", got, tt.want)
-			}
-			if !reflect.DeepEqual(got1, tt.want1) {
-				t.Errorf("checkDates() got1 = %v, want %v", got1, tt.want1)
-			}
 		})
 	}
+}
+
+func mapContainsEquipment(eq *ent.Equipment, m map[int]*ent.Equipment) bool {
+	for _, v := range m {
+		if eq.Name == v.Name && eq.Title == v.Title {
+			return true
+		}
+	}
+	return false
 }

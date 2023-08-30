@@ -310,9 +310,10 @@ func (c Equipment) BlockEquipmentFunc(repository domain.EquipmentRepository) equ
 		role := principal.Role
 
 		if role != roles.Manager {
-			c.logger.Warn("User have no right to block equipment", zap.Any("principal", principal))
-			return equipment.NewBlockEquipmentDefault(http.StatusForbidden).
-				WithPayload(&models.Error{Data: &models.ErrorData{Message: "You don't have rights to block this equipment"}})
+			c.logger.Warn("User have no right to block the equipment", zap.Any("principal", principal))
+			return equipment.
+				NewBlockEquipmentDefault(http.StatusForbidden).
+				WithPayload(&models.Error{Data: &models.ErrorData{Message: "You don't have rights to block the equipment"}})
 		}
 
 		err := repository.BlockEquipment(
@@ -325,7 +326,7 @@ func (c Equipment) BlockEquipmentFunc(repository domain.EquipmentRepository) equ
 			}
 			c.logger.Error("Error while blocking equipment", zap.Error(err))
 			return equipment.NewBlockEquipmentDefault(http.StatusInternalServerError).
-				WithPayload(buildStringPayload("Error while archiving equipment"))
+				WithPayload(buildStringPayload("Error while blocking equipment"))
 		}
 		return equipment.NewBlockEquipmentNoContent()
 	}
