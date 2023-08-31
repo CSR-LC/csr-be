@@ -178,7 +178,7 @@ func (s *orderTestSuite) TestOrder_ListUserOrders_MapErr() {
 	var orderList []*ent.Order
 	orderList = append(orderList, orderWithNoEdges())
 	s.orderRepository.On("OrdersTotal", ctx, userID).Return(1, nil)
-	s.orderRepository.On("List", ctx, userID, filter).
+	s.orderRepository.On("List", ctx, &userID, filter).
 		Return(orderList, nil)
 
 	handlerFunc := s.orderHandler.ListUserOrdersFunc(s.orderRepository)
@@ -237,7 +237,7 @@ func (s *orderTestSuite) TestOrder_ListUserOrders_EmptyParams() {
 		orderWithAllEdges(t, 1),
 	}
 	s.orderRepository.On("OrdersTotal", ctx, userID).Return(1, nil)
-	s.orderRepository.On("List", ctx, userID, filter).
+	s.orderRepository.On("List", ctx, &userID, filter).
 		Return(orderList, nil)
 
 	handlerFunc := s.orderHandler.ListUserOrdersFunc(s.orderRepository)
@@ -285,7 +285,7 @@ func (s *orderTestSuite) TestOrder_ListUserOrders_LimitGreaterThanTotal() {
 		orderWithAllEdges(t, 2),
 	}
 	s.orderRepository.On("OrdersTotal", ctx, userID).Return(2, nil)
-	s.orderRepository.On("List", ctx, userID, filter).
+	s.orderRepository.On("List", ctx, &userID, filter).
 		Return(orderList, nil)
 
 	handlerFunc := s.orderHandler.ListUserOrdersFunc(s.orderRepository)
@@ -341,7 +341,7 @@ func (s *orderTestSuite) TestOrder_ListUserOrders_LimitLessThanTotal() {
 		orderWithAllEdges(t, 4),
 	}
 	s.orderRepository.On("OrdersTotal", ctx, userID).Return(4, nil)
-	s.orderRepository.On("List", ctx, userID, filter).
+	s.orderRepository.On("List", ctx, &userID, filter).
 		Return(orderList[:limit], nil)
 
 	handlerFunc := s.orderHandler.ListUserOrdersFunc(s.orderRepository)
@@ -397,7 +397,7 @@ func (s *orderTestSuite) TestOrder_ListUserOrders_SecondPage() {
 		orderWithAllEdges(t, 4),
 	}
 	s.orderRepository.On("OrdersTotal", ctx, userID).Return(4, nil)
-	s.orderRepository.On("List", ctx, userID, filter).
+	s.orderRepository.On("List", ctx, &userID, filter).
 		Return(orderList[offset:], nil)
 
 	handlerFunc := s.orderHandler.ListUserOrdersFunc(s.orderRepository)
@@ -453,7 +453,7 @@ func (s *orderTestSuite) TestOrder_ListUserOrders_SeveralPages() {
 		orderWithAllEdges(t, 4),
 	}
 	s.orderRepository.On("OrdersTotal", ctx, userID).Return(4, nil)
-	s.orderRepository.On("List", ctx, userID, filter).
+	s.orderRepository.On("List", ctx, &userID, filter).
 		Return(orderList[:limit], nil)
 
 	handlerFunc := s.orderHandler.ListUserOrdersFunc(s.orderRepository)
@@ -486,7 +486,7 @@ func (s *orderTestSuite) TestOrder_ListUserOrders_SeveralPages() {
 	offset = limit
 	filter.Offset = int(offset)
 	s.orderRepository.On("OrdersTotal", ctx, userID).Return(4, nil)
-	s.orderRepository.On("List", ctx, userID, filter).
+	s.orderRepository.On("List", ctx, &userID, filter).
 		Return(orderList[offset:], nil)
 
 	data = orders.GetUserOrdersParams{
@@ -581,7 +581,7 @@ func (s *orderTestSuite) TestOrder_ListUserOrders_StatusFilter() {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			s.orderRepository.On("OrdersTotal", ctx, userID).Return(4, nil)
-			s.orderRepository.On("List", ctx, userID, tc.fl).
+			s.orderRepository.On("List", ctx, &userID, tc.fl).
 				Return(tc.ords, nil)
 
 			data := orders.GetUserOrdersParams{

@@ -186,7 +186,7 @@ func ManagerUserLogin(t *testing.T) *users.LoginOK {
 	ctx := context.Background()
 	client := SetupClient()
 	l, p, _ := ManagerLoginPassword(t)
-	// login and get token with admin role
+	// login and get token with manager role
 	loginUser, err := LoginUser(ctx, client, l, p)
 	require.NoError(t, err)
 	return loginUser
@@ -228,7 +228,7 @@ func OperatorUserLogin(t *testing.T) *users.LoginOK {
 	ctx := context.Background()
 	client := SetupClient()
 	l, p, _ := OperatorLoginPassword(t)
-	// login and get token with admin role
+	// login and get token with operator role
 	loginUser, err := LoginUser(ctx, client, l, p)
 	require.NoError(t, err)
 	return loginUser
@@ -270,7 +270,7 @@ func UserLogin(t *testing.T) *users.LoginOK {
 	ctx := context.Background()
 	client := SetupClient()
 	l, p, _ := UserLoginPassword(t)
-	// login and get token with admin role
+	// login and get token with user role
 	loginUser, err := LoginUser(ctx, client, l, p)
 	require.NoError(t, err)
 	return loginUser

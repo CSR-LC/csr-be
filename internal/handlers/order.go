@@ -234,7 +234,7 @@ func (o Order) ListUserOrdersFunc(repository domain.OrderRepository) orders.GetU
 
 		var items []*ent.Order
 		if total > 0 {
-			items, err = repository.List(ctx, userID, orderFilter)
+			items, err = repository.List(ctx, &userID, orderFilter)
 			if err != nil {
 				o.logger.Error("list items failed", zap.Error(err))
 				return orders.NewGetUserOrdersDefault(http.StatusInternalServerError).WithPayload(buildErrorPayload(err))
@@ -295,7 +295,7 @@ func (o Order) ListAllOrdersFunc(repository domain.OrderRepository) orders.GetAl
 
 		var items []*ent.Order
 		if total > 0 {
-			items, err = repository.List(ctx, -1, orderFilter)
+			items, err = repository.List(ctx, nil, orderFilter)
 			if err != nil {
 				o.logger.Error("list items failed", zap.Error(err))
 				return orders.NewGetAllOrdersDefault(http.StatusInternalServerError).WithPayload(buildErrorPayload(err))
