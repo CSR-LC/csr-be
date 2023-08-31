@@ -561,6 +561,9 @@ func TestIntegration_ListAllOrders(t *testing.T) {
 	_, err = client.Orders.CreateOrder(createParams, auth2)
 	require.NoError(t, err)
 
+	// Due to the lack of a Delete method, we cannot clean up orders and 
+	// verify the exact number of orders. For this reason, we are only using
+	// assert.NotEmpty in the cases below.
 	t.Run("Get All Orders as Admin Ok", func(t *testing.T) {
 		listParams := orders.NewGetAllOrdersParamsWithContext(ctx)
 		res, err := client.Orders.GetAllOrders(listParams, auth)
