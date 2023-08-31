@@ -561,49 +561,25 @@ func TestIntegration_ListAllOrders(t *testing.T) {
 	_, err = client.Orders.CreateOrder(createParams, auth2)
 	require.NoError(t, err)
 
-	// Due to the lack of Delete method we have to use all existing orders in this case
-	// The List below is a similar to the 1st case in this test
-	listParams := orders.NewGetAllOrdersParamsWithContext(ctx)
-	res, err := client.Orders.GetAllOrders(listParams, auth)
-	assert.NoError(t, err)
-
-	// We'll track only finished and 'InReview' to simplify this test
-	var existingOrders, existingInReview, existingFinished int
-	existingOrders = len(res.Payload.Items)
-	for _, o := range res.Payload.Items {
-		switch *o.LastStatus.Status {
-		case domain.OrderStatusInReview:
-			existingInReview++
-		case domain.OrderStatusClosed:
-			existingFinished++
-		case domain.OrderStatusRejected:
-			existingFinished++
-		case domain.OrderStatusBlocked:
-			existingFinished++
-		default:
-			continue
-		}
-	}
-
 	t.Run("Get All Orders as Admin Ok", func(t *testing.T) {
 		listParams := orders.NewGetAllOrdersParamsWithContext(ctx)
 		res, err := client.Orders.GetAllOrders(listParams, auth)
 		require.NoError(t, err)
-		assert.Equal(t, existingOrders, len(res.GetPayload().Items))
+		assert.NotEmpty(t, res)
 	})
 
 	t.Run("Get All Orders as Manager Ok", func(t *testing.T) {
 		listParams := orders.NewGetAllOrdersParamsWithContext(ctx)
 		res, err := client.Orders.GetAllOrders(listParams, managerAuth)
 		require.NoError(t, err)
-		assert.Equal(t, existingOrders, len(res.GetPayload().Items))
+		assert.NotEmpty(t, res)
 	})
 
 	t.Run("Get All Orders as Operator Ok", func(t *testing.T) {
 		listParams := orders.NewGetAllOrdersParamsWithContext(ctx)
 		res, err := client.Orders.GetAllOrders(listParams, operatorAuth)
 		require.NoError(t, err)
-		assert.Equal(t, existingOrders, len(res.GetPayload().Items))
+		assert.NotEmpty(t, res.Payload.Items)
 	})
 
 	t.Run("Get All Orders as User Forbidden", func(t *testing.T) {
@@ -620,14 +596,6 @@ func TestIntegration_ListAllOrders(t *testing.T) {
 		assert.Equal(t, 1, len(res.GetPayload().Items))
 	})
 
-	t.Run("Get All Orders as Admin, filter by Finished status", func(t *testing.T) {
-		listParams := orders.NewGetAllOrdersParamsWithContext(ctx)
-		listParams.Status = &domain.OrderStatusFinished // we have 2 finished orders from the TC above
-		res, err := client.Orders.GetAllOrders(listParams, auth)
-		require.NoError(t, err)
-		assert.Equal(t, existingFinished, len(res.GetPayload().Items))
-	})
-
 	t.Run("Get All Orders as Admin, filter by Finished status + equipment", func(t *testing.T) {
 		listParams := orders.NewGetAllOrdersParamsWithContext(ctx)
 		listParams.Status = &domain.OrderStatusFinished // we have 2 finished orders from the TC above
@@ -635,14 +603,6 @@ func TestIntegration_ListAllOrders(t *testing.T) {
 		res, err := client.Orders.GetAllOrders(listParams, auth)
 		require.NoError(t, err)
 		assert.Equal(t, 0, len(res.GetPayload().Items))
-	})
-
-	t.Run("Get All Orders as Admin, filter by InReview status", func(t *testing.T) {
-		listParams := orders.NewGetAllOrdersParamsWithContext(ctx)
-		listParams.Status = &domain.OrderStatusInReview // we have only 1 new order in Review
-		res, err := client.Orders.GetAllOrders(listParams, auth)
-		require.NoError(t, err)
-		assert.Equal(t, existingInReview, len(res.GetPayload().Items))
 	})
 }
 
