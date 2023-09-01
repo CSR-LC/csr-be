@@ -2,6 +2,7 @@ package repositories
 
 import (
 	"context"
+	"fmt"
 	"math"
 	"testing"
 	"time"
@@ -554,11 +555,20 @@ func (s *EquipmentSuite) TestEquipmentRepository_BlockEquipment() {
 	t := s.T()
 	ctx := s.ctx
 	startDate := time.Time(strfmt.DateTime(time.Now()))
-	endDate := time.Time(strfmt.DateTime(time.Now().AddDate(0, 0, 1)))
+	endDate := time.Time(strfmt.DateTime(time.Now().AddDate(0, 0, 5)))
 	tx, err := s.client.Tx(ctx)
 	require.NoError(t, err)
-	_, err = tx.OrderStatusName.Create().SetStatus(domain.EquipmentStatusAvailable).Save(ctx)
+	availStatus, err := tx.OrderStatusName.Create().SetStatus(domain.EquipmentStatusAvailable).Save(ctx)
 	_, err = tx.OrderStatusName.Create().SetStatus(domain.OrderStatusBlocked).Save(s.ctx)
+	_, err = tx.Order.Create().
+		SetDescription("test order").
+		SetQuantity(1).
+		SetCurrentStatus(availStatus).
+		SetRentStart(startDate).
+		SetRentEnd(endDate).
+		SetUsers(s.user).
+		Save(s.ctx)
+
 	eqToBlock, err := tx.Equipment.Query().WithCurrentStatus().First(ctx)
 	require.Empty(t, eqToBlock.Edges.EquipmentStatus)
 
@@ -566,6 +576,10 @@ func (s *EquipmentSuite) TestEquipmentRepository_BlockEquipment() {
 	err = s.repository.BlockEquipment(ctx, eqToBlock.ID, startDate, endDate, s.user.ID)
 	require.NoError(t, err)
 	eqBlocked, err := tx.Equipment.Query().WithEquipmentStatus().WithCurrentStatus().First(ctx)
+
+	orBlocked, err := tx.Order.Query().WithOrderStatus().WithCurrentStatus().First(ctx)
+	fmt.Println(orBlocked.Edges.CurrentStatus)
+
 	require.NotEmpty(t, eqBlocked.Edges.EquipmentStatus)
 	require.NotEqual(t, eqToBlock.Edges.CurrentStatus.Name, eqBlocked.Edges.CurrentStatus.Name)
 	require.NoError(t, tx.Commit())
