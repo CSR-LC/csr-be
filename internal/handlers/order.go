@@ -225,7 +225,7 @@ func (o Order) ListUserOrdersFunc(repository domain.OrderRepository) orders.GetU
 			}
 		}
 
-		total, err := repository.OrdersTotal(ctx, userID)
+		total, err := repository.OrdersTotal(ctx, &userID)
 		if err != nil {
 			o.logger.Error("Error while getting total of all user's orders", zap.Error(err))
 			return orders.NewGetUserOrdersDefault(http.StatusInternalServerError).
@@ -286,7 +286,7 @@ func (o Order) ListAllOrdersFunc(repository domain.OrderRepository) orders.GetAl
 			orderFilter.EquipmentID = &eid
 		}
 
-		total, err := repository.OrdersTotal(ctx, -1)
+		total, err := repository.OrdersTotal(ctx, nil)
 		if err != nil {
 			o.logger.Error("Error while getting total of all orders", zap.Error(err))
 			return orders.NewGetAllOrdersDefault(http.StatusInternalServerError).

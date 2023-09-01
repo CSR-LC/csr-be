@@ -103,14 +103,14 @@ func (r *orderRepository) List(ctx context.Context, ownerId *int, filter domain.
 	return items, err
 }
 
-func (r *orderRepository) OrdersTotal(ctx context.Context, ownerId int) (int, error) {
+func (r *orderRepository) OrdersTotal(ctx context.Context, ownerId *int) (int, error) {
 	tx, err := middlewares.TxFromContext(ctx)
 	if err != nil {
 		return 0, err
 	}
 	query := tx.Order.Query()
-	if ownerId > 0 {
-		query = query.Where(order.HasUsersWith(user.ID(ownerId)))
+	if ownerId != nil {
+		query = query.Where(order.HasUsersWith(user.ID(*ownerId)))
 	}
 	return query.Count(ctx)
 }

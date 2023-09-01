@@ -493,7 +493,13 @@ func (s *OrderSuite) TestOrderRepository_OrdersTotal() {
 	tx, err := s.client.Tx(ctx)
 	require.NoError(t, err)
 	ctx = context.WithValue(ctx, middlewares.TxContextKey, tx)
-	totalOrders, err := s.orderRepository.OrdersTotal(ctx, s.user.ID)
+	totalOrders, err := s.orderRepository.OrdersTotal(ctx, &s.user.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	require.Equal(t, len(s.orders), totalOrders)
+	// Check orders for all users (should be the same amount because of only user)
+	totalOrders, err = s.orderRepository.OrdersTotal(ctx, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
