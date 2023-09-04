@@ -2,7 +2,6 @@ package repositories
 
 import (
 	"context"
-	"fmt"
 	"math"
 	"testing"
 	"time"
@@ -554,34 +553,52 @@ func (s *EquipmentSuite) TestEquipmentRepository_FindEquipmentsTotal() {
 func (s *EquipmentSuite) TestEquipmentRepository_BlockEquipment() {
 	t := s.T()
 	ctx := s.ctx
-	startDate := time.Time(strfmt.DateTime(time.Now()))
-	endDate := time.Time(strfmt.DateTime(time.Now().AddDate(0, 0, 5)))
 	tx, err := s.client.Tx(ctx)
 	require.NoError(t, err)
-	availStatus, err := tx.OrderStatusName.Create().SetStatus(domain.EquipmentStatusAvailable).Save(ctx)
+
+	blockStartDate := time.Time(strfmt.DateTime(time.Now().AddDate(0, 0, 0)))
+	blockEndDate := time.Time(strfmt.DateTime(time.Now().AddDate(0, 0, 5)))
+	eqToBlock, err := tx.Equipment.Query().WithCurrentStatus().First(ctx)
+	require.NoError(t, err)
+	require.Empty(t, eqToBlock.Edges.EquipmentStatus)
+	approvedStatus, err := tx.OrderStatusName.Create().SetStatus(domain.OrderStatusApproved).Save(ctx)
+	require.NoError(t, err)
 	_, err = tx.OrderStatusName.Create().SetStatus(domain.OrderStatusBlocked).Save(s.ctx)
-	_, err = tx.Order.Create().
+	require.NoError(t, err)
+
+	order, err := tx.Order.Create().
+		AddEquipmentIDs(eqToBlock.ID).
 		SetDescription("test order").
 		SetQuantity(1).
-		SetCurrentStatus(availStatus).
-		SetRentStart(startDate).
-		SetRentEnd(endDate).
+		SetCurrentStatus(approvedStatus).
+		SetRentStart(blockStartDate).
+		SetRentEnd(blockEndDate).
 		SetUsers(s.user).
 		Save(s.ctx)
+	require.NoError(t, err)
 
-	eqToBlock, err := tx.Equipment.Query().WithCurrentStatus().First(ctx)
-	require.Empty(t, eqToBlock.Edges.EquipmentStatus)
+	_, err = tx.OrderStatus.Create().
+		SetComment("qwe").
+		SetCurrentDate(time.Now()).
+		SetOrderID(order.ID).
+		SetUsers(s.user).
+		SetOrderStatusName(approvedStatus).
+		Save(ctx)
+	require.NoError(t, err)
 
+	orToBlock, err := tx.Order.Query().WithOrderStatus().WithCurrentStatus().First(ctx)
+	require.NoError(t, err)
 	ctx = context.WithValue(ctx, middlewares.TxContextKey, tx)
-	err = s.repository.BlockEquipment(ctx, eqToBlock.ID, startDate, endDate, s.user.ID)
+	err = s.repository.BlockEquipment(ctx, eqToBlock.ID, blockStartDate, blockEndDate, s.user.ID)
 	require.NoError(t, err)
 	eqBlocked, err := tx.Equipment.Query().WithEquipmentStatus().WithCurrentStatus().First(ctx)
-
+	require.NoError(t, err)
 	orBlocked, err := tx.Order.Query().WithOrderStatus().WithCurrentStatus().First(ctx)
-	fmt.Println(orBlocked.Edges.CurrentStatus)
+	require.NoError(t, err)
 
 	require.NotEmpty(t, eqBlocked.Edges.EquipmentStatus)
 	require.NotEqual(t, eqToBlock.Edges.CurrentStatus.Name, eqBlocked.Edges.CurrentStatus.Name)
+	require.NotEqual(t, orToBlock.Edges.CurrentStatus.Status, orBlocked.Edges.CurrentStatus.Status)
 	require.NoError(t, tx.Commit())
 }
 

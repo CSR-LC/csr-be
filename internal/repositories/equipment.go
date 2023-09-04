@@ -561,6 +561,7 @@ func (r *equipmentRepository) BlockEquipment(
 	oss := make([]*ent.OrderStatusCreate, len(orderIDs))
 	for i, order := range orderIDs {
 		oss[i] = tx.OrderStatus.Create().
+			SetComment("").
 			SetCurrentDate(time.Now()).
 			SetOrderID(order).
 			SetUsersID(userID).
