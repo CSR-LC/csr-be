@@ -429,7 +429,6 @@ func TestIntegration_ArchiveEquipment(t *testing.T) {
 	})
 
 	t.Run("Archive Equipment with active orders", func(t *testing.T) {
-		//var orderID *int64
 		orStartDate, orEndDate := time.Now(), time.Now().AddDate(0, 0, 1)
 		orderID, err := createOrder(ctx, client, auth, created.Payload.ID, orStartDate, orEndDate)
 		params := equipment.NewArchiveEquipmentParamsWithContext(ctx).WithEquipmentID(*created.Payload.ID)
@@ -642,12 +641,12 @@ func TestIntegration_BlockEquipment(t *testing.T) {
 			orders.NewGetOrdersByStatusParamsWithContext(ctx).WithStatus(domain.OrderStatusBlocked), auth)
 		fmt.Println(orders)
 
-		// The first order switches status form Approved to Blocked
+		// The first order switches status from Approved to Blocked
 		ok, err := checkOrderStatus(ctx, client, auth, firstOrderID, domain.OrderStatusBlocked)
 		require.NoError(t, err)
 		require.True(t, ok)
 
-		// The ssecond order keeps the same status
+		// The second order keeps the same status
 		ok, err = checkOrderStatus(ctx, client, auth, secondOrderID, domain.OrderStatusRejected)
 		require.NoError(t, err)
 		require.True(t, ok)
