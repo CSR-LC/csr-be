@@ -429,15 +429,15 @@ func TestIntegration_ArchiveEquipment(t *testing.T) {
 	})
 
 	t.Run("Archive Equipment with active orders", func(t *testing.T) {
-		var orderID *int64
-		orderID, err = createOrder(ctx, client, auth, created.Payload.ID)
+		//var orderID *int64
+		orStartDate, orEndDate := time.Now(), time.Now().AddDate(0, 0, 1)
+		orderID, err := createOrder(ctx, client, auth, created.Payload.ID, orStartDate, orEndDate)
 		params := equipment.NewArchiveEquipmentParamsWithContext(ctx).WithEquipmentID(*created.Payload.ID)
 		var res *equipment.ArchiveEquipmentNoContent
 		res, err = client.Equipment.ArchiveEquipment(params, auth)
 		require.NoError(t, err)
 		require.True(t, res.IsCode(http.StatusNoContent))
-		var ok bool
-		ok, err = checkOrderStatus(ctx, client, auth, orderID, "closed")
+		ok, err := checkOrderStatus(ctx, client, auth, orderID, domain.OrderStatusClosed)
 		require.NoError(t, err)
 		require.True(t, ok)
 	})
@@ -598,17 +598,17 @@ func TestIntegration_BlockEquipment(t *testing.T) {
 		eq, err := createEquipment(ctx, client, auth, model)
 		require.NoError(t, err)
 
-		orderID1, err := createOrder(ctx, client, auth, eq.Payload.ID)
+		orStartDate, orEndDate := time.Now(), time.Now().AddDate(0, 0, 1)
+		firstOrderID, err := createOrder(ctx, client, auth, eq.Payload.ID, orStartDate, orEndDate)
 		require.NoError(t, err)
-		fmt.Println(err)
-		createOrder(ctx, client, auth, eq.Payload.ID)
+		orStartDate, orEndDate = time.Now().AddDate(0, 0, 2), time.Now().AddDate(0, 0, 3)
+		secondOrderID, err := createOrder(ctx, client, auth, eq.Payload.ID, orStartDate, orEndDate)
 		require.NoError(t, err)
-		//fmt.Println(orderID2)
+
 		listParams := orders.NewGetAllOrdersParamsWithContext(ctx)
-		test, err := client.Orders.GetAllOrders(listParams, auth)
+		ordersList, err := client.Orders.GetAllOrders(listParams, auth)
 		require.NoError(t, err)
-		fmt.Println("12122", test)
-		for i, o := range test.Payload.Items {
+		for i, o := range ordersList.Payload.Items {
 			var st string
 			if i == 0 {
 				st = domain.OrderStatusApproved
@@ -634,8 +634,7 @@ func TestIntegration_BlockEquipment(t *testing.T) {
 			EndDate:   strfmt.DateTime(endDate),
 		}
 
-		var res *equipment.BlockEquipmentNoContent
-		res, err = client.Equipment.BlockEquipment(params, auth)
+		res, err := client.Equipment.BlockEquipment(params, auth)
 		require.NoError(t, err)
 		require.True(t, res.IsCode(http.StatusNoContent))
 
@@ -643,11 +642,14 @@ func TestIntegration_BlockEquipment(t *testing.T) {
 			orders.NewGetOrdersByStatusParamsWithContext(ctx).WithStatus(domain.OrderStatusBlocked), auth)
 		fmt.Println(orders)
 
-		ok, err := checkOrderStatus(ctx, client, auth, orderID1, domain.OrderStatusBlocked)
-		fmt.Println(ok, err)
-		//ok, err = checkOrderStatus(ctx, client, auth, orderID2, domain.OrderStatusBlocked)
-		//fmt.Println(ok, err)
-		//require.NoError(t, err)
+		// The first order switches status form Approved to Blocked
+		ok, err := checkOrderStatus(ctx, client, auth, firstOrderID, domain.OrderStatusBlocked)
+		require.NoError(t, err)
+		require.True(t, ok)
+
+		// The ssecond order keeps the same status
+		ok, err = checkOrderStatus(ctx, client, auth, secondOrderID, domain.OrderStatusRejected)
+		require.NoError(t, err)
 		require.True(t, ok)
 	})
 
@@ -671,15 +673,15 @@ func TestIntegration_BlockEquipment(t *testing.T) {
 	})
 }
 
-func createOrder(ctx context.Context, be *client.Be, auth runtime.ClientAuthInfoWriterFunc, id *int64) (*int64, error) {
+func createOrder(ctx context.Context, be *client.Be, auth runtime.ClientAuthInfoWriterFunc, id *int64, start time.Time, end time.Time) (*int64, error) {
 	rentStart := strfmt.NewDateTime()
 	dateTimeFmt := "2006-01-02 15:04:05"
-	err := rentStart.UnmarshalText([]byte(time.Now().Format(dateTimeFmt)))
+	err := rentStart.UnmarshalText([]byte(start.Format(dateTimeFmt)))
 	if err != nil {
 		return nil, err
 	}
 	rentEnd := strfmt.NewDateTime()
-	err = rentEnd.UnmarshalText([]byte(time.Now().AddDate(0, 0, 10).Format(dateTimeFmt)))
+	err = rentEnd.UnmarshalText([]byte(end.Format(dateTimeFmt)))
 	if err != nil {
 		return nil, err
 	}
