@@ -25,6 +25,7 @@ import (
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/swagger/models"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/handlers"
 	utils "git.epam.com/epm-lstr/epm-lstr-lc/be/internal/integration-tests/common"
+	"git.epam.com/epm-lstr/epm-lstr-lc/be/pkg/domain"
 )
 
 func TestIntegration_CreateEquipment(t *testing.T) {
@@ -520,7 +521,7 @@ func TestIntegration_BlockEquipment(t *testing.T) {
 	ctx := context.Background()
 	client := utils.SetupClient()
 	startDate := strfmt.DateTime(time.Now())
-	endDate := strfmt.DateTime(time.Now().AddDate(0, 0, 1))
+	endDate := strfmt.DateTime(time.Now().AddDate(0, 0, 10))
 
 	t.Run("Block Equipment is prohibited for operators", func(t *testing.T) {
 		tokens := utils.OperatorUserLogin(t)
@@ -589,6 +590,39 @@ func TestIntegration_BlockEquipment(t *testing.T) {
 		require.True(t, res.IsCode(http.StatusNoContent))
 	})
 
+	t.Run("Block Equipment with active orders", func(t *testing.T) {
+		tokens := utils.ManagerUserLogin(t)
+		auth := utils.AuthInfoFunc(tokens.GetPayload().AccessToken)
+		model, err := setParameters(ctx, client, auth)
+		require.NoError(t, err)
+		eq, err := createEquipment(ctx, client, auth, model)
+		require.NoError(t, err)
+
+		var orderID *int64
+		orderID, err = createOrder(ctx, client, auth, eq.Payload.ID)
+		require.NoError(t, err)
+		params := equipment.NewBlockEquipmentParamsWithContext(ctx).WithEquipmentID(*eq.Payload.ID)
+		params.Data = &models.ChangeEquipmentStatusToBlockedRequest{
+			StartDate: strfmt.DateTime(startDate),
+			EndDate:   strfmt.DateTime(endDate),
+		}
+
+		var res *equipment.BlockEquipmentNoContent
+		res, err = client.Equipment.BlockEquipment(params, auth)
+		require.NoError(t, err)
+		require.True(t, res.IsCode(http.StatusNoContent))
+
+		orders, err := client.Orders.GetOrdersByStatus(
+			orders.NewGetOrdersByStatusParamsWithContext(ctx).WithStatus(domain.OrderStatusBlocked), auth)
+		fmt.Println(orders)
+
+		var ok bool
+		ok, err = checkOrderStatus(ctx, client, auth, orderID, domain.OrderStatusBlocked)
+		fmt.Println(ok, err)
+		require.NoError(t, err)
+		require.True(t, ok)
+	})
+
 	t.Run("Block Equipment is failed, equipment not found", func(t *testing.T) {
 		tokens := utils.ManagerUserLogin(t)
 		auth := utils.AuthInfoFunc(tokens.GetPayload().AccessToken)
@@ -629,6 +663,7 @@ func createOrder(ctx context.Context, be *client.Be, auth runtime.ClientAuthInfo
 			RentStart:   &rentStart,
 		},
 	}, auth)
+
 	if err != nil {
 		return nil, err
 	}
