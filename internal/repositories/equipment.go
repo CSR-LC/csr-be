@@ -574,6 +574,47 @@ func (r *equipmentRepository) BlockEquipment(
 	return err
 }
 
+func (r *equipmentRepository) UnblockEquipment(ctx context.Context, id int) error {
+	tx, err := middlewares.TxFromContext(ctx)
+	if err != nil {
+		return err
+	}
+
+	eqToUnblock, err := tx.Equipment.Get(ctx, id)
+	if err != nil {
+		return err
+	}
+
+	// Get EquipmentStatusName form DB
+	eqStatusAvailable, err := tx.EquipmentStatusName.
+		Query().
+		Where(equipmentstatusname.Name(domain.EquipmentStatusAvailable)).
+		Only(ctx)
+	if err != nil {
+		return err
+	}
+
+	// Set a new EquipmentStatusName for current Equipment
+	_, err = eqToUnblock.Update().SetCurrentStatus(eqStatusAvailable).Save(ctx)
+	if err != nil {
+		return err
+	}
+
+	// Create a new EquipmentStatus and set the current time, Equipment and EquipmentStatusName
+	_, err = tx.EquipmentStatus.Create().
+		SetCreatedAt(time.Now()).
+		SetEndDate(time.Now()).
+		SetStartDate(time.Now()).
+		SetEquipments(eqToUnblock).
+		SetEquipmentStatusName(eqStatusAvailable).
+		SetUpdatedAt(time.Now()).
+		Save(ctx)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func checkDates(start *time.Time, end *time.Time) (*time.Time, *time.Time, error) {
 	startDate := time.Time(*start)
 	endDate := time.Time(*end)

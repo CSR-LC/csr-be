@@ -652,6 +652,32 @@ func Test_checkDates(t *testing.T) {
 	}
 }
 
+func (s *EquipmentSuite) TestEquipmentRepository_UnblockEquipment() {
+	t := s.T()
+	ctx := s.ctx
+	tx, err := s.client.Tx(ctx)
+	require.NoError(t, err)
+
+	eqToUnblock, err := tx.Equipment.
+		Query().
+		WithCurrentStatus().
+		Where(equipment.Title("equipment 5")).
+		Only(ctx)
+	ctx = context.WithValue(ctx, middlewares.TxContextKey, tx)
+	err = s.repository.UnblockEquipment(ctx, eqToUnblock.ID)
+	require.NoError(t, err)
+
+	eqUnblocked, err := tx.Equipment.
+		Query().
+		WithEquipmentStatus().
+		WithCurrentStatus().
+		Where(equipment.Title("equipment 5")).
+		Only(ctx)
+	require.NotEmpty(t, eqUnblocked.Edges.EquipmentStatus)
+	require.NotEqual(t, eqToUnblock.Edges.CurrentStatus.Name, eqUnblocked.Edges.CurrentStatus.Name)
+	require.NoError(t, tx.Commit())
+}
+
 func mapContainsEquipment(eq *ent.Equipment, m map[int]*ent.Equipment) bool {
 	for _, v := range m {
 		if eq.Name == v.Name && eq.Title == v.Title {

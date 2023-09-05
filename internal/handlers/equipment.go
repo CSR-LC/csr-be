@@ -1,12 +1,16 @@
 package handlers
 
 import (
+	"context"
 	"errors"
 	"math"
 	"net/http"
+	"net/http/httptest"
 	"time"
 
+	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/runtime/middleware"
+	"github.com/stretchr/testify/require"
 	"go.uber.org/zap"
 
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/ent"
@@ -32,6 +36,7 @@ func SetEquipmentHandler(logger *zap.Logger, api *operations.BeAPI) {
 	api.EquipmentFindEquipmentHandler = equipmentHandler.FindEquipmentFunc(eqRepo)
 	api.EquipmentArchiveEquipmentHandler = equipmentHandler.ArchiveEquipmentFunc(eqRepo)
 	api.EquipmentBlockEquipmentHandler = equipmentHandler.BlockEquipmentFunc(eqRepo)
+	api.EquipmentUnblockEquipmentHandler = equipmentHandler.UnblockEquipmentFunc(eqRepo)
 }
 
 type Equipment struct {
@@ -329,5 +334,93 @@ func (c Equipment) BlockEquipmentFunc(repository domain.EquipmentRepository) equ
 				WithPayload(buildStringPayload("Error while blocking equipment"))
 		}
 		return equipment.NewBlockEquipmentNoContent()
+	}
+}
+
+func (s *EquipmentTestSuite) TestEquipment_UnblockEquipmentFunc_RepoNotFoundErr() {
+	t := s.T()
+	request := http.Request{}
+	ctx := context.Background()
+
+	handlerFunc := s.equipment.UnblockEquipmentFunc(s.equipmentRepo)
+	userID, equipmentID := 1, 1
+	params := equipment.UnblockEquipmentParams{
+		HTTPRequest: request.WithContext(ctx),
+		EquipmentID: int64(equipmentID),
+	}
+	err := &ent.NotFoundError{}
+
+	s.equipmentRepo.On("UnblockEquipment", ctx, equipmentID).Return(err)
+	responseRecorder := httptest.NewRecorder()
+	producer := runtime.JSONProducer()
+	principal := &models.Principal{ID: int64(userID), Role: roles.Manager}
+	resp := handlerFunc(params, principal)
+	resp.WriteResponse(responseRecorder, producer)
+	require.Equal(t, http.StatusNotFound, responseRecorder.Code)
+	s.equipmentRepo.AssertExpectations(t)
+
+	responseRecorder = httptest.NewRecorder()
+	producer = runtime.JSONProducer()
+	principal = &models.Principal{ID: int64(userID), Role: roles.Operator}
+	resp = handlerFunc(params, principal)
+	resp.WriteResponse(responseRecorder, producer)
+	require.Equal(t, http.StatusForbidden, responseRecorder.Code)
+	s.equipmentRepo.AssertExpectations(t)
+}
+
+func (s *EquipmentTestSuite) TestEquipment_UnblockEquipmentFunc_OK() {
+	t := s.T()
+	request := http.Request{}
+	ctx := context.Background()
+
+	handlerFunc := s.equipment.UnblockEquipmentFunc(s.equipmentRepo)
+	userID, equipmentID := 1, 1
+	params := equipment.UnblockEquipmentParams{
+		HTTPRequest: request.WithContext(ctx),
+		EquipmentID: int64(equipmentID),
+	}
+
+	s.equipmentRepo.On("UnblockEquipment", ctx, equipmentID).Return(nil)
+	principal := &models.Principal{ID: int64(userID), Role: roles.Manager}
+	resp := handlerFunc(params, principal)
+	responseRecorder := httptest.NewRecorder()
+	producer := runtime.JSONProducer()
+	resp.WriteResponse(responseRecorder, producer)
+	require.Equal(t, http.StatusNoContent, responseRecorder.Code)
+	s.equipmentRepo.AssertExpectations(t)
+
+	s.equipmentRepo.On("UnblockEquipment", ctx, equipmentID).Return(nil)
+	principal = &models.Principal{ID: int64(userID), Role: roles.Admin}
+	resp = handlerFunc(params, principal)
+	responseRecorder = httptest.NewRecorder()
+	producer = runtime.JSONProducer()
+	resp.WriteResponse(responseRecorder, producer)
+	require.Equal(t, http.StatusForbidden, responseRecorder.Code)
+	s.equipmentRepo.AssertExpectations(t)
+}
+
+func (c Equipment) UnblockEquipmentFunc(repository domain.EquipmentRepository) equipment.UnblockEquipmentHandlerFunc {
+	return func(s equipment.UnblockEquipmentParams, principal *models.Principal) middleware.Responder {
+		ctx := s.HTTPRequest.Context()
+		role := principal.Role
+
+		if role != roles.Manager {
+			c.logger.Warn("User have no right to unblock the equipment", zap.Any("principal", principal))
+			return equipment.
+				NewUnblockEquipmentDefault(http.StatusForbidden).
+				WithPayload(&models.Error{Data: &models.ErrorData{Message: "You don't have rights to unblock the equipment"}})
+		}
+
+		err := repository.UnblockEquipment(ctx, int(s.EquipmentID))
+		if err != nil {
+			if ent.IsNotFound(err) {
+				return equipment.NewUnblockEquipmentNotFound().
+					WithPayload(buildStringPayload(EquipmentNotFoundMsg))
+			}
+			c.logger.Error("Error while unblocking equipment", zap.Error(err))
+			return equipment.NewUnblockEquipmentDefault(http.StatusInternalServerError).
+				WithPayload(buildStringPayload("Error while unblocking equipment"))
+		}
+		return equipment.NewUnblockEquipmentNoContent()
 	}
 }
