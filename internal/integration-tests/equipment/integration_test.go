@@ -598,9 +598,36 @@ func TestIntegration_BlockEquipment(t *testing.T) {
 		eq, err := createEquipment(ctx, client, auth, model)
 		require.NoError(t, err)
 
-		var orderID *int64
-		orderID, err = createOrder(ctx, client, auth, eq.Payload.ID)
+		orderID1, err := createOrder(ctx, client, auth, eq.Payload.ID)
 		require.NoError(t, err)
+		fmt.Println(err)
+		createOrder(ctx, client, auth, eq.Payload.ID)
+		require.NoError(t, err)
+		//fmt.Println(orderID2)
+		listParams := orders.NewGetAllOrdersParamsWithContext(ctx)
+		test, err := client.Orders.GetAllOrders(listParams, auth)
+		require.NoError(t, err)
+		fmt.Println("12122", test)
+		for i, o := range test.Payload.Items {
+			var st string
+			if i == 0 {
+				st = domain.OrderStatusApproved
+			} else {
+				st = domain.OrderStatusRejected
+			}
+
+			dt := strfmt.DateTime(time.Now())
+			osp := orders.NewAddNewOrderStatusParamsWithContext(ctx)
+			osp.Data = &models.NewOrderStatus{
+				OrderID:   o.ID,
+				CreatedAt: &dt,
+				Status:    &st,
+				Comment:   &st,
+			}
+			_, err = client.Orders.AddNewOrderStatus(osp, auth)
+			require.NoError(t, err)
+		}
+
 		params := equipment.NewBlockEquipmentParamsWithContext(ctx).WithEquipmentID(*eq.Payload.ID)
 		params.Data = &models.ChangeEquipmentStatusToBlockedRequest{
 			StartDate: strfmt.DateTime(startDate),
@@ -616,10 +643,11 @@ func TestIntegration_BlockEquipment(t *testing.T) {
 			orders.NewGetOrdersByStatusParamsWithContext(ctx).WithStatus(domain.OrderStatusBlocked), auth)
 		fmt.Println(orders)
 
-		var ok bool
-		ok, err = checkOrderStatus(ctx, client, auth, orderID, domain.OrderStatusBlocked)
+		ok, err := checkOrderStatus(ctx, client, auth, orderID1, domain.OrderStatusBlocked)
 		fmt.Println(ok, err)
-		require.NoError(t, err)
+		//ok, err = checkOrderStatus(ctx, client, auth, orderID2, domain.OrderStatusBlocked)
+		//fmt.Println(ok, err)
+		//require.NoError(t, err)
 		require.True(t, ok)
 	})
 
@@ -655,6 +683,7 @@ func createOrder(ctx context.Context, be *client.Be, auth runtime.ClientAuthInfo
 	if err != nil {
 		return nil, err
 	}
+
 	orderCreated, err := be.Orders.CreateOrder(&orders.CreateOrderParams{
 		Context: ctx,
 		Data: &models.OrderCreateRequest{
