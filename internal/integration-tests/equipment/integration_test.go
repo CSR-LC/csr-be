@@ -673,6 +673,83 @@ func TestIntegration_BlockEquipment(t *testing.T) {
 	})
 }
 
+func TestIntegration_UnblockEquipment(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping integration test")
+	}
+
+	ctx := context.Background()
+	client := utils.SetupClient()
+
+	t.Run("Unblock Equipment is prohibited for operators", func(t *testing.T) {
+		tokens := utils.OperatorUserLogin(t)
+		auth := utils.AuthInfoFunc(tokens.GetPayload().AccessToken)
+		model, err := setParameters(ctx, client, auth)
+		require.NoError(t, err)
+		eq, err := createEquipment(ctx, client, auth, model)
+		require.NoError(t, err)
+
+		params := equipment.NewUnblockEquipmentParamsWithContext(ctx).WithEquipmentID(*eq.Payload.ID)
+		_, err = client.Equipment.UnblockEquipment(params, auth)
+		require.Error(t, err)
+
+		wantErr := equipment.NewUnblockEquipmentDefault(http.StatusForbidden)
+		wantErr.Payload = &models.Error{Data: &models.ErrorData{
+			Message: "You don't have rights to unblock the equipment",
+		}}
+		assert.Equal(t, wantErr, err)
+	})
+
+	t.Run("Unblock Equipment is prohibited for admins", func(t *testing.T) {
+		tokens := utils.AdminUserLogin(t)
+		auth := utils.AuthInfoFunc(tokens.GetPayload().AccessToken)
+		model, err := setParameters(ctx, client, auth)
+		require.NoError(t, err)
+		eq, err := createEquipment(ctx, client, auth, model)
+		require.NoError(t, err)
+
+		params := equipment.NewUnblockEquipmentParamsWithContext(ctx).WithEquipmentID(*eq.Payload.ID)
+
+		_, err = client.Equipment.UnblockEquipment(params, auth)
+		require.Error(t, err)
+
+		wantErr := equipment.NewUnblockEquipmentDefault(http.StatusForbidden)
+		wantErr.Payload = &models.Error{Data: &models.ErrorData{
+			Message: "You don't have rights to block the equipment",
+		}}
+		assert.Equal(t, wantErr, err)
+	})
+
+	t.Run("Unblock Equipment is permitted for managers", func(t *testing.T) {
+		tokens := utils.ManagerUserLogin(t)
+		auth := utils.AuthInfoFunc(tokens.GetPayload().AccessToken)
+		model, err := setParameters(ctx, client, auth)
+		require.NoError(t, err)
+		eq, err := createEquipment(ctx, client, auth, model)
+		require.NoError(t, err)
+
+		params := equipment.NewUnblockEquipmentParamsWithContext(ctx).WithEquipmentID(*eq.Payload.ID)
+		res, err := client.Equipment.UnblockEquipment(params, auth)
+		fmt.Println(err)
+		require.NoError(t, err)
+		require.True(t, res.IsCode(http.StatusNoContent))
+	})
+
+	t.Run("Unblock Equipment is failed, equipment not found", func(t *testing.T) {
+		tokens := utils.ManagerUserLogin(t)
+		auth := utils.AuthInfoFunc(tokens.GetPayload().AccessToken)
+		var fakeID int64 = 111
+
+		params := equipment.NewUnblockEquipmentParamsWithContext(ctx).WithEquipmentID(fakeID)
+		_, err := client.Equipment.UnblockEquipment(params, auth)
+		require.Error(t, err)
+
+		wantErr := equipment.NewUnblockEquipmentNotFound()
+		wantErr.Payload = &models.Error{Data: &models.ErrorData{Message: handlers.EquipmentNotFoundMsg}}
+		assert.Equal(t, wantErr, err)
+	})
+}
+
 func createOrder(ctx context.Context, be *client.Be, auth runtime.ClientAuthInfoWriterFunc, id *int64, start time.Time, end time.Time) (*int64, error) {
 	rentStart := strfmt.NewDateTime()
 	dateTimeFmt := "2006-01-02 15:04:05"

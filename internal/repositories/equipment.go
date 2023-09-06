@@ -612,7 +612,7 @@ func (r *equipmentRepository) UnblockEquipment(ctx context.Context, id int) erro
 	if err != nil {
 		return err
 	}
-	return nil
+	return err
 }
 
 func checkDates(start *time.Time, end *time.Time) (*time.Time, *time.Time, error) {

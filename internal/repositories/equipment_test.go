@@ -43,12 +43,12 @@ func (s *EquipmentSuite) SetupTest() {
 	if err != nil {
 		t.Fatal(err)
 	}
-	status, err := s.client.EquipmentStatusName.Create().SetName(domain.EquipmentStatusAvailable).Save(s.ctx)
+	availStatus, err := s.client.EquipmentStatusName.Create().SetName(domain.EquipmentStatusAvailable).Save(s.ctx)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	_, err = s.client.EquipmentStatusName.Create().SetName(domain.EquipmentStatusNotAvailable).Save(s.ctx)
+	notAvailStatus, err := s.client.EquipmentStatusName.Create().SetName(domain.EquipmentStatusNotAvailable).Save(s.ctx)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -144,6 +144,10 @@ func (s *EquipmentSuite) SetupTest() {
 		t.Fatal(err)
 	}
 	for i, value := range s.equipments {
+		eqStatus := availStatus
+		if i == 5 {
+			eqStatus = notAvailStatus
+		}
 		eq, errCreate := s.client.Equipment.Create().
 			SetName(value.Name).
 			SetTitle(value.Title).
@@ -153,11 +157,12 @@ func (s *EquipmentSuite) SetupTest() {
 			SetReceiptDate(value.ReceiptDate).
 			SetDescription(value.Description).
 			SetCondition(value.Condition).
-			SetCurrentStatus(status).
+			SetCurrentStatus(eqStatus).
 			SetCategory(category).
 			SetSubcategory(subcategory).
 			SetPhoto(photo).
-			SetPetSizeID(petSize.ID).AddPetKinds(petKind).
+			SetPetSizeID(petSize.ID).
+			AddPetKinds(petKind).
 			Save(s.ctx)
 		if errCreate != nil {
 			t.Fatal(errCreate)
@@ -602,6 +607,34 @@ func (s *EquipmentSuite) TestEquipmentRepository_BlockEquipment() {
 	require.NoError(t, tx.Commit())
 }
 
+func (s *EquipmentSuite) TestEquipmentRepository_UnblockEquipment() {
+	t := s.T()
+	ctx := s.ctx
+	tx, err := s.client.Tx(ctx)
+	require.NoError(t, err)
+
+	eqToUnblock, err := tx.Equipment.
+		Query().
+		WithCurrentStatus().
+		Where(equipment.Title("equipment 5")).
+		Only(ctx)
+
+	ctx = context.WithValue(ctx, middlewares.TxContextKey, tx)
+	err = s.repository.UnblockEquipment(ctx, eqToUnblock.ID)
+	require.NoError(t, err)
+
+	eqUnblocked, err := tx.Equipment.
+		Query().
+		WithEquipmentStatus().
+		WithCurrentStatus().
+		Where(equipment.Title("equipment 5")).
+		Only(ctx)
+
+	require.NotEmpty(t, eqUnblocked.Edges.EquipmentStatus)
+	require.NotEqual(t, eqToUnblock.Edges.CurrentStatus.Name, eqUnblocked.Edges.CurrentStatus.Name)
+	require.NoError(t, tx.Commit())
+}
+
 func Test_checkDates(t *testing.T) {
 	start := time.Now()
 	end := time.Now().Add(time.Hour * 24)
@@ -650,32 +683,6 @@ func Test_checkDates(t *testing.T) {
 			}
 		})
 	}
-}
-
-func (s *EquipmentSuite) TestEquipmentRepository_UnblockEquipment() {
-	t := s.T()
-	ctx := s.ctx
-	tx, err := s.client.Tx(ctx)
-	require.NoError(t, err)
-
-	eqToUnblock, err := tx.Equipment.
-		Query().
-		WithCurrentStatus().
-		Where(equipment.Title("equipment 5")).
-		Only(ctx)
-	ctx = context.WithValue(ctx, middlewares.TxContextKey, tx)
-	err = s.repository.UnblockEquipment(ctx, eqToUnblock.ID)
-	require.NoError(t, err)
-
-	eqUnblocked, err := tx.Equipment.
-		Query().
-		WithEquipmentStatus().
-		WithCurrentStatus().
-		Where(equipment.Title("equipment 5")).
-		Only(ctx)
-	require.NotEmpty(t, eqUnblocked.Edges.EquipmentStatus)
-	require.NotEqual(t, eqToUnblock.Edges.CurrentStatus.Name, eqUnblocked.Edges.CurrentStatus.Name)
-	require.NoError(t, tx.Commit())
 }
 
 func mapContainsEquipment(eq *ent.Equipment, m map[int]*ent.Equipment) bool {
