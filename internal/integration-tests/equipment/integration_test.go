@@ -430,15 +430,13 @@ func TestIntegration_ArchiveEquipment(t *testing.T) {
 
 	t.Run("Archive Equipment with active orders", func(t *testing.T) {
 		orStartDate, orEndDate := time.Now(), time.Now().AddDate(0, 0, 1)
-		var orderID *int64
-		orderID, err = createOrder(ctx, client, auth, created.Payload.ID, orStartDate, orEndDate)
+		orderID, err := createOrder(ctx, client, auth, created.Payload.ID, orStartDate, orEndDate)
 		params := equipment.NewArchiveEquipmentParamsWithContext(ctx).WithEquipmentID(*created.Payload.ID)
 		var res *equipment.ArchiveEquipmentNoContent
 		res, err = client.Equipment.ArchiveEquipment(params, auth)
 		require.NoError(t, err)
 		require.True(t, res.IsCode(http.StatusNoContent))
-		var ok bool
-		ok, err = checkOrderStatus(ctx, client, auth, orderID, domain.OrderStatusClosed)
+		ok, err := checkOrderStatus(ctx, client, auth, orderID, domain.OrderStatusClosed)
 		require.NoError(t, err)
 		require.True(t, ok)
 	})
