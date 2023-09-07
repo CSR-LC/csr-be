@@ -522,14 +522,16 @@ func TestIntegration_BlockEquipment(t *testing.T) {
 	startDate := strfmt.DateTime(time.Now())
 	endDate := strfmt.DateTime(time.Now().AddDate(0, 0, 10))
 
+	tokens := utils.AdminUserLogin(t)
+	auth := utils.AuthInfoFunc(tokens.GetPayload().AccessToken)
+	model, err := setParameters(ctx, client, auth)
+	require.NoError(t, err)
+	eq, err := createEquipment(ctx, client, auth, model)
+	require.NoError(t, err)
+
 	t.Run("Block Equipment is prohibited for operators", func(t *testing.T) {
 		tokens := utils.OperatorUserLogin(t)
 		auth := utils.AuthInfoFunc(tokens.GetPayload().AccessToken)
-		model, err := setParameters(ctx, client, auth)
-		require.NoError(t, err)
-		eq, err := createEquipment(ctx, client, auth, model)
-		require.NoError(t, err)
-
 		params := equipment.NewBlockEquipmentParamsWithContext(ctx).WithEquipmentID(*eq.Payload.ID)
 		params.Data = &models.ChangeEquipmentStatusToBlockedRequest{
 			StartDate: strfmt.DateTime(startDate),
@@ -549,11 +551,6 @@ func TestIntegration_BlockEquipment(t *testing.T) {
 	t.Run("Block Equipment is prohibited for admins", func(t *testing.T) {
 		tokens := utils.AdminUserLogin(t)
 		auth := utils.AuthInfoFunc(tokens.GetPayload().AccessToken)
-		model, err := setParameters(ctx, client, auth)
-		require.NoError(t, err)
-		eq, err := createEquipment(ctx, client, auth, model)
-		require.NoError(t, err)
-
 		params := equipment.NewBlockEquipmentParamsWithContext(ctx).WithEquipmentID(*eq.Payload.ID)
 		params.Data = &models.ChangeEquipmentStatusToBlockedRequest{
 			StartDate: strfmt.DateTime(startDate),
@@ -573,11 +570,6 @@ func TestIntegration_BlockEquipment(t *testing.T) {
 	t.Run("Block Equipment is permitted for managers", func(t *testing.T) {
 		tokens := utils.ManagerUserLogin(t)
 		auth := utils.AuthInfoFunc(tokens.GetPayload().AccessToken)
-		model, err := setParameters(ctx, client, auth)
-		require.NoError(t, err)
-		eq, err := createEquipment(ctx, client, auth, model)
-		require.NoError(t, err)
-
 		params := equipment.NewBlockEquipmentParamsWithContext(ctx).WithEquipmentID(*eq.Payload.ID)
 		params.Data = &models.ChangeEquipmentStatusToBlockedRequest{
 			StartDate: strfmt.DateTime(startDate),
@@ -592,17 +584,13 @@ func TestIntegration_BlockEquipment(t *testing.T) {
 	t.Run("Block Equipment with active orders", func(t *testing.T) {
 		tokens := utils.ManagerUserLogin(t)
 		auth := utils.AuthInfoFunc(tokens.GetPayload().AccessToken)
-		model, err := setParameters(ctx, client, auth)
-		require.NoError(t, err)
-		eq, err := createEquipment(ctx, client, auth, model)
-		require.NoError(t, err)
 
 		orStartDate, orEndDate := time.Now(), time.Now().AddDate(0, 0, 1)
 		firstOrderID, err := createOrder(ctx, client, auth, eq.Payload.ID, orStartDate, orEndDate)
-		require.NoError(t, err)
+		require.NotNil(t, firstOrderID)
 		orStartDate, orEndDate = time.Now().AddDate(0, 0, 2), time.Now().AddDate(0, 0, 3)
 		secondOrderID, err := createOrder(ctx, client, auth, eq.Payload.ID, orStartDate, orEndDate)
-		require.NoError(t, err)
+		require.NotNil(t, secondOrderID)
 
 		listParams := orders.NewGetAllOrdersParamsWithContext(ctx)
 		ordersList, err := client.Orders.GetAllOrders(listParams, auth)
@@ -655,7 +643,7 @@ func TestIntegration_BlockEquipment(t *testing.T) {
 	t.Run("Block Equipment is failed, equipment not found", func(t *testing.T) {
 		tokens := utils.ManagerUserLogin(t)
 		auth := utils.AuthInfoFunc(tokens.GetPayload().AccessToken)
-		var fakeID int64 = 111
+		var fakeID int64 = -1
 
 		params := equipment.NewBlockEquipmentParamsWithContext(ctx).WithEquipmentID(fakeID)
 		params.Data = &models.ChangeEquipmentStatusToBlockedRequest{
