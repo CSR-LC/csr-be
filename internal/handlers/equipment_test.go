@@ -1171,7 +1171,6 @@ func (s *EquipmentTestSuite) TestEquipment_BlockEquipmentFunc_OK() {
 	resp.WriteResponse(responseRecorder, producer)
 	require.Equal(t, http.StatusForbidden, responseRecorder.Code)
 	s.equipmentRepo.AssertExpectations(t)
-
 }
 
 func (s *EquipmentTestSuite) TestEquipment_UnblockEquipmentFunc_RepoNotFoundErr() {

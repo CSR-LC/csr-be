@@ -429,7 +429,6 @@ func TestIntegration_ArchiveEquipment(t *testing.T) {
 	})
 
 	t.Run("Archive Equipment with active orders", func(t *testing.T) {
-		//var orderID *int64
 		orStartDate, orEndDate := time.Now(), time.Now().AddDate(0, 0, 1)
 		orderID, err := createOrder(ctx, client, auth, created.Payload.ID, orStartDate, orEndDate)
 		params := equipment.NewArchiveEquipmentParamsWithContext(ctx).WithEquipmentID(*created.Payload.ID)
@@ -457,6 +456,152 @@ func TestIntegration_ArchiveEquipment(t *testing.T) {
 	// todo: test for archive equipment with non-default status
 }
 
+func TestIntegration_BlockEquipment(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping integration test")
+	}
+
+	ctx := context.Background()
+	client := utils.SetupClient()
+	startDate, endDate := strfmt.DateTime(time.Now()), strfmt.DateTime(time.Now().AddDate(0, 0, 10))
+
+	tokens := utils.AdminUserLogin(t)
+	auth := utils.AuthInfoFunc(tokens.GetPayload().AccessToken)
+	model, err := setParameters(ctx, client, auth)
+	require.NoError(t, err)
+	eq, err := createEquipment(ctx, client, auth, model)
+	require.NoError(t, err)
+
+	orStartDate, orEndDate := time.Now().AddDate(0, 0, 1), time.Now().AddDate(0, 0, 2)
+	firstOrderID, err := createOrder(ctx, client, auth, eq.Payload.ID, orStartDate, orEndDate)
+	require.NoError(t, err)
+	require.NotNil(t, firstOrderID)
+
+	orStartDate, orEndDate = time.Now().AddDate(0, 0, 3), time.Now().AddDate(0, 0, 4)
+	secondOrderID, err := createOrder(ctx, client, auth, eq.Payload.ID, orStartDate, orEndDate)
+	require.NoError(t, err)
+	require.NotNil(t, secondOrderID)
+
+	t.Run("Block Equipment with active orders", func(t *testing.T) {
+		tokens := utils.ManagerUserLogin(t)
+		auth := utils.AuthInfoFunc(tokens.GetPayload().AccessToken)
+
+		dt := strfmt.DateTime(time.Now())
+		firstOrderStatus := orders.NewAddNewOrderStatusParamsWithContext(ctx)
+		firstOrderStatus.Data = &models.NewOrderStatus{
+			OrderID:   firstOrderID,
+			CreatedAt: &dt,
+			Status:    &domain.OrderStatusApproved,
+			Comment:   &domain.OrderStatusApproved,
+		}
+		os1, err := client.Orders.AddNewOrderStatus(firstOrderStatus, auth)
+		require.NoError(t, err)
+		require.NotNil(t, os1)
+
+		secondOrderStatus := orders.NewAddNewOrderStatusParamsWithContext(ctx)
+		secondOrderStatus.Data = &models.NewOrderStatus{
+			OrderID:   secondOrderID,
+			CreatedAt: &dt,
+			Status:    &domain.OrderStatusRejected,
+			Comment:   &domain.OrderStatusRejected,
+		}
+		os2, err := client.Orders.AddNewOrderStatus(secondOrderStatus, auth)
+		require.NoError(t, err)
+		require.NotNil(t, os2)
+
+		params := equipment.NewBlockEquipmentParamsWithContext(ctx).WithEquipmentID(*eq.Payload.ID)
+		params.Data = &models.ChangeEquipmentStatusToBlockedRequest{
+			StartDate: strfmt.DateTime(startDate),
+			EndDate:   strfmt.DateTime(endDate),
+		}
+
+		res, err := client.Equipment.BlockEquipment(params, auth)
+		require.NoError(t, err)
+		require.True(t, res.IsCode(http.StatusNoContent))
+
+		// The first order switches status from Approved to Blocked
+		ok, err := checkOrderStatus(ctx, client, auth, firstOrderID, domain.OrderStatusBlocked)
+		require.NoError(t, err)
+		require.True(t, ok)
+
+		// The second order keeps the same status
+		ok, err = checkOrderStatus(ctx, client, auth, secondOrderID, domain.OrderStatusRejected)
+		require.NoError(t, err)
+		require.True(t, ok)
+	})
+
+	t.Run("Block Equipment is failed, equipment not found", func(t *testing.T) {
+		tokens := utils.ManagerUserLogin(t)
+		auth := utils.AuthInfoFunc(tokens.GetPayload().AccessToken)
+		var fakeID int64 = -1
+
+		params := equipment.NewBlockEquipmentParamsWithContext(ctx).WithEquipmentID(fakeID)
+		params.Data = &models.ChangeEquipmentStatusToBlockedRequest{
+			StartDate: strfmt.DateTime(startDate),
+			EndDate:   strfmt.DateTime(endDate),
+		}
+
+		_, err := client.Equipment.BlockEquipment(params, auth)
+		require.Error(t, err)
+
+		wantErr := equipment.NewBlockEquipmentNotFound()
+		wantErr.Payload = &models.Error{Data: &models.ErrorData{Message: handlers.EquipmentNotFoundMsg}}
+		assert.Equal(t, wantErr, err)
+	})
+
+	t.Run("Block Equipment is prohibited for operators", func(t *testing.T) {
+		tokens := utils.OperatorUserLogin(t)
+		auth := utils.AuthInfoFunc(tokens.GetPayload().AccessToken)
+		params := equipment.NewBlockEquipmentParamsWithContext(ctx).WithEquipmentID(*eq.Payload.ID)
+		params.Data = &models.ChangeEquipmentStatusToBlockedRequest{
+			StartDate: strfmt.DateTime(startDate),
+			EndDate:   strfmt.DateTime(endDate),
+		}
+
+		_, err = client.Equipment.BlockEquipment(params, auth)
+		require.Error(t, err)
+
+		wantErr := equipment.NewBlockEquipmentDefault(http.StatusForbidden)
+		wantErr.Payload = &models.Error{Data: &models.ErrorData{
+			Message: "You don't have rights to block the equipment",
+		}}
+		assert.Equal(t, wantErr, err)
+	})
+
+	t.Run("Block Equipment is prohibited for admins", func(t *testing.T) {
+		tokens := utils.AdminUserLogin(t)
+		auth := utils.AuthInfoFunc(tokens.GetPayload().AccessToken)
+		params := equipment.NewBlockEquipmentParamsWithContext(ctx).WithEquipmentID(*eq.Payload.ID)
+		params.Data = &models.ChangeEquipmentStatusToBlockedRequest{
+			StartDate: strfmt.DateTime(startDate),
+			EndDate:   strfmt.DateTime(endDate),
+		}
+
+		_, err = client.Equipment.BlockEquipment(params, auth)
+		require.Error(t, err)
+
+		wantErr := equipment.NewBlockEquipmentDefault(http.StatusForbidden)
+		wantErr.Payload = &models.Error{Data: &models.ErrorData{
+			Message: "You don't have rights to block the equipment",
+		}}
+		assert.Equal(t, wantErr, err)
+	})
+
+	t.Run("Block Equipment is permitted for managers", func(t *testing.T) {
+		tokens := utils.ManagerUserLogin(t)
+		auth := utils.AuthInfoFunc(tokens.GetPayload().AccessToken)
+		params := equipment.NewBlockEquipmentParamsWithContext(ctx).WithEquipmentID(*eq.Payload.ID)
+		params.Data = &models.ChangeEquipmentStatusToBlockedRequest{
+			StartDate: strfmt.DateTime(startDate),
+			EndDate:   strfmt.DateTime(endDate),
+		}
+
+		res, err := client.Equipment.BlockEquipment(params, auth)
+		require.NoError(t, err)
+		require.True(t, res.IsCode(http.StatusNoContent))
+	})
+}
+
 func TestIntegration_DeleteEquipment(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping integration test")
@@ -470,20 +615,20 @@ func TestIntegration_DeleteEquipment(t *testing.T) {
 	auth := utils.AuthInfoFunc(tokens.GetPayload().AccessToken)
 
 	t.Run("Delete All Equipment", func(t *testing.T) {
-		res, err := client.Equipment.GetAllEquipment(equipment.NewGetAllEquipmentParamsWithContext(ctx), auth)
+		beforeEq, err := client.Equipment.GetAllEquipment(equipment.NewGetAllEquipmentParamsWithContext(ctx), auth)
 		require.NoError(t, err)
-		assert.NotZero(t, len(res.Payload.Items))
+		assert.NotZero(t, len(beforeEq.Payload.Items))
 
 		params := equipment.NewDeleteEquipmentParamsWithContext(ctx)
-		for _, item := range res.Payload.Items {
+		for _, item := range beforeEq.Payload.Items {
 			params.WithEquipmentID(*item.ID)
 			_, err = client.Equipment.DeleteEquipment(params, auth)
 			require.NoError(t, err)
 		}
 
-		res, err = client.Equipment.GetAllEquipment(equipment.NewGetAllEquipmentParamsWithContext(ctx), auth)
+		afterEq, err := client.Equipment.GetAllEquipment(equipment.NewGetAllEquipmentParamsWithContext(ctx), auth)
 		require.NoError(t, err)
-		assert.Zero(t, len(res.Payload.Items))
+		assert.Zero(t, len(afterEq.Payload.Items))
 	})
 
 	t.Run("Delete Equipment failed: zero equipments, delete failed", func(t *testing.T) {
@@ -510,166 +655,6 @@ func TestIntegration_DeleteEquipment(t *testing.T) {
 		wantErr := equipment.NewDeleteEquipmentDefault(http.StatusUnauthorized)
 		wantErr.Payload = &models.Error{Data: nil}
 		assert.Equal(t, wantErr, gotErr)
-	})
-}
-
-func TestIntegration_BlockEquipment(t *testing.T) {
-	if testing.Short() {
-		t.Skip("skipping integration test")
-	}
-
-	ctx := context.Background()
-	client := utils.SetupClient()
-	startDate := strfmt.DateTime(time.Now())
-	endDate := strfmt.DateTime(time.Now().AddDate(0, 0, 10))
-
-	t.Run("Block Equipment is prohibited for operators", func(t *testing.T) {
-		tokens := utils.OperatorUserLogin(t)
-		auth := utils.AuthInfoFunc(tokens.GetPayload().AccessToken)
-		model, err := setParameters(ctx, client, auth)
-		require.NoError(t, err)
-		eq, err := createEquipment(ctx, client, auth, model)
-		require.NoError(t, err)
-
-		params := equipment.NewBlockEquipmentParamsWithContext(ctx).WithEquipmentID(*eq.Payload.ID)
-		params.Data = &models.ChangeEquipmentStatusToBlockedRequest{
-			StartDate: strfmt.DateTime(startDate),
-			EndDate:   strfmt.DateTime(endDate),
-		}
-
-		_, err = client.Equipment.BlockEquipment(params, auth)
-		require.Error(t, err)
-
-		wantErr := equipment.NewBlockEquipmentDefault(http.StatusForbidden)
-		wantErr.Payload = &models.Error{Data: &models.ErrorData{
-			Message: "You don't have rights to block the equipment",
-		}}
-		assert.Equal(t, wantErr, err)
-	})
-
-	t.Run("Block Equipment is prohibited for admins", func(t *testing.T) {
-		tokens := utils.AdminUserLogin(t)
-		auth := utils.AuthInfoFunc(tokens.GetPayload().AccessToken)
-		model, err := setParameters(ctx, client, auth)
-		require.NoError(t, err)
-		eq, err := createEquipment(ctx, client, auth, model)
-		require.NoError(t, err)
-
-		params := equipment.NewBlockEquipmentParamsWithContext(ctx).WithEquipmentID(*eq.Payload.ID)
-		params.Data = &models.ChangeEquipmentStatusToBlockedRequest{
-			StartDate: strfmt.DateTime(startDate),
-			EndDate:   strfmt.DateTime(endDate),
-		}
-
-		_, err = client.Equipment.BlockEquipment(params, auth)
-		require.Error(t, err)
-
-		wantErr := equipment.NewBlockEquipmentDefault(http.StatusForbidden)
-		wantErr.Payload = &models.Error{Data: &models.ErrorData{
-			Message: "You don't have rights to block the equipment",
-		}}
-		assert.Equal(t, wantErr, err)
-	})
-
-	t.Run("Block Equipment is permitted for managers", func(t *testing.T) {
-		tokens := utils.ManagerUserLogin(t)
-		auth := utils.AuthInfoFunc(tokens.GetPayload().AccessToken)
-		model, err := setParameters(ctx, client, auth)
-		require.NoError(t, err)
-		eq, err := createEquipment(ctx, client, auth, model)
-		require.NoError(t, err)
-
-		params := equipment.NewBlockEquipmentParamsWithContext(ctx).WithEquipmentID(*eq.Payload.ID)
-		params.Data = &models.ChangeEquipmentStatusToBlockedRequest{
-			StartDate: strfmt.DateTime(startDate),
-			EndDate:   strfmt.DateTime(endDate),
-		}
-
-		res, err := client.Equipment.BlockEquipment(params, auth)
-		require.NoError(t, err)
-		require.True(t, res.IsCode(http.StatusNoContent))
-	})
-
-	t.Run("Block Equipment with active orders", func(t *testing.T) {
-		tokens := utils.ManagerUserLogin(t)
-		auth := utils.AuthInfoFunc(tokens.GetPayload().AccessToken)
-		model, err := setParameters(ctx, client, auth)
-		require.NoError(t, err)
-		eq, err := createEquipment(ctx, client, auth, model)
-		require.NoError(t, err)
-
-		orStartDate, orEndDate := time.Now(), time.Now().AddDate(0, 0, 1)
-		firstOrderID, err := createOrder(ctx, client, auth, eq.Payload.ID, orStartDate, orEndDate)
-		require.NoError(t, err)
-		orStartDate, orEndDate = time.Now().AddDate(0, 0, 2), time.Now().AddDate(0, 0, 3)
-		secondOrderID, err := createOrder(ctx, client, auth, eq.Payload.ID, orStartDate, orEndDate)
-		require.NoError(t, err)
-
-		listParams := orders.NewGetAllOrdersParamsWithContext(ctx)
-		ordersList, err := client.Orders.GetAllOrders(listParams, auth)
-		require.NoError(t, err)
-		for i, o := range ordersList.Payload.Items {
-			var st string
-			if i == 0 {
-				st = domain.OrderStatusApproved
-			} else {
-				st = domain.OrderStatusRejected
-			}
-
-			dt := strfmt.DateTime(time.Now())
-			osp := orders.NewAddNewOrderStatusParamsWithContext(ctx)
-			osp.Data = &models.NewOrderStatus{
-				OrderID:   o.ID,
-				CreatedAt: &dt,
-				Status:    &st,
-				Comment:   &st,
-			}
-			_, err = client.Orders.AddNewOrderStatus(osp, auth)
-			require.NoError(t, err)
-		}
-
-		params := equipment.NewBlockEquipmentParamsWithContext(ctx).WithEquipmentID(*eq.Payload.ID)
-		params.Data = &models.ChangeEquipmentStatusToBlockedRequest{
-			StartDate: strfmt.DateTime(startDate),
-			EndDate:   strfmt.DateTime(endDate),
-		}
-
-		res, err := client.Equipment.BlockEquipment(params, auth)
-		require.NoError(t, err)
-		require.True(t, res.IsCode(http.StatusNoContent))
-
-		orders, err := client.Orders.GetOrdersByStatus(
-			orders.NewGetOrdersByStatusParamsWithContext(ctx).WithStatus(domain.OrderStatusBlocked), auth)
-		fmt.Println(orders)
-
-		// The first order switches status form Approved to Blocked
-		ok, err := checkOrderStatus(ctx, client, auth, firstOrderID, domain.OrderStatusBlocked)
-		require.NoError(t, err)
-		require.True(t, ok)
-
-		// The ssecond order keeps the same status
-		ok, err = checkOrderStatus(ctx, client, auth, secondOrderID, domain.OrderStatusRejected)
-		require.NoError(t, err)
-		require.True(t, ok)
-	})
-
-	t.Run("Block Equipment is failed, equipment not found", func(t *testing.T) {
-		tokens := utils.ManagerUserLogin(t)
-		auth := utils.AuthInfoFunc(tokens.GetPayload().AccessToken)
-		var fakeID int64 = 111
-
-		params := equipment.NewBlockEquipmentParamsWithContext(ctx).WithEquipmentID(fakeID)
-		params.Data = &models.ChangeEquipmentStatusToBlockedRequest{
-			StartDate: strfmt.DateTime(startDate),
-			EndDate:   strfmt.DateTime(endDate),
-		}
-
-		_, err := client.Equipment.BlockEquipment(params, auth)
-		require.Error(t, err)
-
-		wantErr := equipment.NewBlockEquipmentNotFound()
-		wantErr.Payload = &models.Error{Data: &models.ErrorData{Message: handlers.EquipmentNotFoundMsg}}
-		assert.Equal(t, wantErr, err)
 	})
 }
 
@@ -766,6 +751,7 @@ func createOrder(ctx context.Context, be *client.Be, auth runtime.ClientAuthInfo
 	orderCreated, err := be.Orders.CreateOrder(&orders.CreateOrderParams{
 		Context: ctx,
 		Data: &models.OrderCreateRequest{
+			Description: "order",
 			EquipmentID: id,
 			RentEnd:     &rentEnd,
 			RentStart:   &rentStart,
