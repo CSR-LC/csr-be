@@ -700,7 +700,7 @@ func TestIntegration_UnblockEquipment(t *testing.T) {
 
 		wantErr := equipment.NewUnblockEquipmentDefault(http.StatusForbidden)
 		wantErr.Payload = &models.Error{Data: &models.ErrorData{
-			Message: "You don't have rights to block the equipment",
+			Message: "You don't have rights to unblock the equipment",
 		}}
 		assert.Equal(t, wantErr, err)
 	})
