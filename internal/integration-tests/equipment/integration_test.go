@@ -666,13 +666,18 @@ func TestIntegration_UnblockEquipment(t *testing.T) {
 	ctx := context.Background()
 	client := utils.SetupClient()
 
+	tokens := utils.AdminUserLogin(t)
+	auth := utils.AuthInfoFunc(tokens.GetPayload().AccessToken)
+
+	model, err := setParameters(ctx, client, auth)
+	require.NoError(t, err)
+	eq, err := createEquipment(ctx, client, auth, model)
+	require.NotNil(t, eq)
+	require.NoError(t, err)
+
 	t.Run("Unblock Equipment is prohibited for operators", func(t *testing.T) {
 		tokens := utils.OperatorUserLogin(t)
 		auth := utils.AuthInfoFunc(tokens.GetPayload().AccessToken)
-		model, err := setParameters(ctx, client, auth)
-		require.NoError(t, err)
-		eq, err := createEquipment(ctx, client, auth, model)
-		require.NoError(t, err)
 
 		params := equipment.NewUnblockEquipmentParamsWithContext(ctx).WithEquipmentID(*eq.Payload.ID)
 		_, err = client.Equipment.UnblockEquipment(params, auth)
@@ -688,13 +693,8 @@ func TestIntegration_UnblockEquipment(t *testing.T) {
 	t.Run("Unblock Equipment is prohibited for admins", func(t *testing.T) {
 		tokens := utils.AdminUserLogin(t)
 		auth := utils.AuthInfoFunc(tokens.GetPayload().AccessToken)
-		model, err := setParameters(ctx, client, auth)
-		require.NoError(t, err)
-		eq, err := createEquipment(ctx, client, auth, model)
-		require.NoError(t, err)
 
 		params := equipment.NewUnblockEquipmentParamsWithContext(ctx).WithEquipmentID(*eq.Payload.ID)
-
 		_, err = client.Equipment.UnblockEquipment(params, auth)
 		require.Error(t, err)
 
@@ -706,24 +706,38 @@ func TestIntegration_UnblockEquipment(t *testing.T) {
 	})
 
 	t.Run("Unblock Equipment is permitted for managers", func(t *testing.T) {
-		tokens := utils.ManagerUserLogin(t)
-		auth := utils.AuthInfoFunc(tokens.GetPayload().AccessToken)
-		model, err := setParameters(ctx, client, auth)
+		token := utils.ManagerUserLogin(t)
+		auth := utils.AuthInfoFunc(token.GetPayload().AccessToken)
+
+		startDate, endDate := strfmt.DateTime(time.Now()), strfmt.DateTime(time.Now().AddDate(0, 0, 10))
+		blockParams := equipment.NewBlockEquipmentParamsWithContext(ctx).WithEquipmentID(*eq.Payload.ID)
+		blockParams.Data = &models.ChangeEquipmentStatusToBlockedRequest{
+			StartDate: strfmt.DateTime(startDate),
+			EndDate:   strfmt.DateTime(endDate),
+		}
+
+		blockRes, err := client.Equipment.BlockEquipment(blockParams, auth)
 		require.NoError(t, err)
-		eq, err := createEquipment(ctx, client, auth, model)
+		require.True(t, blockRes.IsCode(http.StatusNoContent))
+
+		eqStatusIDBlocked, err := getEquipmentStatus(ctx, client, *eq.Payload.ID, auth)
 		require.NoError(t, err)
 
-		params := equipment.NewUnblockEquipmentParamsWithContext(ctx).WithEquipmentID(*eq.Payload.ID)
-		res, err := client.Equipment.UnblockEquipment(params, auth)
-		fmt.Println(err)
+		unblockParams := equipment.NewUnblockEquipmentParamsWithContext(ctx).WithEquipmentID(*eq.Payload.ID)
+		unblockRes, err := client.Equipment.UnblockEquipment(unblockParams, auth)
 		require.NoError(t, err)
-		require.True(t, res.IsCode(http.StatusNoContent))
+		require.True(t, unblockRes.IsCode(http.StatusNoContent))
+
+		eqStatusIDUnblocked, err := getEquipmentStatus(ctx, client, *eq.Payload.ID, auth)
+		require.NoError(t, err)
+
+		require.NotEqual(t, eqStatusIDUnblocked, eqStatusIDBlocked)
 	})
 
 	t.Run("Unblock Equipment is failed, equipment not found", func(t *testing.T) {
 		tokens := utils.ManagerUserLogin(t)
 		auth := utils.AuthInfoFunc(tokens.GetPayload().AccessToken)
-		var fakeID int64 = 111
+		var fakeID int64 = -1
 
 		params := equipment.NewUnblockEquipmentParamsWithContext(ctx).WithEquipmentID(fakeID)
 		_, err := client.Equipment.UnblockEquipment(params, auth)
@@ -868,4 +882,14 @@ func createEquipment(ctx context.Context, client *client.Be, auth runtime.Client
 		return nil, err
 	}
 	return created, nil
+}
+
+func getEquipmentStatus(ctx context.Context, client *client.Be, id int64, auth runtime.ClientAuthInfoWriterFunc) (int64, error) {
+	params := equipment.NewGetEquipmentParamsWithContext(ctx)
+	params.EquipmentID = id
+	eq, err := client.Equipment.GetEquipment(params, auth)
+	if err != nil {
+		return 0, err
+	}
+	return *eq.Payload.Status, nil
 }
