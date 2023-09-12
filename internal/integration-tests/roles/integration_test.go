@@ -39,8 +39,8 @@ func TestIntegration_GetRoles(t *testing.T) {
 		require.Error(t, err)
 
 		errExp := roles.NewGetRolesDefault(http.StatusUnauthorized)
-		errExp.Payload = &models.Error{
-			Data: nil,
+		errExp.Payload = &models.SwaggerError{
+			Message: nil,
 		}
 		assert.Equal(t, errExp, err)
 	})
@@ -53,8 +53,8 @@ func TestIntegration_GetRoles(t *testing.T) {
 		require.Error(t, err)
 
 		errExp := roles.NewGetRolesDefault(http.StatusUnauthorized)
-		errExp.Payload = &models.Error{
-			Data: nil,
+		errExp.Payload = &models.SwaggerError{
+			Message: nil,
 		}
 		assert.Equal(t, errExp, err)
 	})

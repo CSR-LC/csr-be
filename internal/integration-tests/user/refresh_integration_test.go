@@ -79,9 +79,8 @@ func TestIntegration_Refresh(t *testing.T) {
 		require.Error(t, gotErr)
 
 		wantErr := users.NewRefreshDefault(400)
-		wantErr.Payload = &models.Error{Data: &models.ErrorData{
-			Message: "token invalid",
-		}}
+		wantMsg := "token is invalid"
+		wantErr.Payload.Message = &wantMsg
 		assert.Equal(t, wantErr, gotErr)
 	})
 }

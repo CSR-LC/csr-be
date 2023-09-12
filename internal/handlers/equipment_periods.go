@@ -49,7 +49,7 @@ func (c EquipmentPeriods) GetEquipmentUnavailableDatesFunc(
 				zap.Error(err),
 			)
 			return eqStatus.NewCheckEquipmentStatusDefault(http.StatusInternalServerError).
-				WithPayload(buildStringPayload("can't find unavailable equipment status dates"))
+				WithPayload(buildInternalErrorPayload("can't find unavailable equipment status dates"))
 		}
 
 		var result []*models.EquipmentUnavailabilityPeriods

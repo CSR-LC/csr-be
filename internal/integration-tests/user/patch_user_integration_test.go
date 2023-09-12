@@ -78,8 +78,8 @@ func TestIntegration_PatchUpdate(t *testing.T) {
 		assert.Error(t, err)
 
 		errExp := users.NewPatchUserDefault(http.StatusUnauthorized)
-		errExp.Payload = &models.Error{
-			Data: nil,
+		errExp.Payload = &models.SwaggerError{
+			Message: nil,
 		}
 		assert.Equal(t, errExp, err)
 	})
@@ -95,8 +95,8 @@ func TestIntegration_PatchUpdate(t *testing.T) {
 		assert.Error(t, err)
 
 		errExp := users.NewPatchUserDefault(http.StatusUnauthorized)
-		errExp.Payload = &models.Error{
-			Data: nil,
+		errExp.Payload = &models.SwaggerError{
+			Message: nil,
 		}
 		assert.Equal(t, errExp, err)
 	})
@@ -108,8 +108,8 @@ func TestIntegration_PatchUpdate(t *testing.T) {
 		assert.Error(t, err)
 
 		errExp := users.NewPatchUserDefault(http.StatusUnprocessableEntity)
-		errExp.Payload = &models.Error{
-			Data: nil,
+		errExp.Payload = &models.SwaggerError{
+			Message: nil,
 		}
 		assert.Equal(t, errExp, err)
 	})

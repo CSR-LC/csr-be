@@ -199,7 +199,7 @@ func (a *blackListAccessManager) VerifyAccess(role Role, method, path string) er
 	}
 	allowedPaths, ok := a.accessMap[role][method]
 	if !ok {
-		return openApiErrors.New(http.StatusForbidden, models.SwaggerErrorMessageUserIsNotAuthorized)
+		return openApiErrors.New(http.StatusForbidden, "user is not authorized")
 	}
 	for _, allowedPath := range allowedPaths {
 		if allowedPath.isMatch(path) {
@@ -207,15 +207,15 @@ func (a *blackListAccessManager) VerifyAccess(role Role, method, path string) er
 		}
 	}
 	if !role.IsRegistrationConfirmed {
-		return openApiErrors.New(http.StatusForbidden, models.SwaggerErrorMessageUserHasNoConfirmedEmail)
+		return openApiErrors.New(http.StatusForbidden, "user has no confirmed email")
 	}
-	return openApiErrors.New(http.StatusForbidden, models.SwaggerErrorMessageUserIsNotAuthorized)
+	return openApiErrors.New(http.StatusForbidden, "user is not authorized")
 }
 
 func (a *blackListAccessManager) Authorize(r *http.Request, auth interface{}) error {
 	principal, ok := auth.(*models.Principal)
 	if !ok {
-		return openApiErrors.New(http.StatusForbidden, models.SwaggerErrorMessageUserIsNotAuthorized)
+		return openApiErrors.New(http.StatusForbidden, "user is not authorized")
 	}
 
 	role := Role{

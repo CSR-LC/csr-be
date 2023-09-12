@@ -44,13 +44,13 @@ func (s *Subcategory) CreateNewSubcategoryFunc(repository domain.SubcategoryRepo
 		if err != nil {
 			s.logger.Error("failed to create new subcategory", zap.Error(err))
 			return subcategories.NewCreateNewSubcategoryDefault(http.StatusInternalServerError).
-				WithPayload(buildStringPayload("failed to create new subcategory"))
+				WithPayload(buildInternalErrorPayload("failed to create new subcategory"))
 		}
 		result, err := mapSubcategory(createdSubcategory)
 		if err != nil {
 			s.logger.Error("failed to map new subcategory", zap.Error(err))
 			return subcategories.NewCreateNewSubcategoryDefault(http.StatusInternalServerError).
-				WithPayload(buildStringPayload("failed to map new subcategory"))
+				WithPayload(buildInternalErrorPayload("failed to map new subcategory"))
 		}
 		return subcategories.NewCreateNewSubcategoryCreated().WithPayload(&models.SubcategoryResponse{
 			Data: result,
@@ -66,7 +66,7 @@ func (s *Subcategory) ListSubcategoriesFunc(repository domain.SubcategoryReposit
 		if err != nil {
 			s.logger.Error("failed to list subcategories by category id", zap.Error(err))
 			return subcategories.NewListSubcategoriesByCategoryIDDefault(http.StatusInternalServerError).
-				WithPayload(buildStringPayload("failed to list subcategories by category id"))
+				WithPayload(buildInternalErrorPayload("failed to list subcategories by category id"))
 		}
 		mappedSubcategories := make([]*models.Subcategory, len(subcategoriesList))
 		for i, v := range subcategoriesList {
@@ -74,7 +74,7 @@ func (s *Subcategory) ListSubcategoriesFunc(repository domain.SubcategoryReposit
 			if err != nil {
 				s.logger.Error("failed to map subcategories by category id", zap.Error(err))
 				return subcategories.NewListSubcategoriesByCategoryIDDefault(http.StatusInternalServerError).
-					WithPayload(buildStringPayload("failed to map subcategories by category id"))
+					WithPayload(buildInternalErrorPayload("failed to map subcategories by category id"))
 			}
 			mappedSubcategories[i] = mappedSubcategory
 		}
@@ -89,13 +89,13 @@ func (s *Subcategory) GetSubcategoryByIDFunc(repository domain.SubcategoryReposi
 		if err != nil {
 			s.logger.Error("failed to get subcategory", zap.Error(err))
 			return subcategories.NewGetSubcategoryByIDDefault(http.StatusInternalServerError).
-				WithPayload(buildStringPayload("failed to get subcategory"))
+				WithPayload(buildInternalErrorPayload("failed to get subcategory"))
 		}
 		result, err := mapSubcategory(subcategory)
 		if err != nil {
 			s.logger.Error("failed to map subcategory", zap.Error(err))
 			return subcategories.NewGetSubcategoryByIDDefault(http.StatusInternalServerError).
-				WithPayload(buildStringPayload("failed to map subcategory"))
+				WithPayload(buildInternalErrorPayload("failed to map subcategory"))
 		}
 		return subcategories.NewGetSubcategoryByIDOK().
 			WithPayload(&models.SubcategoryResponse{Data: result})
@@ -109,7 +109,7 @@ func (s *Subcategory) DeleteSubcategoryFunc(repository domain.SubcategoryReposit
 		if err != nil {
 			s.logger.Error("failed to delete subcategory", zap.Error(err))
 			return subcategories.NewDeleteSubcategoryDefault(http.StatusInternalServerError).
-				WithPayload(buildStringPayload("failed to delete subcategory"))
+				WithPayload(buildInternalErrorPayload("failed to delete subcategory"))
 		}
 		return subcategories.NewDeleteSubcategoryOK().
 			WithPayload("subcategory deleted")
@@ -123,13 +123,13 @@ func (s *Subcategory) UpdateSubcategoryFunc(repository domain.SubcategoryReposit
 		if err != nil {
 			s.logger.Error("failed to update subcategory", zap.Error(err))
 			return subcategories.NewUpdateSubcategoryDefault(http.StatusInternalServerError).
-				WithPayload(buildStringPayload("failed to update subcategory"))
+				WithPayload(buildInternalErrorPayload("failed to update subcategory"))
 		}
 		result, err := mapSubcategory(updateSubcategory)
 		if err != nil {
 			s.logger.Error("failed to map subcategory", zap.Error(err))
 			return subcategories.NewUpdateSubcategoryDefault(http.StatusInternalServerError).
-				WithPayload(buildStringPayload("failed to map subcategory"))
+				WithPayload(buildInternalErrorPayload("failed to map subcategory"))
 		}
 		return subcategories.NewUpdateSubcategoryOK().WithPayload(&models.SubcategoryResponse{
 			Data: result,

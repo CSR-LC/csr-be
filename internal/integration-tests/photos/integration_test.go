@@ -93,8 +93,8 @@ func TestIntegration_PhotosUpload(t *testing.T) {
 		require.True(t, errors.As(err, &phErr))
 
 		wantMessage := "Wrong file format. File should be jpg or jpeg"
-		require.NotNil(t, phErr.Payload.Data)
-		assert.Equal(t, wantMessage, phErr.Payload.Data.Message)
+		require.NotNil(t, phErr.Payload.Message)
+		assert.Equal(t, wantMessage, phErr.Payload.Message)
 		f.Close()
 	})
 
@@ -108,7 +108,7 @@ func TestIntegration_PhotosUpload(t *testing.T) {
 
 		var phErr *photos.CreateNewPhotoBadRequest
 		require.True(t, errors.As(err, &phErr))
-		assert.Nil(t, phErr.Payload.Data)
+		assert.Nil(t, phErr.Payload.Message)
 
 		emptyFile.Close()
 		require.NoError(t, os.Remove("empty.jpeg"))
@@ -125,7 +125,7 @@ func TestIntegration_PhotosUpload(t *testing.T) {
 		require.Error(t, gotErr)
 
 		wantErr := photos.NewCreateNewPhotoDefault(http.StatusUnauthorized)
-		wantErr.Payload = &models.Error{Data: nil}
+		wantErr.Payload = &models.SwaggerError{Message: nil}
 		assert.Equal(t, wantErr, gotErr)
 		f.Close()
 	})
@@ -155,7 +155,7 @@ func TestIntegration_DeletePhoto(t *testing.T) {
 		require.Error(t, gotErr)
 
 		wantErr := photos.NewDeletePhotoDefault(http.StatusUnauthorized)
-		wantErr.Payload = &models.Error{Data: nil}
+		wantErr.Payload = &models.SwaggerError{Message: nil}
 		assert.Equal(t, wantErr, gotErr)
 	})
 
@@ -164,7 +164,7 @@ func TestIntegration_DeletePhoto(t *testing.T) {
 		require.Error(t, gotErr)
 
 		wantErr := photos.NewDeletePhotoDefault(http.StatusUnprocessableEntity)
-		wantErr.Payload = &models.Error{Data: nil}
+		wantErr.Payload = &models.SwaggerError{Message: nil}
 		assert.Equal(t, wantErr, gotErr)
 	})
 
@@ -185,7 +185,7 @@ func TestIntegration_DeletePhoto(t *testing.T) {
 		ok := errors.As(err, &phErr)
 		require.True(t, ok)
 
-		assert.Contains(t, phErr.Payload.Data.Message, "photo not found")
+		assert.Contains(t, phErr.Payload.Message, "photo not found")
 	})
 
 	f.Close()
@@ -252,7 +252,7 @@ func TestIntegration_PhotosDownload(t *testing.T) {
 		require.Error(t, gotErr)
 
 		wantErr := photos.NewDownloadPhotoDefault(http.StatusUnauthorized)
-		wantErr.Payload = &models.Error{Data: nil}
+		wantErr.Payload = &models.SwaggerError{Message: nil}
 		assert.Equal(t, wantErr, gotErr)
 		f.Close()
 	})
@@ -265,7 +265,7 @@ func TestIntegration_PhotosDownload(t *testing.T) {
 		require.True(t, errors.As(err, &phErr))
 
 		assert.Equal(t, http.StatusInternalServerError, phErr.Code())
-		assert.Contains(t, phErr.Payload.Data.Message, "photo not found")
+		assert.Contains(t, phErr.Payload.Message, "photo not found")
 	})
 }
 
@@ -328,7 +328,7 @@ func TestIntegration_PhotoGet(t *testing.T) {
 		require.Error(t, gotErr)
 
 		wantErr := photos.NewGetPhotoDefault(http.StatusUnauthorized)
-		wantErr.Payload = &models.Error{Data: nil}
+		wantErr.Payload = &models.SwaggerError{Message: nil}
 		assert.Equal(t, wantErr, gotErr)
 		f.Close()
 	})
@@ -338,7 +338,7 @@ func TestIntegration_PhotoGet(t *testing.T) {
 		require.Error(t, gotErr)
 
 		wantErr := photos.NewGetPhotoDefault(http.StatusUnprocessableEntity)
-		wantErr.Payload = &models.Error{Data: nil}
+		wantErr.Payload = &models.SwaggerError{Message: nil}
 		assert.Equal(t, wantErr, gotErr)
 	})
 }

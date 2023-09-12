@@ -23,7 +23,6 @@ import (
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/swagger/client/photos"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/swagger/client/subcategories"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/swagger/models"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/handlers"
 	utils "git.epam.com/epm-lstr/epm-lstr-lc/be/internal/integration-tests/common"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/pkg/domain"
 )
@@ -128,9 +127,8 @@ func TestIntegration_CreateEquipment(t *testing.T) {
 		require.Error(t, gotErr)
 
 		wantErr := equipment.NewCreateNewEquipmentDefault(500)
-		wantErr.Payload = &models.Error{Data: &models.ErrorData{
-			Message: "Error while creating equipment",
-		}}
+		wantMsg := "Error while creating equipment"
+		wantErr.Payload.Message = &wantMsg
 		assert.Equal(t, wantErr, gotErr)
 	})
 
@@ -146,7 +144,7 @@ func TestIntegration_CreateEquipment(t *testing.T) {
 		require.Error(t, gotErr)
 
 		wantErr := equipment.NewCreateNewEquipmentDefault(http.StatusUnauthorized)
-		wantErr.Payload = &models.Error{Data: nil}
+		wantErr.Payload = &models.SwaggerError{Message: nil}
 		assert.Equal(t, wantErr, gotErr)
 	})
 }
@@ -179,7 +177,7 @@ func TestIntegration_GetAllEquipment(t *testing.T) {
 		require.Error(t, gotErr)
 
 		wantErr := equipment.NewGetAllEquipmentDefault(http.StatusUnauthorized)
-		wantErr.Payload = &models.Error{Data: nil}
+		wantErr.Payload = &models.SwaggerError{Message: nil}
 		assert.Equal(t, wantErr, gotErr)
 	})
 }
@@ -240,7 +238,8 @@ func TestIntegration_GetEquipment(t *testing.T) {
 		require.Error(t, gotErr)
 
 		wantErr := equipment.NewGetEquipmentDefault(500)
-		wantErr.Payload = &models.Error{Data: &models.ErrorData{Message: "Error while getting equipment"}}
+		wantMsg := "Error while getting equipment"
+		wantErr.Payload.Message = &wantMsg
 		assert.Equal(t, wantErr, gotErr)
 	})
 
@@ -254,7 +253,7 @@ func TestIntegration_GetEquipment(t *testing.T) {
 		require.Error(t, gotErr)
 
 		wantErr := equipment.NewGetEquipmentDefault(http.StatusUnauthorized)
-		wantErr.Payload = &models.Error{Data: nil}
+		wantErr.Payload = &models.SwaggerError{Message: nil}
 		assert.Equal(t, wantErr, gotErr)
 	})
 }
@@ -316,7 +315,7 @@ func TestIntegration_FindEquipment(t *testing.T) {
 		require.Error(t, gotErr)
 
 		wantErr := equipment.NewFindEquipmentDefault(http.StatusUnauthorized)
-		wantErr.Payload = &models.Error{Data: nil}
+		wantErr.Payload = &models.SwaggerError{Message: nil}
 		assert.Equal(t, wantErr, gotErr)
 	})
 
@@ -372,7 +371,8 @@ func TestIntegration_EditEquipment(t *testing.T) {
 		require.Error(t, gotErr)
 
 		wantErr := equipment.NewEditEquipmentDefault(500)
-		wantErr.Payload = &models.Error{Data: &models.ErrorData{Message: "Error while updating equipment"}}
+		wantMsg := "Error while updating equipment"
+		wantErr.Payload.Message = &wantMsg
 		assert.Equal(t, wantErr, gotErr)
 	})
 
@@ -386,7 +386,7 @@ func TestIntegration_EditEquipment(t *testing.T) {
 		require.Error(t, gotErr)
 
 		wantErr := equipment.NewEditEquipmentDefault(http.StatusUnauthorized)
-		wantErr.Payload = &models.Error{Data: nil}
+		wantErr.Payload = &models.SwaggerError{Message: nil}
 		assert.Equal(t, wantErr, gotErr)
 	})
 }
@@ -423,7 +423,8 @@ func TestIntegration_ArchiveEquipment(t *testing.T) {
 		fmt.Print(resp)
 
 		wantedErr := equipment.NewArchiveEquipmentNotFound()
-		wantedErr.Payload = &models.Error{Data: &models.ErrorData{Message: handlers.EquipmentNotFoundMsg}}
+		wantMsg := "Equipment not found"
+		wantedErr.Payload.Message = &wantMsg
 
 		require.Equal(t, wantedErr, gotErr)
 	})
@@ -449,7 +450,7 @@ func TestIntegration_ArchiveEquipment(t *testing.T) {
 		require.Error(t, gotErr)
 
 		wantedErr := equipment.NewArchiveEquipmentDefault(http.StatusUnauthorized)
-		wantedErr.Payload = &models.Error{Data: nil}
+		wantedErr.Payload = &models.SwaggerError{Message: nil}
 		assert.Equal(t, wantedErr, gotErr)
 	})
 
@@ -547,7 +548,8 @@ func TestIntegration_BlockEquipment(t *testing.T) {
 		require.Error(t, err)
 
 		wantErr := equipment.NewBlockEquipmentNotFound()
-		wantErr.Payload = &models.Error{Data: &models.ErrorData{Message: handlers.EquipmentNotFoundMsg}}
+		wantMsg := "Equipment not found"
+		wantErr.Payload.Message = &wantMsg
 		assert.Equal(t, wantErr, err)
 	})
 
@@ -564,9 +566,8 @@ func TestIntegration_BlockEquipment(t *testing.T) {
 		require.Error(t, err)
 
 		wantErr := equipment.NewBlockEquipmentDefault(http.StatusForbidden)
-		wantErr.Payload = &models.Error{Data: &models.ErrorData{
-			Message: "You don't have rights to block the equipment",
-		}}
+		wantMsg := "You don't have rights to block the equipment"
+		wantErr.Payload.Message = &wantMsg
 		assert.Equal(t, wantErr, err)
 	})
 
@@ -583,9 +584,8 @@ func TestIntegration_BlockEquipment(t *testing.T) {
 		require.Error(t, err)
 
 		wantErr := equipment.NewBlockEquipmentDefault(http.StatusForbidden)
-		wantErr.Payload = &models.Error{Data: &models.ErrorData{
-			Message: "You don't have rights to block the equipment",
-		}}
+		wantMsg := "You don't have rights to block the equipment"
+		wantErr.Payload.Message = &wantMsg
 		assert.Equal(t, wantErr, err)
 	})
 
@@ -640,9 +640,8 @@ func TestIntegration_DeleteEquipment(t *testing.T) {
 		require.Error(t, gotErr)
 
 		wantErr := equipment.NewDeleteEquipmentDefault(500)
-		wantErr.Payload = &models.Error{Data: &models.ErrorData{
-			Message: "Error while getting equipment",
-		}}
+		wantMsg := "Error while getting equipment"
+		wantErr.Payload.Message = &wantMsg
 		assert.Equal(t, wantErr, gotErr)
 	})
 
@@ -655,7 +654,7 @@ func TestIntegration_DeleteEquipment(t *testing.T) {
 		require.Error(t, gotErr)
 
 		wantErr := equipment.NewDeleteEquipmentDefault(http.StatusUnauthorized)
-		wantErr.Payload = &models.Error{Data: nil}
+		wantErr.Payload = &models.SwaggerError{Message: nil}
 		assert.Equal(t, wantErr, gotErr)
 	})
 }

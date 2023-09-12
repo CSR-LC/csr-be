@@ -45,7 +45,7 @@ func (c *Category) CreateNewCategoryFunc(repository domain.CategoryRepository) c
 		if err != nil {
 			c.logger.Error("cant create new category", zap.Error(err))
 			return categories.NewCreateNewCategoryDefault(http.StatusInternalServerError).
-				WithPayload(buildStringPayload("cant create new category"))
+				WithPayload(buildInternalErrorPayload("cant create new category"))
 		}
 		return categories.NewCreateNewCategoryCreated().WithPayload(&models.CreateNewCategoryResponse{
 			Data: mapCategory(createdCategory),
@@ -65,7 +65,7 @@ func (c *Category) GetAllCategoriesFunc(repository domain.CategoryRepository) ca
 		if err != nil {
 			c.logger.Error("query total categories error", zap.Error(err))
 			return categories.NewGetAllCategoriesDefault(http.StatusInternalServerError).
-				WithPayload(buildStringPayload("cant get total amount of categories"))
+				WithPayload(buildInternalErrorPayload("cant get total amount of categories"))
 		}
 		var allCategories []*ent.Category
 		if total > 0 {
@@ -84,7 +84,7 @@ func (c *Category) GetAllCategoriesFunc(repository domain.CategoryRepository) ca
 			if err != nil {
 				c.logger.Error("query all category error", zap.Error(err))
 				return categories.NewGetAllCategoriesDefault(http.StatusInternalServerError).
-					WithPayload(buildStringPayload("cant get all categories"))
+					WithPayload(buildInternalErrorPayload("cant get all categories"))
 			}
 		}
 		mappedCategories := make([]*models.Category, len(allCategories))
@@ -107,7 +107,7 @@ func (c *Category) GetCategoryByIDFunc(repository domain.CategoryRepository) cat
 		if err != nil {
 			c.logger.Error("failed to get category", zap.Error(err))
 			return categories.NewGetCategoryByIDDefault(http.StatusInternalServerError).
-				WithPayload(buildStringPayload("failed to get category"))
+				WithPayload(buildInternalErrorPayload("failed to get category"))
 		}
 		return categories.NewGetCategoryByIDOK().WithPayload(&models.GetCategoryByIDResponse{
 			Data: mapCategory(category),
@@ -122,7 +122,7 @@ func (c *Category) DeleteCategoryFunc(repository domain.CategoryRepository) cate
 		if err != nil {
 			c.logger.Error("delete category failed", zap.Error(err))
 			return categories.NewDeleteCategoryDefault(http.StatusInternalServerError).
-				WithPayload(buildStringPayload("delete category failed"))
+				WithPayload(buildInternalErrorPayload("delete category failed"))
 		}
 		return categories.NewDeleteCategoryOK().WithPayload("category deleted")
 	}
@@ -135,7 +135,7 @@ func (c *Category) UpdateCategoryFunc(repository domain.CategoryRepository) cate
 		if err != nil {
 			c.logger.Error("cant update category", zap.Error(err))
 			return categories.NewUpdateCategoryDefault(http.StatusInternalServerError).
-				WithPayload(buildStringPayload("cant update category"))
+				WithPayload(buildInternalErrorPayload("cant update category"))
 		}
 
 		return categories.NewUpdateCategoryOK().WithPayload(&models.UpdateCategoryResponse{

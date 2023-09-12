@@ -16,7 +16,7 @@ import (
 
 func TokenInvalidError() error {
 	// make sure that the error message is exactly as the one in the #/definitions/SwaggerError object.
-	return errors.New(http.StatusUnauthorized, "Token is invalid")
+	return errors.New(http.StatusUnauthorized, "token is invalid")
 }
 
 func APIKeyAuthFunc(key interface{}, userRepository domain.UserRepository) func(context.Context, string) (context.Context, interface{}, error) {

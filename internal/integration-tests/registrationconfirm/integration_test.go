@@ -53,9 +53,8 @@ func TestIntegration_SendConfirmLink(t *testing.T) {
 		require.Error(t, err)
 
 		errExp := registration_confirm.NewSendRegistrationConfirmLinkByLoginDefault(http.StatusInternalServerError)
-		errExp.Payload = &models.Error{
-			Data: &models.ErrorData{Message: "Can't find this user, registration confirmation link wasn't send"},
-		}
+		wantMsg := "Can't find this user, registration confirmation link wasn't send"
+		errExp.Payload.Message = &wantMsg
 		assert.Equal(t, errExp, err)
 	})
 }

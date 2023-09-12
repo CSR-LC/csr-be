@@ -53,19 +53,19 @@ func (c Equipment) PostEquipmentFunc(eqRepo domain.EquipmentRepository, eqStatus
 		if err != nil {
 			c.logger.Error("Error while getting status", zap.Error(err))
 			return equipment.NewCreateNewEquipmentDefault(http.StatusInternalServerError).
-				WithPayload(buildStringPayload("Error while creating equipment"))
+				WithPayload(buildInternalErrorPayload("Error while creating equipment"))
 		}
 		eq, err := eqRepo.CreateEquipment(ctx, *s.NewEquipment, status)
 		if err != nil {
 			c.logger.Error("Error while creating equipment", zap.Error(err))
 			return equipment.NewCreateNewEquipmentDefault(http.StatusInternalServerError).
-				WithPayload(buildStringPayload("Error while creating equipment"))
+				WithPayload(buildInternalErrorPayload("Error while creating equipment"))
 		}
 		returnEq, err := mapEquipmentResponse(eq)
 		if err != nil {
 			c.logger.Error("Error while mapping equipment", zap.Error(err))
 			return equipment.NewCreateNewEquipmentDefault(http.StatusInternalServerError).
-				WithPayload(buildStringPayload("Error while mapping equipment"))
+				WithPayload(buildInternalErrorPayload("Error while mapping equipment"))
 		}
 
 		return equipment.NewCreateNewEquipmentCreated().WithPayload(returnEq)
@@ -79,13 +79,13 @@ func (c Equipment) GetEquipmentFunc(repository domain.EquipmentRepository) equip
 		if err != nil {
 			c.logger.Error("Error while getting equipment", zap.Error(err))
 			return equipment.NewGetEquipmentDefault(http.StatusInternalServerError).
-				WithPayload(buildStringPayload("Error while getting equipment"))
+				WithPayload(buildInternalErrorPayload("Error while getting equipment"))
 		}
 		returnEq, err := mapEquipmentResponse(eq)
 		if err != nil {
 			c.logger.Error("Error while mapping equipment", zap.Error(err))
 			return equipment.NewGetEquipmentDefault(http.StatusInternalServerError).
-				WithPayload(buildStringPayload("Error while mapping equipment"))
+				WithPayload(buildInternalErrorPayload("Error while mapping equipment"))
 		}
 		return equipment.NewGetEquipmentOK().WithPayload(returnEq)
 	}
@@ -98,11 +98,11 @@ func (c Equipment) ArchiveEquipmentFunc(repository domain.EquipmentRepository) e
 		if err != nil {
 			if ent.IsNotFound(err) {
 				return equipment.NewArchiveEquipmentNotFound().
-					WithPayload(buildStringPayload(EquipmentNotFoundMsg))
+					WithPayload(buildNotFoundErrorPayload(EquipmentNotFoundMsg))
 			}
 			c.logger.Error("Error while archiving equipment", zap.Error(err))
 			return equipment.NewArchiveEquipmentDefault(http.StatusInternalServerError).
-				WithPayload(buildStringPayload("Error while archiving equipment"))
+				WithPayload(buildInternalErrorPayload("Error while archiving equipment"))
 		}
 		return equipment.NewArchiveEquipmentNoContent()
 	}
@@ -114,17 +114,14 @@ func (c Equipment) DeleteEquipmentFunc(repository domain.EquipmentRepository) eq
 		eq, err := repository.EquipmentByID(ctx, int(s.EquipmentID))
 		if err != nil {
 			c.logger.Error("Error while getting equipment", zap.Error(err))
-			return equipment.NewDeleteEquipmentDefault(http.StatusInternalServerError).WithPayload(&models.Error{
-				Data: &models.ErrorData{
-					Message: "Error while getting equipment",
-				},
-			})
+			return equipment.NewDeleteEquipmentDefault(http.StatusInternalServerError).
+				WithPayload(buildInternalErrorPayload("Error while getting equipment"))
 		}
 		err = repository.DeleteEquipmentByID(ctx, int(s.EquipmentID))
 		if err != nil {
 			c.logger.Error("Error while deleting equipment", zap.Error(err))
 			return equipment.NewDeleteEquipmentDefault(http.StatusInternalServerError).
-				WithPayload(buildStringPayload("Error while deleting equipment"))
+				WithPayload(buildInternalErrorPayload("Error while deleting equipment"))
 		}
 
 		if err := repository.DeleteEquipmentPhoto(ctx, eq.Edges.Photo.ID); err != nil {
@@ -146,7 +143,7 @@ func (c Equipment) ListEquipmentFunc(repository domain.EquipmentRepository) equi
 		if err != nil {
 			c.logger.Error("Error while getting total of all equipments", zap.Error(err))
 			return equipment.NewGetAllEquipmentDefault(http.StatusInternalServerError).
-				WithPayload(buildStringPayload("Error while getting total of all equipments"))
+				WithPayload(buildInternalErrorPayload("Error while getting total of all equipments"))
 		}
 		var equipments []*ent.Equipment
 		if total > 0 {
@@ -154,7 +151,7 @@ func (c Equipment) ListEquipmentFunc(repository domain.EquipmentRepository) equi
 			if err != nil {
 				c.logger.Error("Error while getting all equipments", zap.Error(err))
 				return equipment.NewGetAllEquipmentDefault(http.StatusInternalServerError).
-					WithPayload(buildStringPayload("Error while getting all equipments"))
+					WithPayload(buildInternalErrorPayload("Error while getting all equipments"))
 			}
 		}
 		totalEquipments := int64(total)
@@ -167,7 +164,7 @@ func (c Equipment) ListEquipmentFunc(repository domain.EquipmentRepository) equi
 			if errMap != nil {
 				c.logger.Error("Error while mapping equipment", zap.Error(errMap))
 				return equipment.NewGetAllEquipmentDefault(http.StatusInternalServerError).
-					WithPayload(buildStringPayload("Error while mapping equipment"))
+					WithPayload(buildInternalErrorPayload("Error while mapping equipment"))
 			}
 			listEquipment.Items[i] = tmpEq
 		}
@@ -182,13 +179,13 @@ func (c Equipment) EditEquipmentFunc(repository domain.EquipmentRepository) equi
 		if err != nil {
 			c.logger.Error("Error while updating equipment", zap.Error(err))
 			return equipment.NewEditEquipmentDefault(http.StatusInternalServerError).
-				WithPayload(buildStringPayload("Error while updating equipment"))
+				WithPayload(buildInternalErrorPayload("Error while updating equipment"))
 		}
 		returnEq, err := mapEquipmentResponse(eq)
 		if err != nil {
 			c.logger.Error("Error while mapping equipment", zap.Error(err))
 			return equipment.NewEditEquipmentDefault(http.StatusInternalServerError).
-				WithPayload(buildStringPayload("Error while mapping equipment"))
+				WithPayload(buildInternalErrorPayload("Error while mapping equipment"))
 		}
 
 		return equipment.NewEditEquipmentOK().WithPayload(returnEq)
@@ -207,7 +204,7 @@ func (c Equipment) FindEquipmentFunc(repository domain.EquipmentRepository) equi
 		if err != nil {
 			c.logger.Error("Error while getting total of all equipments", zap.Error(err))
 			return equipment.NewGetAllEquipmentDefault(http.StatusInternalServerError).
-				WithPayload(buildStringPayload("Error while getting total of all equipments"))
+				WithPayload(buildInternalErrorPayload("Error while getting total of all equipments"))
 		}
 		var foundEquipment []*ent.Equipment
 		if total > 0 {
@@ -215,7 +212,7 @@ func (c Equipment) FindEquipmentFunc(repository domain.EquipmentRepository) equi
 			if err != nil {
 				c.logger.Error("Error while finding equipment", zap.Error(err))
 				return equipment.NewFindEquipmentDefault(http.StatusInternalServerError).
-					WithPayload(buildStringPayload("Error while finding equipment"))
+					WithPayload(buildInternalErrorPayload("Error while finding equipment"))
 			}
 		}
 		totalEquipments := int64(total)
@@ -228,7 +225,7 @@ func (c Equipment) FindEquipmentFunc(repository domain.EquipmentRepository) equi
 			if errMap != nil {
 				c.logger.Error("Error while mapping equipment", zap.Error(errMap))
 				return equipment.NewFindEquipmentDefault(http.StatusInternalServerError).
-					WithPayload(buildStringPayload("Error while mapping equipment"))
+					WithPayload(buildInternalErrorPayload("Error while mapping equipment"))
 			}
 			returnEquipment.Items[i] = tmpEq
 		}
@@ -313,7 +310,7 @@ func (c Equipment) BlockEquipmentFunc(repository domain.EquipmentRepository) equ
 			c.logger.Warn("User have no right to block the equipment", zap.Any("principal", principal))
 			return equipment.
 				NewBlockEquipmentDefault(http.StatusForbidden).
-				WithPayload(&models.Error{Data: &models.ErrorData{Message: "You don't have rights to block the equipment"}})
+				WithPayload(buildForbiddenErrorPayload("You don't have rights to block the equipment"))
 		}
 
 		err := repository.BlockEquipment(
@@ -322,11 +319,11 @@ func (c Equipment) BlockEquipmentFunc(repository domain.EquipmentRepository) equ
 		if err != nil {
 			if ent.IsNotFound(err) {
 				return equipment.NewBlockEquipmentNotFound().
-					WithPayload(buildStringPayload(EquipmentNotFoundMsg))
+					WithPayload(buildNotFoundErrorPayload(EquipmentNotFoundMsg))
 			}
 			c.logger.Error("Error while blocking equipment", zap.Error(err))
 			return equipment.NewBlockEquipmentDefault(http.StatusInternalServerError).
-				WithPayload(buildStringPayload("Error while blocking equipment"))
+				WithPayload(buildInternalErrorPayload("Error while blocking equipment"))
 		}
 		return equipment.NewBlockEquipmentNoContent()
 	}

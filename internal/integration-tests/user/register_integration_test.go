@@ -58,13 +58,8 @@ func TestIntegration_RegisterUser(t *testing.T) {
 		require.Error(t, err, r)
 
 		errExp := users.NewPostUserDefault(417)
-		errExp.Payload = &models.Error{
-			Data: &models.ErrorData{
-				CorrelationID: "",
-				Message:       "login is already used",
-			},
-		}
-
+		wantMsg := "login is already used"
+		errExp.Payload.Message = &wantMsg
 		assert.Equal(t, errExp, err)
 	})
 
@@ -120,8 +115,8 @@ func TestIntegration_RegisterUser(t *testing.T) {
 		require.Error(t, err)
 
 		errExp := users.NewPostUserDefault(422)
-		errExp.Payload = &models.Error{
-			Data: nil,
+		errExp.Payload = &models.SwaggerError{
+			Message: nil,
 		}
 
 		assert.Equal(t, errExp, err)
@@ -136,8 +131,8 @@ func TestIntegration_RegisterUser(t *testing.T) {
 		require.Error(t, err)
 
 		errExp := users.NewPostUserDefault(422)
-		errExp.Payload = &models.Error{
-			Data: nil,
+		errExp.Payload = &models.SwaggerError{
+			Message: nil,
 		}
 
 		assert.Equal(t, errExp, err)
@@ -152,8 +147,8 @@ func TestIntegration_RegisterUser(t *testing.T) {
 		require.Error(t, err)
 
 		errExp := users.NewPostUserDefault(422)
-		errExp.Payload = &models.Error{
-			Data: nil,
+		errExp.Payload = &models.SwaggerError{
+			Message: nil,
 		}
 
 		assert.Equal(t, errExp, err)
@@ -168,8 +163,8 @@ func TestIntegration_RegisterUser(t *testing.T) {
 		require.Error(t, err)
 
 		errExp := users.NewPostUserDefault(422)
-		errExp.Payload = &models.Error{
-			Data: nil,
+		errExp.Payload = &models.SwaggerError{
+			Message: nil,
 		}
 
 		assert.Equal(t, errExp, err)
@@ -183,8 +178,8 @@ func TestIntegration_RegisterUser(t *testing.T) {
 		require.Error(t, err)
 
 		errExp := users.NewPostUserDefault(422)
-		errExp.Payload = &models.Error{
-			Data: nil,
+		errExp.Payload = &models.SwaggerError{
+			Message: nil,
 		}
 
 		assert.Equal(t, errExp, err)
@@ -199,8 +194,8 @@ func TestIntegration_RegisterUser(t *testing.T) {
 		require.Error(t, err)
 
 		errExp := users.NewPostUserDefault(422)
-		errExp.Payload = &models.Error{
-			Data: nil,
+		errExp.Payload = &models.SwaggerError{
+			Message: nil,
 		}
 
 		assert.Equal(t, errExp, err)
@@ -215,8 +210,8 @@ func TestIntegration_RegisterUser(t *testing.T) {
 		require.Error(t, err)
 
 		errExp := users.NewPostUserDefault(422)
-		errExp.Payload = &models.Error{
-			Data: nil,
+		errExp.Payload = &models.SwaggerError{
+			Message: nil,
 		}
 
 		assert.Equal(t, errExp, err)

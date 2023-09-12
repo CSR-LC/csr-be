@@ -61,7 +61,7 @@ func TestIntegration_GetAllCategories(t *testing.T) {
 		require.Error(t, gotErr)
 
 		wantErr := categories.NewGetAllCategoriesDefault(http.StatusUnprocessableEntity)
-		wantErr.Payload = &models.Error{Data: nil}
+		wantErr.Payload = &models.SwaggerError{Message: nil}
 		assert.Equal(t, wantErr, gotErr)
 	})
 }
@@ -88,7 +88,7 @@ func TestIntegration_CreateCategory(t *testing.T) {
 		require.Error(t, gotErr)
 
 		wantErr := categories.NewCreateNewCategoryDefault(http.StatusUnauthorized)
-		wantErr.Payload = &models.Error{Data: nil}
+		wantErr.Payload = &models.SwaggerError{Message: nil}
 		assert.Equal(t, wantErr, gotErr)
 	})
 
@@ -163,9 +163,8 @@ func TestIntegration_GetCategoryByID(t *testing.T) {
 		require.Error(t, gotErr)
 
 		wantErr := categories.NewGetCategoryByIDDefault(http.StatusInternalServerError)
-		wantErr.Payload = &models.Error{Data: &models.ErrorData{
-			Message: "failed to get category",
-		}}
+		wantMsg := "failed to get category"
+		wantErr.Payload.Message = &wantMsg
 		assert.Equal(t, wantErr, gotErr)
 	})
 
@@ -175,7 +174,7 @@ func TestIntegration_GetCategoryByID(t *testing.T) {
 		require.Error(t, gotErr)
 
 		wantErr := categories.NewGetCategoryByIDDefault(http.StatusUnauthorized)
-		wantErr.Payload = &models.Error{Data: nil}
+		wantErr.Payload = &models.SwaggerError{Message: nil}
 		assert.Equal(t, wantErr, gotErr)
 	})
 }
@@ -257,9 +256,8 @@ func TestIntegration_EditCategory(t *testing.T) {
 		require.Error(t, gotErr)
 
 		wantErr := categories.NewUpdateCategoryDefault(http.StatusInternalServerError)
-		wantErr.Payload = &models.Error{Data: &models.ErrorData{
-			Message: "cant update category",
-		}}
+		wantMsg := "cant update category"
+		wantErr.Payload.Message = &wantMsg
 		assert.Equal(t, wantErr, gotErr)
 	})
 
@@ -279,7 +277,7 @@ func TestIntegration_EditCategory(t *testing.T) {
 		require.Error(t, gotErr)
 
 		wantErr := categories.NewUpdateCategoryDefault(http.StatusUnauthorized)
-		wantErr.Payload = &models.Error{Data: nil}
+		wantErr.Payload = &models.SwaggerError{Message: nil}
 		assert.Equal(t, wantErr, gotErr)
 	})
 
@@ -289,7 +287,7 @@ func TestIntegration_EditCategory(t *testing.T) {
 		require.Error(t, gotErr)
 
 		wantErr := categories.NewUpdateCategoryDefault(http.StatusUnprocessableEntity)
-		wantErr.Payload = &models.Error{Data: nil}
+		wantErr.Payload = &models.SwaggerError{Message: nil}
 		assert.Equal(t, wantErr, gotErr)
 	})
 }
@@ -307,7 +305,8 @@ func TestIntegration_DeleteCategory(t *testing.T) {
 		require.Error(t, gotErr)
 
 		wantErr := categories.NewDeleteCategoryDefault(http.StatusInternalServerError)
-		wantErr.Payload = &models.Error{Data: &models.ErrorData{Message: "delete category failed"}}
+		wantMsg := "delete category failed"
+		wantErr.Payload.Message = &wantMsg
 		assert.Equal(t, wantErr, gotErr)
 
 		_, gotErr = client.Categories.DeleteCategory(categories.NewDeleteCategoryParamsWithContext(ctx).WithCategoryID(-33), auth)
@@ -322,7 +321,7 @@ func TestIntegration_DeleteCategory(t *testing.T) {
 		require.Error(t, gotErr)
 
 		wantErr := categories.NewDeleteCategoryDefault(http.StatusUnauthorized)
-		wantErr.Payload = &models.Error{Data: nil}
+		wantErr.Payload = &models.SwaggerError{Message: nil}
 		assert.Equal(t, wantErr, gotErr)
 	})
 

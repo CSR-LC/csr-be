@@ -91,14 +91,14 @@ func (s *PhotoTestSuite) TestPhoto_CreatePhoto_EmptyFile() {
 	resp.WriteResponse(responseRecorder, producer)
 	require.Equal(t, http.StatusBadRequest, responseRecorder.Code)
 
-	response := models.Error{}
+	response := models.SwaggerError{}
 	err = json.Unmarshal(responseRecorder.Body.Bytes(), &response)
 	if err != nil {
 		t.Fatal(err)
 	}
 	require.NotEmpty(t, response)
-	require.NotEmpty(t, response.Data)
-	require.Equal(t, "File is empty", response.Data.Message)
+	require.NotEmpty(t, response.Message)
+	require.Equal(t, "File is empty", *response.Message)
 
 	s.repository.AssertExpectations(t)
 }
@@ -134,14 +134,14 @@ func (s *PhotoTestSuite) TestPhoto_CreatePhoto_WrongMimeType() {
 	resp.WriteResponse(responseRecorder, producer)
 	require.Equal(t, http.StatusBadRequest, responseRecorder.Code)
 
-	response := models.Error{}
+	response := models.SwaggerError{}
 	err = json.Unmarshal(responseRecorder.Body.Bytes(), &response)
 	if err != nil {
 		t.Fatal(err)
 	}
 	require.NotEmpty(t, response)
-	require.NotEmpty(t, response.Data)
-	require.Containsf(t, response.Data.Message, "Wrong file format", "returned wrong error")
+	require.NotEmpty(t, response.Message)
+	require.Containsf(t, *response.Message, "Wrong file format", "returned wrong error")
 
 	s.repository.AssertExpectations(t)
 }
@@ -257,14 +257,14 @@ func (s *PhotoTestSuite) TestPhoto_GetPhoto_RepoErr() {
 	require.Equal(t, http.StatusInternalServerError, responseRecorder.Code)
 	require.Equal(t, "application/json", responseRecorder.Header().Get("Content-Type"))
 
-	response := models.Error{}
+	response := models.SwaggerError{}
 	err := json.Unmarshal(responseRecorder.Body.Bytes(), &response)
 	if err != nil {
 		t.Fatal(err)
 	}
 	require.NotEmpty(t, response)
-	require.NotEmpty(t, response.Data)
-	require.Equal(t, errorToReturn.Error(), response.Data.Message)
+	require.NotEmpty(t, response.Message)
+	require.Equal(t, errorToReturn.Error(), *response.Message)
 
 	s.repository.AssertExpectations(t)
 }
@@ -327,14 +327,14 @@ func (s *PhotoTestSuite) TestPhoto_DeletePhoto_NotExists() {
 	resp.WriteResponse(responseRecorder, producer)
 	require.Equal(t, http.StatusInternalServerError, responseRecorder.Code)
 
-	response := models.Error{}
+	response := models.SwaggerError{}
 	err := json.Unmarshal(responseRecorder.Body.Bytes(), &response)
 	if err != nil {
 		t.Fatal(err)
 	}
 	require.NotEmpty(t, response)
-	require.NotEmpty(t, response.Data)
-	require.Equal(t, errorToReturn.Error(), response.Data.Message)
+	require.NotEmpty(t, response.Message)
+	require.Equal(t, errorToReturn.Error(), *response.Message)
 
 	s.repository.AssertExpectations(t)
 }

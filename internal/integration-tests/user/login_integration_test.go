@@ -103,7 +103,7 @@ func TestIntegration_Login(t *testing.T) {
 		require.Equal(t, ok, true)
 
 		wantErr := users.NewLoginDefault(422)
-		wantErr.Payload = &models.Error{Data: nil}
+		wantErr.Payload = &models.SwaggerError{Message: nil}
 
 		assert.Equal(t, wantErr, gotErr)
 	})

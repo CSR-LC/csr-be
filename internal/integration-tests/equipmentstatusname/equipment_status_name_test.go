@@ -40,7 +40,7 @@ func TestIntegration_GetStatuses(t *testing.T) {
 		require.Error(t, gotErr)
 
 		wantErr := eqStatusName.NewListEquipmentStatusNamesDefault(http.StatusUnauthorized)
-		wantErr.Payload = &models.Error{Data: nil}
+		wantErr.Payload = &models.SwaggerError{Message: nil}
 		assert.Equal(t, wantErr, gotErr)
 	})
 }
@@ -74,9 +74,8 @@ func TestIntegration_GetStatus(t *testing.T) {
 		require.Error(t, gotErr)
 
 		wantErr := eqStatusName.NewGetEquipmentStatusNameDefault(500)
-		wantErr.Payload = &models.Error{Data: &models.ErrorData{
-			Message: "can't get status",
-		}}
+		wantMsg := "can't get status"
+		wantErr.Payload.Message = &wantMsg
 		assert.Equal(t, wantErr, gotErr)
 	})
 
@@ -89,7 +88,7 @@ func TestIntegration_GetStatus(t *testing.T) {
 		require.Error(t, gotErr)
 
 		wantErr := eqStatusName.NewGetEquipmentStatusNameDefault(http.StatusUnauthorized)
-		wantErr.Payload = &models.Error{Data: nil}
+		wantErr.Payload = &models.SwaggerError{Message: nil}
 		assert.Equal(t, wantErr, gotErr)
 	})
 }
@@ -128,7 +127,8 @@ func TestIntegration_PostStatus(t *testing.T) {
 		require.Error(t, gotErr)
 
 		wantErr := eqStatusName.NewPostEquipmentStatusNameDefault(500)
-		wantErr.Payload = &models.Error{Data: &models.ErrorData{Message: "can't create status"}}
+		wantMsg := "can't create status"
+		wantErr.Payload.Message = &wantMsg
 		assert.Equal(t, wantErr, gotErr)
 	})
 
@@ -143,7 +143,7 @@ func TestIntegration_PostStatus(t *testing.T) {
 		require.Error(t, gotErr)
 
 		wantErr := eqStatusName.NewPostEquipmentStatusNameDefault(http.StatusUnauthorized)
-		wantErr.Payload = &models.Error{Data: nil}
+		wantErr.Payload = &models.SwaggerError{Message: nil}
 		assert.Equal(t, wantErr, gotErr)
 	})
 }
@@ -178,7 +178,8 @@ func TestIntegration_DeleteStatus(t *testing.T) {
 		require.Error(t, gotErr)
 
 		wantErr := eqStatusName.NewDeleteEquipmentStatusNameDefault(500)
-		wantErr.Payload = &models.Error{Data: &models.ErrorData{Message: "can't delete status"}}
+		wantMsg := "can't delete status"
+		wantErr.Payload.Message = &wantMsg
 		assert.Equal(t, wantErr, gotErr)
 	})
 
@@ -189,7 +190,8 @@ func TestIntegration_DeleteStatus(t *testing.T) {
 		require.Error(t, gotErr)
 
 		wantErr := eqStatusName.NewDeleteEquipmentStatusNameDefault(500)
-		wantErr.Payload = &models.Error{Data: &models.ErrorData{Message: "can't delete status"}}
+		wantMsg := "can't delete status"
+		wantErr.Payload.Message = &wantMsg
 		assert.Equal(t, wantErr, gotErr)
 	})
 
@@ -202,7 +204,7 @@ func TestIntegration_DeleteStatus(t *testing.T) {
 		require.Error(t, gotErr)
 
 		wantErr := eqStatusName.NewDeleteEquipmentStatusNameDefault(http.StatusUnauthorized)
-		wantErr.Payload = &models.Error{Data: nil}
+		wantErr.Payload = &models.SwaggerError{Message: nil}
 		assert.Equal(t, wantErr, gotErr)
 	})
 }

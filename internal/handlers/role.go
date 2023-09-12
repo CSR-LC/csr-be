@@ -37,7 +37,7 @@ func (r Role) GetRolesFunc(repository domain.RoleRepository) roles.GetRolesHandl
 		if err != nil {
 			r.logger.Error("query orders failed")
 			return roles.NewGetRolesDefault(http.StatusInternalServerError).
-				WithPayload(buildStringPayload("cant get all roles"))
+				WithPayload(buildInternalErrorPayload("cant get all roles"))
 		}
 		listRoles := models.ListRoles{}
 		for _, element := range e {

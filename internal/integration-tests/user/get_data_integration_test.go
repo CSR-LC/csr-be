@@ -55,8 +55,8 @@ func TestIntegration_GetCurrentUser(t *testing.T) {
 		_, err = client.Users.GetCurrentUser(params, authInfo)
 
 		errExp := users.NewGetCurrentUserDefault(http.StatusUnauthorized)
-		errExp.Payload = &models.Error{
-			Data: nil,
+		errExp.Payload = &models.SwaggerError{
+			Message: nil,
 		}
 		assert.Equal(t, errExp, err)
 	})
@@ -69,8 +69,8 @@ func TestIntegration_GetCurrentUser(t *testing.T) {
 		assert.Error(t, err)
 
 		errExp := users.NewGetCurrentUserDefault(401)
-		errExp.Payload = &models.Error{
-			Data: nil,
+		errExp.Payload = &models.SwaggerError{
+			Message: nil,
 		}
 		assert.Equal(t, errExp, err)
 	})
@@ -104,8 +104,8 @@ func TestIntegration_GetAllUsers(t *testing.T) {
 		assert.Error(t, err)
 
 		errExp := users.NewGetAllUsersDefault(401)
-		errExp.Payload = &models.Error{
-			Data: nil,
+		errExp.Payload = &models.SwaggerError{
+			Message: nil,
 		}
 		assert.Equal(t, errExp, err)
 	})
@@ -118,8 +118,8 @@ func TestIntegration_GetAllUsers(t *testing.T) {
 		_, err := client.Users.GetAllUsers(params, authInfo)
 
 		errExp := users.NewGetAllUsersDefault(http.StatusUnauthorized)
-		errExp.Payload = &models.Error{
-			Data: nil,
+		errExp.Payload = &models.SwaggerError{
+			Message: nil,
 		}
 		assert.Equal(t, errExp, err)
 	})

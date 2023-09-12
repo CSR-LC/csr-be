@@ -6,7 +6,6 @@ import (
 	"github.com/go-openapi/runtime/middleware"
 	"go.uber.org/zap"
 
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/swagger/models"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/swagger/restapi/operations"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/swagger/restapi/operations/password_reset"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/pkg/domain"
@@ -37,12 +36,8 @@ func (c passwordResetHandler) SendLinkByLoginFunc() password_reset.SendLinkByLog
 		login := *s.Login.Data.Login
 		if login == "" {
 			c.logger.Warn("Login is empty")
-			return password_reset.NewSendLinkByLoginDefault(http.StatusBadRequest).WithPayload(
-				&models.Error{
-					Data: &models.ErrorData{
-						Message: "Login is required",
-					},
-				})
+			return password_reset.NewSendLinkByLoginDefault(http.StatusBadRequest).
+				WithPayload(buildBadRequestErrorPayload("Login is required"))
 		}
 		err := c.passwordReset.SendResetPasswordLink(ctx, login)
 		if err != nil {

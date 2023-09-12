@@ -53,8 +53,8 @@ func TestIntegration_PetKind(t *testing.T) {
 		require.Error(t, err)
 
 		errExp := pet_kind.NewCreateNewPetKindDefault(http.StatusUnprocessableEntity)
-		errExp.Payload = &models.Error{
-			Data: nil,
+		errExp.Payload = &models.SwaggerError{
+			Message: nil,
 		}
 		assert.Equal(t, errExp, err)
 	})
@@ -66,8 +66,8 @@ func TestIntegration_PetKind(t *testing.T) {
 		require.Error(t, err)
 
 		errExp := pet_kind.NewCreateNewPetKindDefault(http.StatusUnauthorized)
-		errExp.Payload = &models.Error{
-			Data: nil,
+		errExp.Payload = &models.SwaggerError{
+			Message: nil,
 		}
 		assert.Equal(t, errExp, err)
 	})
@@ -80,8 +80,8 @@ func TestIntegration_PetKind(t *testing.T) {
 		require.Error(t, err)
 
 		errExp := pet_kind.NewCreateNewPetKindDefault(http.StatusUnauthorized)
-		errExp.Payload = &models.Error{
-			Data: nil,
+		errExp.Payload = &models.SwaggerError{
+			Message: nil,
 		}
 		assert.Equal(t, errExp, err)
 	})

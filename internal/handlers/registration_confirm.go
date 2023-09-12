@@ -38,7 +38,7 @@ func (rc registrationConfirmHandler) SendRegistrationConfirmLinkByLoginFunc() re
 		if login == "" {
 			rc.logger.Warn("Login is empty")
 			return registration_confirm.NewSendRegistrationConfirmLinkByLoginDefault(http.StatusBadRequest).
-				WithPayload(buildStringPayload("Login is required"))
+				WithPayload(buildBadRequestErrorPayload("Login is required"))
 		}
 		err := rc.regConfirm.SendConfirmationLink(ctx, login)
 		if err != nil {
@@ -46,13 +46,13 @@ func (rc registrationConfirmHandler) SendRegistrationConfirmLinkByLoginFunc() re
 			switch err {
 			case services.ErrRegistrationAlreadyConfirmed:
 				return registration_confirm.NewSendRegistrationConfirmLinkByLoginDefault(http.StatusInternalServerError).
-					WithPayload(buildStringPayload("Registration is already confirmed."))
+					WithPayload(buildInternalErrorPayload("Registration is already confirmed."))
 			case services.ErrUserNotFound:
 				return registration_confirm.NewSendRegistrationConfirmLinkByLoginDefault(http.StatusInternalServerError).
-					WithPayload(buildStringPayload("Can't find this user, registration confirmation link wasn't send"))
+					WithPayload(buildInternalErrorPayload("Can't find this user, registration confirmation link wasn't send"))
 			default:
 				return registration_confirm.NewSendRegistrationConfirmLinkByLoginDefault(http.StatusInternalServerError).
-					WithPayload(buildStringPayload("Can't send registration confirmation link. Please try again later"))
+					WithPayload(buildInternalErrorPayload("Can't send registration confirmation link. Please try again later"))
 			}
 		}
 		if !rc.regConfirm.IsSendRequired() {
@@ -70,7 +70,7 @@ func (rc registrationConfirmHandler) VerifyRegistrationConfirmTokenFunc() regist
 		if err != nil {
 			rc.logger.Error("Failed to verify confirmation token", zap.Error(err))
 			return registration_confirm.NewVerifyRegistrationConfirmTokenDefault(http.StatusInternalServerError).
-				WithPayload(buildStringPayload("Failed to verify confirmation token. Please try again later"))
+				WithPayload(buildInternalErrorPayload("Failed to verify confirmation token. Please try again later"))
 		}
 		return registration_confirm.NewVerifyRegistrationConfirmTokenOK().WithPayload("You have successfully confirmed registration")
 	}

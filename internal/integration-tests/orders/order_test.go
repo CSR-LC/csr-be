@@ -76,7 +76,7 @@ func TestIntegration_CreateOrder(t *testing.T) {
 		require.Error(t, gotErr)
 
 		wantErr := orders.NewCreateOrderDefault(http.StatusUnauthorized)
-		wantErr.Payload = &models.Error{Data: nil}
+		wantErr.Payload = &models.SwaggerError{Message: nil}
 		assert.Equal(t, wantErr, gotErr)
 	})
 
@@ -96,7 +96,8 @@ func TestIntegration_CreateOrder(t *testing.T) {
 		require.Error(t, gotErr)
 
 		wantErr := orders.NewCreateOrderDefault(http.StatusInternalServerError)
-		wantErr.Payload = &models.Error{Data: &models.ErrorData{Message: "start date should be before end date"}}
+		wantMsg := "start date should be before end date"
+		wantErr.Payload.Message = &wantMsg
 		assert.Equal(t, wantErr, gotErr)
 	})
 
@@ -116,7 +117,8 @@ func TestIntegration_CreateOrder(t *testing.T) {
 		require.Error(t, gotErr)
 
 		wantErr := orders.NewCreateOrderDefault(http.StatusInternalServerError)
-		wantErr.Payload = &models.Error{Data: &models.ErrorData{Message: "small rent period"}}
+		wantMsg := "small rent period"
+		wantErr.Payload.Message = &wantMsg
 		assert.Equal(t, wantErr, gotErr)
 	})
 
@@ -136,7 +138,8 @@ func TestIntegration_CreateOrder(t *testing.T) {
 		require.Error(t, gotErr)
 
 		wantErr := orders.NewCreateOrderDefault(http.StatusInternalServerError)
-		wantErr.Payload = &models.Error{Data: &models.ErrorData{Message: "too big reservation period"}}
+		wantMsg := "too big reservation period"
+		wantErr.Payload.Message = &wantMsg
 		assert.Equal(t, wantErr, gotErr)
 	})
 
@@ -154,7 +157,7 @@ func TestIntegration_CreateOrder(t *testing.T) {
 		require.Error(t, gotErr)
 
 		wantErr := orders.NewCreateOrderDefault(http.StatusUnprocessableEntity)
-		wantErr.Payload = &models.Error{Data: nil}
+		wantErr.Payload = &models.SwaggerError{Message: nil}
 		assert.Equal(t, wantErr, gotErr)
 	})
 
@@ -291,7 +294,7 @@ func TestIntegration_GetAllOrders(t *testing.T) {
 		require.Error(t, gotErr)
 
 		wantErr := orders.NewGetAllOrdersDefault(http.StatusUnauthorized)
-		wantErr.Payload = &models.Error{Data: nil}
+		wantErr.Payload = &models.SwaggerError{Message: nil}
 		assert.Equal(t, wantErr, gotErr)
 	})
 
@@ -311,7 +314,7 @@ func TestIntegration_GetAllOrders(t *testing.T) {
 		require.Error(t, gotErr)
 
 		wantErr := orders.NewGetAllOrdersDefault(http.StatusUnprocessableEntity)
-		wantErr.Payload = &models.Error{Data: nil}
+		wantErr.Payload = &models.SwaggerError{Message: nil}
 		assert.Equal(t, wantErr, gotErr)
 	})
 

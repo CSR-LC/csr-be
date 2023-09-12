@@ -42,7 +42,7 @@ func (c EquipmentStatusName) PostEquipmentStatusNameFunc(repository domain.Equip
 		if err != nil {
 			c.logger.Error("create status failed", zap.Error(err))
 			return eqStatusName.NewPostEquipmentStatusNameDefault(http.StatusInternalServerError).
-				WithPayload(buildStringPayload("can't create status"))
+				WithPayload(buildInternalErrorPayload("can't create status"))
 		}
 
 		return eqStatusName.NewPostEquipmentStatusNameCreated().WithPayload(&models.SuccessEquipmentStatusNameOperationResponse{
@@ -58,7 +58,7 @@ func (c EquipmentStatusName) ListEquipmentStatusNamesFunc(repository domain.Equi
 		if err != nil {
 			c.logger.Error("get statuses failed", zap.Error(err))
 			return eqStatusName.NewListEquipmentStatusNamesDefault(http.StatusInternalServerError).
-				WithPayload(buildStringPayload("can't get statuses"))
+				WithPayload(buildInternalErrorPayload("can't get statuses"))
 		}
 		listStatuses := models.ListEquipmentStatusNames{}
 		for _, element := range statuses {
@@ -75,7 +75,7 @@ func (c EquipmentStatusName) GetEquipmentStatusNameFunc(repository domain.Equipm
 		if err != nil {
 			c.logger.Error("get status failed", zap.Error(err))
 			return eqStatusName.NewGetEquipmentStatusNameDefault(http.StatusInternalServerError).
-				WithPayload(buildStringPayload("can't get status"))
+				WithPayload(buildInternalErrorPayload("can't get status"))
 		}
 
 		return eqStatusName.NewGetEquipmentStatusNameOK().WithPayload(&models.SuccessEquipmentStatusNameOperationResponse{
@@ -91,7 +91,7 @@ func (c EquipmentStatusName) DeleteEquipmentStatusNameFunc(repository domain.Equ
 		if err != nil {
 			c.logger.Error("delete status failed", zap.Error(err))
 			return eqStatusName.NewDeleteEquipmentStatusNameDefault(http.StatusInternalServerError).
-				WithPayload(buildStringPayload("can't delete status"))
+				WithPayload(buildInternalErrorPayload("can't delete status"))
 		}
 		return eqStatusName.NewDeleteEquipmentStatusNameOK().WithPayload(
 			&models.SuccessEquipmentStatusNameOperationResponse{

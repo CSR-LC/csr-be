@@ -39,8 +39,8 @@ func TestIntegration_GetActiveAreas(t *testing.T) {
 		require.Error(t, err)
 
 		errExp := active_areas.NewGetAllActiveAreasDefault(http.StatusUnauthorized)
-		errExp.Payload = &models.Error{
-			Data: nil,
+		errExp.Payload = &models.SwaggerError{
+			Message: nil,
 		}
 		assert.Equal(t, errExp, err)
 	})
@@ -53,8 +53,8 @@ func TestIntegration_GetActiveAreas(t *testing.T) {
 		require.Error(t, err)
 
 		errExp := active_areas.NewGetAllActiveAreasDefault(http.StatusUnauthorized)
-		errExp.Payload = &models.Error{
-			Data: nil,
+		errExp.Payload = &models.SwaggerError{
+			Message: nil,
 		}
 		assert.Equal(t, errExp, err)
 	})

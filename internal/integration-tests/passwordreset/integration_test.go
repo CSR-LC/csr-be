@@ -51,9 +51,8 @@ func TestIntegration_PasswordReset(t *testing.T) {
 		require.Error(t, err)
 
 		errExp := password_reset.NewSendLinkByLoginDefault(http.StatusBadRequest)
-		errExp.Payload = &models.Error{
-			Data: &models.ErrorData{Message: "Login is required"},
-		}
+		wantMsg := "Login is required"
+		errExp.Payload.Message = &wantMsg
 		assert.Equal(t, errExp, err)
 	})
 

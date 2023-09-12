@@ -60,8 +60,8 @@ func TestIntegration_PetSize(t *testing.T) {
 		require.Error(t, err)
 
 		errExp := pet_size.NewCreateNewPetSizeDefault(http.StatusUnprocessableEntity)
-		errExp.Payload = &models.Error{
-			Data: nil,
+		errExp.Payload = &models.SwaggerError{
+			Message: nil,
 		}
 		assert.Equal(t, errExp, err)
 	})
@@ -73,8 +73,8 @@ func TestIntegration_PetSize(t *testing.T) {
 		require.Error(t, err)
 
 		errExp := pet_size.NewCreateNewPetSizeDefault(http.StatusUnauthorized)
-		errExp.Payload = &models.Error{
-			Data: nil,
+		errExp.Payload = &models.SwaggerError{
+			Message: nil,
 		}
 		assert.Equal(t, errExp, err)
 	})
@@ -87,8 +87,8 @@ func TestIntegration_PetSize(t *testing.T) {
 		require.Error(t, err)
 
 		errExp := pet_size.NewCreateNewPetSizeDefault(http.StatusUnauthorized)
-		errExp.Payload = &models.Error{
-			Data: nil,
+		errExp.Payload = &models.SwaggerError{
+			Message: nil,
 		}
 		assert.Equal(t, errExp, err)
 	})
