@@ -811,11 +811,13 @@ func (s *orderTestSuite) TestOrder_UpdateOrder_RepoErr() {
 	quantity := int64(10)
 	rentStart := strfmt.DateTime(time.Now())
 	rentEnd := strfmt.DateTime(time.Now().Add(time.Hour * 24))
+	status := domain.OrderStatusBlocked
 	createOrder := &models.OrderUpdateRequest{
 		Description: &description,
 		Quantity:    &quantity,
 		RentStart:   &rentStart,
 		RentEnd:     &rentEnd,
+		Status:      &status,
 	}
 	userID := 1
 	orderID := 2
@@ -846,11 +848,13 @@ func (s *orderTestSuite) TestOrder_UpdateOrder_MapErr() {
 	quantity := int64(10)
 	rentStart := strfmt.DateTime(time.Now())
 	rentEnd := strfmt.DateTime(time.Now().Add(time.Hour * 24))
+	status := domain.OrderStatusInProgress
 	createOrder := &models.OrderUpdateRequest{
 		Description: &description,
 		Quantity:    &quantity,
 		RentStart:   &rentStart,
 		RentEnd:     &rentEnd,
+		Status:      &status,
 	}
 	userID := 1
 	orderID := 2
@@ -881,11 +885,13 @@ func (s *orderTestSuite) TestOrder_UpdateOrder_OK() {
 	quantity := int64(10)
 	rentStart := strfmt.DateTime(time.Now())
 	rentEnd := strfmt.DateTime(time.Now().Add(time.Hour * 24))
+	status := domain.OrderStatusInReview
 	createOrder := &models.OrderUpdateRequest{
 		Description: &description,
 		Quantity:    &quantity,
 		RentStart:   &rentStart,
 		RentEnd:     &rentEnd,
+		Status:      &status,
 	}
 	userID := 1
 	orderID := 2

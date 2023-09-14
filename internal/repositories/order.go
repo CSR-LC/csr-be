@@ -203,7 +203,16 @@ func (r *orderRepository) Update(ctx context.Context, id int, data *models.Order
 	if err != nil {
 		return nil, err
 	}
+
 	foundOrder, err := tx.Order.Get(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	foundOrdersStatusName, err := tx.OrderStatusName.
+		Query().
+		Where(orderstatusname.Status(*data.Status)).
+		Only(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -242,13 +251,19 @@ func (r *orderRepository) Update(ctx context.Context, id int, data *models.Order
 		SetRentEnd(*rentEnd).
 		SetDescription(*data.Description).
 		SetQuantity(*quantity).
+		SetCurrentStatus(foundOrdersStatusName).
 		Save(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	returnOrder, err := tx.Order.Query().Where(order.IDEQ(createdOrder.ID)). // get order with relations
-											WithUsers().WithOrderStatus().Only(ctx)
+	returnOrder, err := tx.Order.
+		Query().
+		Where(order.IDEQ(createdOrder.ID)).
+		WithUsers().
+		WithOrderStatus().
+		WithCurrentStatus().
+		Only(ctx)
 	if err != nil {
 		return nil, err
 	}

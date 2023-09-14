@@ -3,12 +3,9 @@ package repositories
 import (
 	"context"
 	"math"
+	"reflect"
 	"testing"
 	"time"
-
-	"github.com/go-openapi/strfmt"
-	"github.com/stretchr/testify/require"
-	"github.com/stretchr/testify/suite"
 
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/ent"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/ent/enttest"
@@ -18,6 +15,9 @@ import (
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/middlewares"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/utils"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/pkg/domain"
+	"github.com/go-openapi/strfmt"
+	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/suite"
 )
 
 type OrderSuite struct {
@@ -29,6 +29,15 @@ type OrderSuite struct {
 	orders                []*ent.Order
 	user                  *ent.User
 	equipments            []*ent.Equipment
+}
+
+// list of statuses with IDs. Amount of statuses is equal to amount of orders.
+var statusNameMap = map[int]string{
+	1: "in review",   // active
+	2: "in progress", // active
+	3: "rejected",    // finished
+	4: "closed",      // finished
+	8: "blocked",
 }
 
 func TestOrdersSuite(t *testing.T) {
@@ -104,13 +113,6 @@ func (s *OrderSuite) SetupTest() {
 		s.equipments[i] = e
 	}
 
-	// list of statuses with IDs. Amount of statuses is equal to amount of orders.
-	statusNameMap := map[int]string{
-		1: "in review",   // active
-		2: "in progress", // active
-		3: "rejected",    // finished
-		4: "closed",      // finished
-	}
 	_, err = s.client.OrderStatusName.Delete().Exec(s.ctx) // clean up
 	if err != nil {
 		t.Fatal(err)
@@ -777,6 +779,38 @@ func (s *OrderSuite) TestOrderRepository_List_StatusFilter() {
 	}
 }
 
+func Test_orderRepository_Update(t *testing.T) {
+
+	type args struct {
+		ctx    context.Context
+		id     int
+		data   *models.OrderUpdateRequest
+		userId int
+	}
+	tests := []struct {
+		name    string
+		r       *orderRepository
+		args    args
+		want    *ent.Order
+		wantErr bool
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			r := &orderRepository{}
+			got, err := r.Update(tt.args.ctx, tt.args.id, tt.args.data, tt.args.userId)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("orderRepository.Update() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("orderRepository.Update() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
 func (s *OrderSuite) TestOrderRepository_Update_OK() {
 	t := s.T()
 	ctx := s.ctx
@@ -798,25 +832,30 @@ func (s *OrderSuite) TestOrderRepository_Update_OK() {
 	require.NoError(t, err)
 	require.NoError(t, crtx.Commit())
 
-	tx, err := s.client.Tx(ctx)
-	require.NoError(t, err)
-	ctx = context.WithValue(ctx, middlewares.TxContextKey, tx)
-	newDesc := "new desc"
-	newStartDate := strfmt.DateTime(time.Now().UTC())
-	newEndDate := strfmt.DateTime(time.Now().UTC().Add(time.Hour * 24 * 10))
-	newQuantity := int64(1)
-	req := &models.OrderUpdateRequest{
-		Description: &newDesc,
-		Quantity:    &newQuantity,
-		RentStart:   &newStartDate,
-		RentEnd:     &newEndDate,
+	for _, status := range statusNameMap {
+		tx, err := s.client.Tx(ctx)
+		require.NoError(t, err)
+		ctx = context.WithValue(ctx, middlewares.TxContextKey, tx)
+		newDesc := "new desc"
+		newStartDate := strfmt.DateTime(time.Now().UTC())
+		newEndDate := strfmt.DateTime(time.Now().UTC().Add(time.Hour * 24 * 10))
+		newQuantity := int64(1)
+
+		req := &models.OrderUpdateRequest{
+			Description: &newDesc,
+			Quantity:    &newQuantity,
+			RentStart:   &newStartDate,
+			RentEnd:     &newEndDate,
+			Status:      &status,
+		}
+		updated, err := s.orderRepository.Update(ctx, createdOrder.ID, req, s.user.ID)
+		require.NoError(t, err)
+		require.NoError(t, tx.Commit())
+		require.Equal(t, newDesc, updated.Description)
+		require.Equal(t, updated.Edges.CurrentStatus.Status, status)
+		require.Equal(t, newEndDate, strfmt.DateTime(updated.RentEnd))
+		require.Equal(t, newStartDate, strfmt.DateTime(updated.RentStart))
 	}
-	updated, err := s.orderRepository.Update(ctx, createdOrder.ID, req, s.user.ID)
-	require.NoError(t, err)
-	require.NoError(t, tx.Commit())
-	require.Equal(t, newDesc, updated.Description)
-	require.Equal(t, newEndDate, strfmt.DateTime(updated.RentEnd))
-	require.Equal(t, newStartDate, strfmt.DateTime(updated.RentStart))
 }
 
 func (s *OrderSuite) TestOrderRepository_Update_MissingOrder() {
