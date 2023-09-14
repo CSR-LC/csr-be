@@ -37,14 +37,14 @@ func (c passwordResetHandler) SendLinkByLoginFunc() password_reset.SendLinkByLog
 		if login == "" {
 			c.logger.Warn("Login is empty")
 			return password_reset.NewSendLinkByLoginDefault(http.StatusBadRequest).
-				WithPayload(buildBadRequestErrorPayload("Login is required"))
+				WithPayload(buildBadRequestErrorPayload(errLoginRequired, ""))
 		}
 		err := c.passwordReset.SendResetPasswordLink(ctx, login)
 		if err != nil {
 			c.logger.Error("Error while sending reset password link", zap.Error(err))
-			return password_reset.NewSendLinkByLoginOK().WithPayload("Check your email for a reset link")
+			return password_reset.NewSendLinkByLoginOK().WithPayload(passwordResetSuccesful)
 		}
-		return password_reset.NewSendLinkByLoginOK().WithPayload("Check your email for a reset link")
+		return password_reset.NewSendLinkByLoginOK().WithPayload(passwordResetSuccesful)
 	}
 }
 

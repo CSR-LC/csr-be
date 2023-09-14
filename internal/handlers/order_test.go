@@ -3,7 +3,6 @@ package handlers
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"math"
 	"net/http"
 	"net/http/httptest"
@@ -158,7 +157,7 @@ func (s *orderTestSuite) TestOrder_ListUserOrders_WrongStatus() {
 	}
 
 	require.Equal(t, http.StatusBadRequest, responseRecorder.Code)
-	require.Equal(t, fmt.Sprintf("Invalid order status '%v'", st), *response.Message)
+	require.Equal(t, "can't get orders", *response.Message)
 }
 
 func (s *orderTestSuite) TestOrder_ListUserOrders_MapErr() {

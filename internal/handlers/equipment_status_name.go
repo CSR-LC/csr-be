@@ -40,9 +40,9 @@ func (c EquipmentStatusName) PostEquipmentStatusNameFunc(repository domain.Equip
 		name := s.Name.Name
 		createdStatus, err := repository.Create(ctx, *name)
 		if err != nil {
-			c.logger.Error("create status failed", zap.Error(err))
+			c.logger.Error(errCreateEqStatus, zap.Error(err))
 			return eqStatusName.NewPostEquipmentStatusNameDefault(http.StatusInternalServerError).
-				WithPayload(buildInternalErrorPayload("can't create status"))
+				WithPayload(buildInternalErrorPayload(errCreateEqStatus, err.Error()))
 		}
 
 		return eqStatusName.NewPostEquipmentStatusNameCreated().WithPayload(&models.SuccessEquipmentStatusNameOperationResponse{
@@ -56,9 +56,9 @@ func (c EquipmentStatusName) ListEquipmentStatusNamesFunc(repository domain.Equi
 		ctx := s.HTTPRequest.Context()
 		statuses, err := repository.GetAll(ctx)
 		if err != nil {
-			c.logger.Error("get statuses failed", zap.Error(err))
+			c.logger.Error(errQueryEqStatuses, zap.Error(err))
 			return eqStatusName.NewListEquipmentStatusNamesDefault(http.StatusInternalServerError).
-				WithPayload(buildInternalErrorPayload("can't get statuses"))
+				WithPayload(buildInternalErrorPayload(errQueryEqStatuses, err.Error()))
 		}
 		listStatuses := models.ListEquipmentStatusNames{}
 		for _, element := range statuses {
@@ -73,9 +73,9 @@ func (c EquipmentStatusName) GetEquipmentStatusNameFunc(repository domain.Equipm
 		ctx := s.HTTPRequest.Context()
 		foundStatus, err := repository.Get(ctx, int(s.StatusID))
 		if err != nil {
-			c.logger.Error("get status failed", zap.Error(err))
+			c.logger.Error(errGetEqStatus, zap.Error(err))
 			return eqStatusName.NewGetEquipmentStatusNameDefault(http.StatusInternalServerError).
-				WithPayload(buildInternalErrorPayload("can't get status"))
+				WithPayload(buildInternalErrorPayload(errGetEqStatus, err.Error()))
 		}
 
 		return eqStatusName.NewGetEquipmentStatusNameOK().WithPayload(&models.SuccessEquipmentStatusNameOperationResponse{
@@ -89,9 +89,9 @@ func (c EquipmentStatusName) DeleteEquipmentStatusNameFunc(repository domain.Equ
 		ctx := s.HTTPRequest.Context()
 		deletedStatus, err := repository.Delete(ctx, int(s.StatusID))
 		if err != nil {
-			c.logger.Error("delete status failed", zap.Error(err))
+			c.logger.Error(errDeleteEqStatus, zap.Error(err))
 			return eqStatusName.NewDeleteEquipmentStatusNameDefault(http.StatusInternalServerError).
-				WithPayload(buildInternalErrorPayload("can't delete status"))
+				WithPayload(buildInternalErrorPayload(errDeleteEqStatus, err.Error()))
 		}
 		return eqStatusName.NewDeleteEquipmentStatusNameOK().WithPayload(
 			&models.SuccessEquipmentStatusNameOperationResponse{

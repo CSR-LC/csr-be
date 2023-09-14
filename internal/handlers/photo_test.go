@@ -264,7 +264,7 @@ func (s *PhotoTestSuite) TestPhoto_GetPhoto_RepoErr() {
 	}
 	require.NotEmpty(t, response)
 	require.NotEmpty(t, response.Message)
-	require.Equal(t, errorToReturn.Error(), *response.Message)
+	require.Contains(t, errorToReturn.Error(), response.Details)
 
 	s.repository.AssertExpectations(t)
 }
@@ -315,7 +315,7 @@ func (s *PhotoTestSuite) TestPhoto_DeletePhoto_NotExists() {
 		PhotoID:     id,
 	}
 
-	errorToReturn := errors.New("not found")
+	errorToReturn := errors.New("failed to delete photo")
 	s.repository.On("PhotoByID", ctx, data.PhotoID).Return(nil, errorToReturn)
 
 	handlerFunc := s.handler.DeletePhotoFunc(s.repository)

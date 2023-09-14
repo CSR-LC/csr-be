@@ -51,9 +51,9 @@ func (c EquipmentStatus) GetEquipmentStatusCheckDatesFunc(
 		newStatus := s.Name.StatusName
 
 		if !newStatusIsUnavailable(*newStatus) {
-			c.logger.Error("Wrong new equipment status, status should be only 'not available'", zap.Any("principal", principal))
+			c.logger.Error(errWrongEqStatus, zap.Any("principal", principal))
 			return orders.NewAddNewOrderStatusDefault(http.StatusBadRequest).
-				WithPayload(buildBadRequestErrorPayload("Wrong new equipment status, status should be only 'not available'"))
+				WithPayload(buildBadRequestErrorPayload(errWrongEqStatus, ""))
 		}
 
 		data := models.EquipmentStatus{
@@ -68,7 +68,7 @@ func (c EquipmentStatus) GetEquipmentStatusCheckDatesFunc(
 		if err != nil {
 			c.logger.Error("receiving equipment status by id failed during checking start/end dates", zap.Error(err))
 			return eqStatus.NewCheckEquipmentStatusDefault(http.StatusInternalServerError).
-				WithPayload(buildInternalErrorPayload("can't find equipment status by provided id"))
+				WithPayload(buildInternalErrorPayload(errGetEqStatusByID, err.Error()))
 		}
 
 		if !eqStatusResult.EndDate.After(time.Time(*data.StartDate)) &&
@@ -81,9 +81,9 @@ func (c EquipmentStatus) GetEquipmentStatusCheckDatesFunc(
 		orderResult, userResult, err := eqStatusRepository.GetOrderAndUserByEquipmentStatusID(
 			ctx, int(*data.ID))
 		if err != nil {
-			c.logger.Error("receiving order and user data failed", zap.Error(err))
+			c.logger.Error(errOrderAndUserByEqStatusID, zap.Error(err))
 			return eqStatus.NewCheckEquipmentStatusDefault(http.StatusInternalServerError).
-				WithPayload(buildInternalErrorPayload("can't receive order and user data during checking equipment status"))
+				WithPayload(buildInternalErrorPayload(errOrderAndUserByEqStatusID, err.Error()))
 		}
 
 		if orderResult == nil && userResult == nil {
@@ -116,9 +116,9 @@ func (c EquipmentStatus) PutEquipmentStatusInRepairFunc(
 		newStatus := s.Name.StatusName
 
 		if !newStatusIsUnavailable(*newStatus) {
-			c.logger.Error("Wrong new equipment status, status should be only 'not available'", zap.Any("principal", principal))
+			c.logger.Error(errWrongEqStatus, zap.Any("principal", principal))
 			return orders.NewAddNewOrderStatusDefault(http.StatusBadRequest).
-				WithPayload(buildBadRequestErrorPayload("Wrong new equipment status, status should be only 'not available'"))
+				WithPayload(buildBadRequestErrorPayload(errWrongEqStatus, ""))
 		}
 
 		reduceOneDayFromCurrentStartDate := strfmt.DateTime(
@@ -139,16 +139,16 @@ func (c EquipmentStatus) PutEquipmentStatusInRepairFunc(
 		orderResult, userResult, err := eqStatusRepository.GetOrderAndUserByEquipmentStatusID(
 			ctx, int(*data.ID))
 		if err != nil {
-			c.logger.Error("receiving user and order status failed", zap.Error(err))
+			c.logger.Error(errOrderAndUserByEqStatusID, zap.Error(err))
 			return eqStatus.NewUpdateEquipmentStatusOnUnavailableDefault(http.StatusInternalServerError).
-				WithPayload(buildInternalErrorPayload("can't receive order and user for updating equipment status on unavailable"))
+				WithPayload(buildInternalErrorPayload(errOrderAndUserByEqStatusID, err.Error()))
 		}
 
 		updatedEqStatus, err := eqStatusRepository.Update(ctx, &data)
 		if err != nil {
-			c.logger.Error("update equipment status failed", zap.Error(err))
+			c.logger.Error(errUpdateEqStatus, zap.Error(err))
 			return eqStatus.NewUpdateEquipmentStatusOnUnavailableDefault(http.StatusInternalServerError).
-				WithPayload(buildInternalErrorPayload("can't update equipment status"))
+				WithPayload(buildInternalErrorPayload(errUpdateEqStatus, err.Error()))
 		}
 
 		comment := EQUIPMENT_UNDER_REPAIR_COMMENT_FOR_ORDER
@@ -163,9 +163,9 @@ func (c EquipmentStatus) PutEquipmentStatusInRepairFunc(
 
 		err = orderStatusRepo.UpdateStatus(ctx, userResult.ID, model)
 		if err != nil {
-			c.logger.Error("Update order status error", zap.Error(err))
+			c.logger.Error(errUpdateOrderStatus, zap.Error(err))
 			return orders.NewAddNewOrderStatusDefault(http.StatusInternalServerError).
-				WithPayload(buildInternalErrorPayload("Can't update order status"))
+				WithPayload(buildInternalErrorPayload(errUpdateOrderStatus, err.Error()))
 		}
 
 		eqStatusResult, err := eqStatusRepository.GetEquipmentStatusByID(
@@ -173,7 +173,7 @@ func (c EquipmentStatus) PutEquipmentStatusInRepairFunc(
 		if err != nil {
 			c.logger.Error("receiving equipment status by id failed during changing status to unavailable", zap.Error(err))
 			return eqStatus.NewCheckEquipmentStatusDefault(http.StatusInternalServerError).
-				WithPayload(buildInternalErrorPayload("can't find equipment status by provided id"))
+				WithPayload(buildInternalErrorPayload(errGetEqStatusByID, err.Error()))
 		}
 
 		equipmentStatusID := int64(updatedEqStatus.ID)
@@ -200,9 +200,9 @@ func (c EquipmentStatus) DeleteEquipmentStatusFromRepairFunc(
 		newStatus := s.Name.StatusName
 
 		if !newStatusIsAvailable(*newStatus) {
-			c.logger.Error("Wrong new equipment status, status should be only 'available'", zap.Any("principal", principal))
+			c.logger.Error(errWrongEqStatus, zap.Any("principal", principal))
 			return orders.NewAddNewOrderStatusDefault(http.StatusBadGateway).
-				WithPayload(buildBadRequestErrorPayload("Wrong new equipment status, status should be only 'not available'"))
+				WithPayload(buildBadRequestErrorPayload(errWrongEqStatus, ""))
 		}
 
 		timeNow := timeNowEquipmentStatus()
@@ -219,7 +219,7 @@ func (c EquipmentStatus) DeleteEquipmentStatusFromRepairFunc(
 		if err != nil {
 			c.logger.Error("update equipment on available status failed", zap.Error(err))
 			return eqStatus.NewUpdateEquipmentStatusOnAvailableDefault(http.StatusInternalServerError).
-				WithPayload(buildInternalErrorPayload("can't update equipment status on available status"))
+				WithPayload(buildInternalErrorPayload(errUpdateEqStatus, err.Error()))
 		}
 
 		eqStatusResult, err := eqStatusRepository.GetEquipmentStatusByID(
@@ -227,7 +227,7 @@ func (c EquipmentStatus) DeleteEquipmentStatusFromRepairFunc(
 		if err != nil {
 			c.logger.Error("receiving equipment status by id failed during changing status to available", zap.Error(err))
 			return eqStatus.NewCheckEquipmentStatusDefault(http.StatusInternalServerError).
-				WithPayload(buildInternalErrorPayload("can't find equipment status by provided id"))
+				WithPayload(buildInternalErrorPayload(errGetEqStatusByID, err.Error()))
 		}
 
 		equipmentStatusID := int64(updatedEqStatus.ID)
@@ -257,7 +257,7 @@ func (c EquipmentStatus) PatchEquipmentStatusEditDatesFunc(
 		if err != nil {
 			c.logger.Error("receiving equipment status by id failed during editing dates", zap.Error(err))
 			return eqStatus.NewCheckEquipmentStatusDefault(http.StatusInternalServerError).
-				WithPayload(buildInternalErrorPayload("can't find equipment status by provided id"))
+				WithPayload(buildInternalErrorPayload(errGetEqStatusByID, err.Error()))
 		}
 
 		if !time.Time(s.Name.StartDate).IsZero() {
@@ -278,7 +278,7 @@ func (c EquipmentStatus) PatchEquipmentStatusEditDatesFunc(
 		if err != nil {
 			c.logger.Error("update equipment on available status failed during editing dates", zap.Error(err))
 			return eqStatus.NewUpdateRepairedEquipmentStatusDatesDefault(http.StatusInternalServerError).
-				WithPayload(buildInternalErrorPayload("can't update equipment status on available status during editing dates"))
+				WithPayload(buildInternalErrorPayload(errUpdateEqStatus, err.Error()))
 		}
 
 		equipmentStatusID := int64(updatedEqStatus.ID)

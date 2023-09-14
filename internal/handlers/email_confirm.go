@@ -33,11 +33,11 @@ func (e emailConfirmHandler) VerifyEmailConfirmTokenFunc() email_confirm.VerifyE
 		token := s.Token
 		err := e.emailConfirm.VerifyTokenAndChangeEmail(ctx, token)
 		if err != nil {
-			e.logger.Error("Failed to verify email confirmation token", zap.Error(err))
+			e.logger.Error(errEmailConfirm, zap.Error(err))
 			return email_confirm.NewVerifyEmailConfirmTokenDefault(http.StatusInternalServerError).
-				WithPayload(buildInternalErrorPayload("Failed to verify email confirmation token. Please try again later"))
+				WithPayload(buildInternalErrorPayload(errEmailConfirm, err.Error()))
 		}
 
-		return email_confirm.NewVerifyEmailConfirmTokenOK().WithPayload("You have successfully confirmed new email")
+		return email_confirm.NewVerifyEmailConfirmTokenOK().WithPayload(emailConfirmed)
 	}
 }

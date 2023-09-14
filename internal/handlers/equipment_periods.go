@@ -44,12 +44,9 @@ func (c EquipmentPeriods) GetEquipmentUnavailableDatesFunc(
 
 		equipmentStatuses, err := eqStatusRepository.GetUnavailableEquipmentStatusByEquipmentID(ctx, id)
 		if err != nil {
-			c.logger.Error(
-				"error during the search for unavailable equipment status dates",
-				zap.Error(err),
-			)
+			c.logger.Error(errGetUnavailableEqStatus, zap.Error(err))
 			return eqStatus.NewCheckEquipmentStatusDefault(http.StatusInternalServerError).
-				WithPayload(buildInternalErrorPayload("can't find unavailable equipment status dates"))
+				WithPayload(buildInternalErrorPayload(errGetUnavailableEqStatus, err.Error()))
 		}
 
 		var result []*models.EquipmentUnavailabilityPeriods

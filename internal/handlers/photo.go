@@ -47,32 +47,32 @@ func (p Photo) CreateNewPhotoFunc(repository domain.PhotoRepository) photos.Crea
 		if err != nil {
 			p.logger.Error("failed to read file", zap.Error(err))
 			return photos.NewCreateNewPhotoDefault(http.StatusInternalServerError).
-				WithPayload(buildInternalErrorPayload(err.Error()))
+				WithPayload(buildInternalErrorPayload(errCreatePhoto, err.Error()))
 		}
 		if err := s.File.Close(); err != nil {
 			p.logger.Error("Failed to close file", zap.Error(err))
 			return photos.NewCreateNewPhotoDefault(http.StatusInternalServerError).
-				WithPayload(buildInternalErrorPayload(err.Error()))
+				WithPayload(buildInternalErrorPayload(errCreatePhoto, err.Error()))
 		}
 		// check if file is not empty
 		if len(fileBytes) == 0 {
-			p.logger.Error("file is empty")
+			p.logger.Error(errFileEmpty)
 			return photos.NewCreateNewPhotoDefault(http.StatusBadRequest).
-				WithPayload(buildBadRequestErrorPayload("File is empty"))
+				WithPayload(buildBadRequestErrorPayload(errFileEmpty, ""))
 		}
 		// check if file is image jpg/jpeg
 		mimeType := http.DetectContentType(fileBytes)
 		if mimeType != "image/jpg" && mimeType != "image/jpeg" {
 			p.logger.Error(fmt.Sprintf("wrong file format: %s. file should be jpg or jpeg", mimeType))
 			return photos.NewCreateNewPhotoDefault(http.StatusBadRequest).
-				WithPayload(buildBadRequestErrorPayload("Wrong file format. File should be jpg or jpeg"))
+				WithPayload(buildBadRequestErrorPayload(errWrongFormat, ""))
 		}
 
 		photoID, err := utils.GenerateFileName()
 		if err != nil {
 			p.logger.Error("failed to generate photo name", zap.Error(err))
 			return photos.NewCreateNewPhotoDefault(http.StatusInternalServerError).
-				WithPayload(buildInternalErrorPayload(err.Error()))
+				WithPayload(buildInternalErrorPayload(errCreatePhoto, err.Error()))
 		}
 
 		fileName := fmt.Sprintf("%s.jpg", photoID)
@@ -86,7 +86,7 @@ func (p Photo) CreateNewPhotoFunc(repository domain.PhotoRepository) photos.Crea
 		if err != nil {
 			p.logger.Error("failed to save photo to db", zap.Error(err))
 			return photos.NewCreateNewPhotoDefault(http.StatusInternalServerError).
-				WithPayload(buildInternalErrorPayload(err.Error()))
+				WithPayload(buildInternalErrorPayload(errCreatePhoto, err.Error()))
 		}
 		return photos.NewCreateNewPhotoCreated().WithPayload(&models.CreateNewPhotoResponse{
 			Data: &models.Photo{
@@ -103,7 +103,7 @@ func (p Photo) GetPhotoFunc(repository domain.PhotoRepository) photos.GetPhotoHa
 			ctx := s.HTTPRequest.Context()
 			photo, err := repository.PhotoByID(ctx, s.PhotoID)
 			if err != nil {
-				p.logger.Error("failed to get photo", zap.Error(err))
+				p.logger.Error(errGetPhoto, zap.Error(err))
 				if err := writeErrorInResponse(w, err); err != nil {
 					p.logger.Error("failed to response to client", zap.Error(err))
 				}
@@ -126,7 +126,7 @@ func (p Photo) DownloadPhotoFunc(repository domain.PhotoRepository) photos.Downl
 			ctx := s.HTTPRequest.Context()
 			photo, err := repository.PhotoByID(ctx, s.PhotoID)
 			if err != nil {
-				p.logger.Error("failed to get photo", zap.Error(err))
+				p.logger.Error(errGetPhoto, zap.Error(err))
 				if err := writeErrorInResponse(w, err); err != nil {
 					p.logger.Error("failed to response to client", zap.Error(err))
 				}
@@ -156,28 +156,28 @@ func (p Photo) DeletePhotoFunc(repository domain.PhotoRepository) photos.DeleteP
 		ctx := s.HTTPRequest.Context()
 		photo, err := repository.PhotoByID(ctx, s.PhotoID)
 		if err != nil {
-			p.logger.Error("failed to get photo", zap.Error(err))
+			p.logger.Error(errGetPhoto, zap.Error(err))
 			return photos.NewDeletePhotoDefault(http.StatusInternalServerError).
-				WithPayload(buildInternalErrorPayload(err.Error()))
+				WithPayload(buildInternalErrorPayload(errDeletePhoto, err.Error()))
 		}
 
 		err = repository.DeletePhotoByID(ctx, photo.ID)
 		if err != nil {
 			p.logger.Error("delete photo failed", zap.Error(err))
 			return photos.NewDeletePhotoDefault(http.StatusInternalServerError).
-				WithPayload(buildInternalErrorPayload(err.Error()))
+				WithPayload(buildInternalErrorPayload(errDeletePhoto, err.Error()))
 		}
 		//err = fileManager.DeleteFile(photo.FileName)
 		//if err != nil {
 		//	p.logger.Error("failed to delete photo file", zap.Error(err))
 		//}
 
-		return photos.NewDeletePhotoOK().WithPayload("Photo deleted")
+		return photos.NewDeletePhotoOK().WithPayload(photoDeleted)
 	}
 }
 
 func writeErrorInResponse(w http.ResponseWriter, err error) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusInternalServerError)
-	return json.NewEncoder(w).Encode(buildInternalErrorPayload(err.Error()))
+	return json.NewEncoder(w).Encode(buildInternalErrorPayload(errGetPhoto, err.Error()))
 }

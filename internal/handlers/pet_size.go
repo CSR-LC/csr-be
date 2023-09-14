@@ -39,27 +39,27 @@ func (ps PetSize) CreatePetSizeFunc(repository domain.PetSizeRepository) pet_siz
 		ctx := p.HTTPRequest.Context()
 		allPetSizes, err := repository.GetAll(ctx)
 		if err != nil {
-			ps.logger.Error("Error while getting pet size", zap.Error(err))
+			ps.logger.Error(errGetPetSize, zap.Error(err))
 			return pet_size.NewCreateNewPetSizeDefault(http.StatusInternalServerError).
-				WithPayload(buildInternalErrorPayload("Error while creating pet size"))
+				WithPayload(buildInternalErrorPayload(errCreatePetSize, err.Error()))
 		}
 		for _, petSize := range allPetSizes {
 			if *p.NewPetSize.Name == petSize.Name {
-				ps.logger.Error("Error while creating pet size", zap.Error(err))
+				ps.logger.Error(errCreatePetSize, zap.Error(err))
 				return pet_size.NewCreateNewPetSizeDefault(http.StatusInternalServerError).
-					WithPayload(buildInternalErrorPayload("Error while creating pet size: the name already exist"))
+					WithPayload(buildInternalErrorPayload(errPetSizeAlreadyExists, ""))
 			}
 		}
 		petSize, err := repository.Create(ctx, *p.NewPetSize)
 		if err != nil {
-			ps.logger.Error("Error while creating pet size", zap.Error(err))
+			ps.logger.Error(errCreatePetSize, zap.Error(err))
 			return pet_size.NewCreateNewPetSizeDefault(http.StatusInternalServerError).
-				WithPayload(buildBadRequestErrorPayload("Error while creating pet size"))
+				WithPayload(buildBadRequestErrorPayload(errCreatePetSize, err.Error()))
 		}
 		if petSize == nil {
 			ps.logger.Error("Pet size is nil")
 			return pet_size.NewCreateNewPetSizeDefault(http.StatusInternalServerError).
-				WithPayload(buildInternalErrorPayload("Error while creating pet size"))
+				WithPayload(buildInternalErrorPayload(errCreatePetSize, ""))
 		}
 		id := int64(petSize.ID)
 		return pet_size.NewCreateNewPetSizeCreated().WithPayload(&models.PetSizeResponse{
@@ -77,13 +77,13 @@ func (ps PetSize) GetAllPetSizeFunc(repository domain.PetSizeRepository) pet_siz
 		ctx := p.HTTPRequest.Context()
 		petSizes, err := repository.GetAll(ctx)
 		if err != nil {
-			ps.logger.Error("Error while getting pet size", zap.Error(err))
+			ps.logger.Error(errGetPetSize, zap.Error(err))
 			return pet_size.NewGetAllPetSizeDefault(http.StatusInternalServerError).
-				WithPayload(buildInternalErrorPayload("Error while getting pet size"))
+				WithPayload(buildInternalErrorPayload(errGetPetSize, ""))
 		}
 		if len(petSizes) == 0 {
 			return pet_size.NewGetAllPetSizeDefault(http.StatusInternalServerError).
-				WithPayload(buildInternalErrorPayload("No pet size found"))
+				WithPayload(buildInternalErrorPayload(errPetSizeNotFound, ""))
 		}
 		listOfPetSize := models.ListOfPetSizes{}
 		for _, v := range petSizes {
@@ -104,13 +104,13 @@ func (ps PetSize) GetPetSizeByID(repo domain.PetSizeRepository) pet_size.GetPetS
 		ctx := p.HTTPRequest.Context()
 		petSize, err := repo.GetByID(ctx, int(p.PetSizeID))
 		if err != nil {
-			ps.logger.Error("Error while getting pet size by id", zap.Error(err))
+			ps.logger.Error(errGetPetSize, zap.Error(err))
 			return pet_size.NewGetPetSizeDefault(http.StatusInternalServerError).
-				WithPayload(buildInternalErrorPayload("Error while getting pet size"))
+				WithPayload(buildInternalErrorPayload(errGetPetSize, err.Error()))
 		}
 		if petSize == nil {
 			return pet_size.NewGetPetSizeDefault(http.StatusInternalServerError).
-				WithPayload(buildInternalErrorPayload("Error while getting pet size"))
+				WithPayload(buildInternalErrorPayload(errGetPetSize, ""))
 		}
 		id := int64(petSize.ID)
 		return pet_size.NewGetPetSizeOK().WithPayload(&models.PetSizeResponse{ID: &id, Name: &petSize.Name, Size: &petSize.Size})
@@ -122,11 +122,11 @@ func (ps PetSize) DeletePetSizeByID(repo domain.PetSizeRepository) pet_size.Dele
 		ctx := p.HTTPRequest.Context()
 		err := repo.Delete(ctx, int(p.PetSizeID))
 		if err != nil {
-			ps.logger.Error("Error while deleting pet size by id", zap.Error(err))
+			ps.logger.Error(errDeletePetSize, zap.Error(err))
 			return pet_size.NewDeletePetSizeDefault(http.StatusInternalServerError).
-				WithPayload(buildInternalErrorPayload("Error while deleting pet size"))
+				WithPayload(buildInternalErrorPayload(errDeletePetSize, err.Error()))
 		}
-		return pet_size.NewDeletePetSizeOK().WithPayload("Pet size deleted")
+		return pet_size.NewDeletePetSizeOK().WithPayload(petSizeDeleted)
 	}
 }
 
@@ -135,14 +135,14 @@ func (ps PetSize) UpdatePetSizeByID(repo domain.PetSizeRepository) pet_size.Edit
 		ctx := p.HTTPRequest.Context()
 		petSize, err := repo.Update(ctx, int(p.PetSizeID), p.EditPetSize)
 		if err != nil {
-			ps.logger.Error("Error while updating pet size by id", zap.Error(err))
+			ps.logger.Error(errUpdatePetSize, zap.Error(err))
 			return pet_size.NewEditPetSizeDefault(http.StatusInternalServerError).
-				WithPayload(buildInternalErrorPayload("Error while updating pet size"))
+				WithPayload(buildInternalErrorPayload(errUpdatePetSize, err.Error()))
 		}
 		if petSize == nil {
-			ps.logger.Error("Error while updating pet size by id", zap.Error(err))
+			ps.logger.Error(errUpdatePetSize, zap.Error(err))
 			return pet_size.NewEditPetSizeDefault(http.StatusInternalServerError).
-				WithPayload(buildInternalErrorPayload("Error while updating pet size"))
+				WithPayload(buildInternalErrorPayload(errUpdatePetSize, ""))
 		}
 
 		id := int64(petSize.ID)

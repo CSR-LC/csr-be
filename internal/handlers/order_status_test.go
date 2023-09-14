@@ -1054,7 +1054,8 @@ func (s *OrderStatusTestSuite) TestOrderStatus_AddNewStatusToOrder_ApprovedToPre
 	require.NoError(t, err)
 	require.NotEmpty(t, response)
 	require.NotEmpty(t, response.Message)
-	require.Contains(t, *response.Message, "equipment IDs don't have correspondent status: [1]")
+	require.Contains(t, *response.Message, "can't update status")
+	require.Contains(t, response.Details, "equipment IDs don't have correspondent status: [1]")
 	require.Equal(t, http.StatusInternalServerError, responseRecorder.Code)
 	s.orderStatusRepository.AssertExpectations(t)
 }
