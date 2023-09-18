@@ -94,7 +94,7 @@ func TestIntegration_PhotosUpload(t *testing.T) {
 
 		wantMessage := "Wrong file format. File should be jpg or jpeg"
 		require.NotNil(t, phErr.Payload.Message)
-		assert.Equal(t, wantMessage, phErr.Payload.Message)
+		assert.Equal(t, wantMessage, *phErr.Payload.Message)
 		f.Close()
 	})
 
@@ -106,9 +106,14 @@ func TestIntegration_PhotosUpload(t *testing.T) {
 		_, err = beClient.Photos.CreateNewPhoto(params, auth)
 		require.Error(t, err)
 
-		var phErr *photos.CreateNewPhotoBadRequest
-		require.True(t, errors.As(err, &phErr))
-		assert.Nil(t, phErr.Payload.Message)
+		wantErr := photos.NewCreateNewPhotoBadRequest()
+		msgExp := "multipart: NextPart: EOF"
+		codeExp := int32(http.StatusBadRequest)
+		wantErr.Payload = &models.SwaggerError{
+			Code:    &codeExp,
+			Message: &msgExp,
+		}
+		assert.Equal(t, wantErr, err)
 
 		emptyFile.Close()
 		require.NoError(t, os.Remove("empty.jpeg"))
@@ -125,7 +130,12 @@ func TestIntegration_PhotosUpload(t *testing.T) {
 		require.Error(t, gotErr)
 
 		wantErr := photos.NewCreateNewPhotoDefault(http.StatusUnauthorized)
-		wantErr.Payload = &models.SwaggerError{Message: nil}
+		msgExp := "token is invalid"
+		codeExp := int32(http.StatusUnauthorized)
+		wantErr.Payload = &models.SwaggerError{
+			Code:    &codeExp,
+			Message: &msgExp,
+		}
 		assert.Equal(t, wantErr, gotErr)
 		f.Close()
 	})
@@ -155,7 +165,12 @@ func TestIntegration_DeletePhoto(t *testing.T) {
 		require.Error(t, gotErr)
 
 		wantErr := photos.NewDeletePhotoDefault(http.StatusUnauthorized)
-		wantErr.Payload = &models.SwaggerError{Message: nil}
+		msgExp := "token is invalid"
+		codeExp := int32(http.StatusUnauthorized)
+		wantErr.Payload = &models.SwaggerError{
+			Code:    &codeExp,
+			Message: &msgExp,
+		}
 		assert.Equal(t, wantErr, gotErr)
 	})
 
@@ -164,7 +179,12 @@ func TestIntegration_DeletePhoto(t *testing.T) {
 		require.Error(t, gotErr)
 
 		wantErr := photos.NewDeletePhotoDefault(http.StatusUnprocessableEntity)
-		wantErr.Payload = &models.SwaggerError{Message: nil}
+		msgExp := "equipmentId in path must be of type int64: \"photos\""
+		codeExp := int32(601)
+		wantErr.Payload = &models.SwaggerError{
+			Code:    &codeExp,
+			Message: &msgExp,
+		}
 		assert.Equal(t, wantErr, gotErr)
 	})
 
@@ -173,19 +193,23 @@ func TestIntegration_DeletePhoto(t *testing.T) {
 		require.NoError(t, err)
 
 		got := result.Payload
-		want := "Photo deleted"
+		want := "photo deleted"
 		assert.Equal(t, want, got)
 	})
 
 	t.Run("Delete Photo failed: trying to delete again the same photo, photo not found", func(t *testing.T) {
-		_, err = beClient.Photos.DeletePhoto(photos.NewDeletePhotoParamsWithContext(ctx).WithPhotoID(*res.Payload.Data.ID), auth)
-		require.Error(t, err)
+		_, gotErr := beClient.Photos.DeletePhoto(photos.NewDeletePhotoParamsWithContext(ctx).WithPhotoID(*res.Payload.Data.ID), auth)
+		require.Error(t, gotErr)
 
-		var phErr *photos.DeletePhotoDefault
-		ok := errors.As(err, &phErr)
-		require.True(t, ok)
-
-		assert.Contains(t, phErr.Payload.Message, "photo not found")
+		wantErr := photos.NewDeletePhotoDefault(http.StatusInternalServerError)
+		msgExp := "failed to delete photo"
+		codeExp := int32(http.StatusInternalServerError)
+		wantErr.Payload = &models.SwaggerError{
+			Code:    &codeExp,
+			Message: &msgExp,
+			Details: "ent: photo not found",
+		}
+		assert.Equal(t, wantErr, gotErr)
 	})
 
 	f.Close()
@@ -252,20 +276,29 @@ func TestIntegration_PhotosDownload(t *testing.T) {
 		require.Error(t, gotErr)
 
 		wantErr := photos.NewDownloadPhotoDefault(http.StatusUnauthorized)
-		wantErr.Payload = &models.SwaggerError{Message: nil}
+		msgExp := "token is invalid"
+		codeExp := int32(http.StatusUnauthorized)
+		wantErr.Payload = &models.SwaggerError{
+			Code:    &codeExp,
+			Message: &msgExp,
+		}
 		assert.Equal(t, wantErr, gotErr)
 		f.Close()
 	})
 
 	t.Run("Download Photo failed: photoID not provided", func(t *testing.T) {
-		_, err := beClient.Photos.DownloadPhoto(photos.NewDownloadPhotoParamsWithContext(ctx), auth, io.Discard)
-		require.Error(t, err)
+		_, gotErr := beClient.Photos.DownloadPhoto(photos.NewDownloadPhotoParamsWithContext(ctx), auth, io.Discard)
+		require.Error(t, gotErr)
 
-		var phErr *photos.DownloadPhotoDefault
-		require.True(t, errors.As(err, &phErr))
-
-		assert.Equal(t, http.StatusInternalServerError, phErr.Code())
-		assert.Contains(t, phErr.Payload.Message, "photo not found")
+		wantErr := photos.NewDownloadPhotoDefault(http.StatusInternalServerError)
+		msgExp := "failed to get photo"
+		codeExp := int32(http.StatusInternalServerError)
+		wantErr.Payload = &models.SwaggerError{
+			Code:    &codeExp,
+			Message: &msgExp,
+			Details: "ent: photo not found",
+		}
+		assert.Equal(t, wantErr, gotErr)
 	})
 }
 
@@ -328,7 +361,12 @@ func TestIntegration_PhotoGet(t *testing.T) {
 		require.Error(t, gotErr)
 
 		wantErr := photos.NewGetPhotoDefault(http.StatusUnauthorized)
-		wantErr.Payload = &models.SwaggerError{Message: nil}
+		msgExp := "token is invalid"
+		codeExp := int32(http.StatusUnauthorized)
+		wantErr.Payload = &models.SwaggerError{
+			Code:    &codeExp,
+			Message: &msgExp,
+		}
 		assert.Equal(t, wantErr, gotErr)
 		f.Close()
 	})
@@ -338,7 +376,12 @@ func TestIntegration_PhotoGet(t *testing.T) {
 		require.Error(t, gotErr)
 
 		wantErr := photos.NewGetPhotoDefault(http.StatusUnprocessableEntity)
-		wantErr.Payload = &models.SwaggerError{Message: nil}
+		msgExp := "equipmentId in path must be of type int64: \"photos\""
+		codeExp := int32(601)
+		wantErr.Payload = &models.SwaggerError{
+			Code:    &codeExp,
+			Message: &msgExp,
+		}
 		assert.Equal(t, wantErr, gotErr)
 	})
 }

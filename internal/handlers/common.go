@@ -85,34 +85,34 @@ const (
 	errOrderNotFound       = "no order with such id"
 	errMapOrder            = "can't map order"
 	errQueryOrders         = "can't get orders"
-	errQueryTotalOrders    = "Error while getting total of orders"
+	errQueryTotalOrders    = "error while getting total of orders"
 	errUpdateOrder         = "update order failed"
 	errEquipmentIsNotFree  = "requested equipment is not free"
 	errCheckEqStatusFailed = "error while checking if equipment is available for period"
 
 	// Password Reset
 
-	errLoginRequired       = "Login is required"
-	passwordResetSuccesful = "Check your email for a reset link"
+	errLoginRequired       = "login is required"
+	passwordResetSuccesful = "check your email for a reset link"
 
 	// Pet Kind
 
-	errCreatePetKind   = "Error while creating pet kind"
-	errGetPetKind      = "Error while getting pet kind"
-	errPetKindNotFound = "No pet kind found"
-	errUpdatePetKind   = "Error while updating pet kind"
-	errDeletePetKind   = "Error while deleting pet kind"
-	petKindDeleted     = "Pet kind deleted"
+	errCreatePetKind   = "error while creating pet kind"
+	errGetPetKind      = "error while getting pet kind"
+	errPetKindNotFound = "no pet kind found"
+	errUpdatePetKind   = "error while updating pet kind"
+	errDeletePetKind   = "error while deleting pet kind"
+	petKindDeleted     = "pet kind deleted"
 
 	// Pet Size
 
-	errCreatePetSize        = "Error while creating pet size"
-	errPetSizeAlreadyExists = "Error while creating pet size: the name already exist"
-	errGetPetSize           = "Error while getting pet size"
-	errPetSizeNotFound      = "No pet size found"
-	errUpdatePetSize        = "Error while updating pet size"
-	errDeletePetSize        = "Error while deleting pet size"
-	petSizeDeleted          = "Pet size deleted"
+	errCreatePetSize        = "error while creating pet size"
+	errPetSizeAlreadyExists = "error while creating pet size: the name already exist"
+	errGetPetSize           = "error while getting pet size"
+	errPetSizeNotFound      = "no pet size found"
+	errUpdatePetSize        = "error while updating pet size"
+	errDeletePetSize        = "error while deleting pet size"
+	petSizeDeleted          = "pet size deleted"
 
 	// Photo
 
@@ -121,7 +121,7 @@ const (
 	errWrongFormat = "Wrong file format. File should be jpg or jpeg"
 	errGetPhoto    = "failed to get photo"
 	errDeletePhoto = "failed to delete photo"
-	photoDeleted   = "Photo deleted"
+	photoDeleted   = "photo deleted"
 
 	// Registration Confirm
 
@@ -149,11 +149,11 @@ const (
 
 	// User
 
-	errInvalidLoginOrPass   = "Invalid login or password"
+	errInvalidLoginOrPass   = "invalid login or password"
 	errLoginInUse           = "login is already used"
 	errCreateUser           = "failed to create user"
 	errInvalidToken         = "token invalid"
-	errTokenRefresh         = "Error while refreshing token"
+	errTokenRefresh         = "error while refreshing token"
 	errMapUser              = "map user error"
 	errUserNotFound         = "can't find user by id"
 	errUpdateUser           = "can't update user"
@@ -162,16 +162,16 @@ const (
 	errQueryTotalUsers      = "failed get user total amount"
 	errQueryUsers           = "failed to get user list"
 	errDeleteUser           = "can't delete user"
-	errDeleteUserNotRO      = "User must be readonly for deletion"
-	errUserPasswordChange   = "Error while changing password"
-	errWrongPassword        = "Wrong password"
-	errPasswordsAreSame     = "Old and new passwords are the same"
-	errPasswordPatchEmpty   = "Password patch is empty"
+	errDeleteUserNotRO      = "user must be readonly for deletion"
+	errUserPasswordChange   = "error while changing password"
+	errWrongPassword        = "wrong password"
+	errPasswordsAreSame     = "old and new passwords are the same"
+	errPasswordPatchEmpty   = "password patch is empty"
 	errUpdateROAccess       = "error while updating readonly access"
-	errChangeEmail          = "Error while changing email"
-	errEmailPatchEmpty      = "Email patch is empty"
-	errNewEmailConfirmation = "Can't send link for confirmation new email"
-	logoutSuccessful        = "Successfully logged out"
+	errChangeEmail          = "error while changing email"
+	errEmailPatchEmpty      = "email patch is empty"
+	errNewEmailConfirmation = "can't send link for confirmation new email"
+	logoutSuccessful        = "successfully logged out"
 	roleAssigned            = "role assigned"
 )
 

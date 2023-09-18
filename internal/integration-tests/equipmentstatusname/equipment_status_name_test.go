@@ -40,7 +40,12 @@ func TestIntegration_GetStatuses(t *testing.T) {
 		require.Error(t, gotErr)
 
 		wantErr := eqStatusName.NewListEquipmentStatusNamesDefault(http.StatusUnauthorized)
-		wantErr.Payload = &models.SwaggerError{Message: nil}
+		msgExp := "token is invalid"
+		codeExp := int32(http.StatusUnauthorized)
+		wantErr.Payload = &models.SwaggerError{
+			Code:    &codeExp,
+			Message: &msgExp,
+		}
 		assert.Equal(t, wantErr, gotErr)
 	})
 }
@@ -74,8 +79,13 @@ func TestIntegration_GetStatus(t *testing.T) {
 		require.Error(t, gotErr)
 
 		wantErr := eqStatusName.NewGetEquipmentStatusNameDefault(500)
-		wantMsg := "can't get status"
-		wantErr.Payload.Message = &wantMsg
+		msgExp := "can't get equipment status"
+		codeExp := int32(http.StatusInternalServerError)
+		wantErr.Payload = &models.SwaggerError{
+			Code:    &codeExp,
+			Message: &msgExp,
+			Details: "ent: equipment_status_name not found",
+		}
 		assert.Equal(t, wantErr, gotErr)
 	})
 
@@ -88,7 +98,12 @@ func TestIntegration_GetStatus(t *testing.T) {
 		require.Error(t, gotErr)
 
 		wantErr := eqStatusName.NewGetEquipmentStatusNameDefault(http.StatusUnauthorized)
-		wantErr.Payload = &models.SwaggerError{Message: nil}
+		msgExp := "token is invalid"
+		codeExp := int32(http.StatusUnauthorized)
+		wantErr.Payload = &models.SwaggerError{
+			Code:    &codeExp,
+			Message: &msgExp,
+		}
 		assert.Equal(t, wantErr, gotErr)
 	})
 }
@@ -126,9 +141,14 @@ func TestIntegration_PostStatus(t *testing.T) {
 		_, gotErr := client.EquipmentStatusName.PostEquipmentStatusName(params, utils.AuthInfoFunc(token))
 		require.Error(t, gotErr)
 
-		wantErr := eqStatusName.NewPostEquipmentStatusNameDefault(500)
-		wantMsg := "can't create status"
-		wantErr.Payload.Message = &wantMsg
+		wantErr := eqStatusName.NewPostEquipmentStatusNameDefault(http.StatusInternalServerError)
+		msgExp := "can't create equipment status"
+		codeExp := int32(http.StatusInternalServerError)
+		wantErr.Payload = &models.SwaggerError{
+			Code:    &codeExp,
+			Message: &msgExp,
+			Details: "ent: constraint failed: ERROR: duplicate key value violates unique constraint \"equipment_status_names_name_key\" (SQLSTATE 23505)",
+		}
 		assert.Equal(t, wantErr, gotErr)
 	})
 
@@ -143,7 +163,12 @@ func TestIntegration_PostStatus(t *testing.T) {
 		require.Error(t, gotErr)
 
 		wantErr := eqStatusName.NewPostEquipmentStatusNameDefault(http.StatusUnauthorized)
-		wantErr.Payload = &models.SwaggerError{Message: nil}
+		msgExp := "token is invalid"
+		codeExp := int32(http.StatusUnauthorized)
+		wantErr.Payload = &models.SwaggerError{
+			Code:    &codeExp,
+			Message: &msgExp,
+		}
 		assert.Equal(t, wantErr, gotErr)
 	})
 }
@@ -177,9 +202,14 @@ func TestIntegration_DeleteStatus(t *testing.T) {
 		_, gotErr := client.EquipmentStatusName.DeleteEquipmentStatusName(params, utils.AuthInfoFunc(token))
 		require.Error(t, gotErr)
 
-		wantErr := eqStatusName.NewDeleteEquipmentStatusNameDefault(500)
-		wantMsg := "can't delete status"
-		wantErr.Payload.Message = &wantMsg
+		wantErr := eqStatusName.NewDeleteEquipmentStatusNameDefault(http.StatusInternalServerError)
+		msgExp := "can't delete equipment status"
+		codeExp := int32(http.StatusInternalServerError)
+		wantErr.Payload = &models.SwaggerError{
+			Code:    &codeExp,
+			Message: &msgExp,
+			Details: "ent: equipment_status_name not found",
+		}
 		assert.Equal(t, wantErr, gotErr)
 	})
 
@@ -189,9 +219,14 @@ func TestIntegration_DeleteStatus(t *testing.T) {
 		_, gotErr := client.EquipmentStatusName.DeleteEquipmentStatusName(params, utils.AuthInfoFunc(token))
 		require.Error(t, gotErr)
 
-		wantErr := eqStatusName.NewDeleteEquipmentStatusNameDefault(500)
-		wantMsg := "can't delete status"
-		wantErr.Payload.Message = &wantMsg
+		wantErr := eqStatusName.NewDeleteEquipmentStatusNameDefault(http.StatusInternalServerError)
+		msgExp := "can't delete equipment status"
+		codeExp := int32(http.StatusInternalServerError)
+		wantErr.Payload = &models.SwaggerError{
+			Code:    &codeExp,
+			Message: &msgExp,
+			Details: "ent: equipment_status_name not found",
+		}
 		assert.Equal(t, wantErr, gotErr)
 	})
 
@@ -204,7 +239,12 @@ func TestIntegration_DeleteStatus(t *testing.T) {
 		require.Error(t, gotErr)
 
 		wantErr := eqStatusName.NewDeleteEquipmentStatusNameDefault(http.StatusUnauthorized)
-		wantErr.Payload = &models.SwaggerError{Message: nil}
+		msgExp := "token is invalid"
+		codeExp := int32(http.StatusUnauthorized)
+		wantErr.Payload = &models.SwaggerError{
+			Code:    &codeExp,
+			Message: &msgExp,
+		}
 		assert.Equal(t, wantErr, gotErr)
 	})
 }

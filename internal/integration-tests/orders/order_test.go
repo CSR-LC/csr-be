@@ -91,7 +91,12 @@ func TestIntegration_CreateOrder(t *testing.T) {
 		require.Error(t, gotErr)
 
 		wantErr := orders.NewCreateOrderDefault(http.StatusUnauthorized)
-		wantErr.Payload = &models.SwaggerError{Message: nil}
+		msgExp := "token is invalid"
+		codeExp := int32(http.StatusUnauthorized)
+		wantErr.Payload = &models.SwaggerError{
+			Code:    &codeExp,
+			Message: &msgExp,
+		}
 		assert.Equal(t, wantErr, gotErr)
 	})
 
@@ -111,8 +116,13 @@ func TestIntegration_CreateOrder(t *testing.T) {
 		require.Error(t, gotErr)
 
 		wantErr := orders.NewCreateOrderDefault(http.StatusInternalServerError)
-		wantMsg := "start date should be before end date"
-		wantErr.Payload.Message = &wantMsg
+		msgExp := "can't map order"
+		codeExp := int32(http.StatusInternalServerError)
+		wantErr.Payload = &models.SwaggerError{
+			Code:    &codeExp,
+			Message: &msgExp,
+			Details: "start date should be before end date",
+		}
 		assert.Equal(t, wantErr, gotErr)
 	})
 
@@ -132,8 +142,13 @@ func TestIntegration_CreateOrder(t *testing.T) {
 		require.Error(t, gotErr)
 
 		wantErr := orders.NewCreateOrderDefault(http.StatusInternalServerError)
-		wantMsg := "small rent period"
-		wantErr.Payload.Message = &wantMsg
+		msgExp := "can't map order"
+		codeExp := int32(http.StatusInternalServerError)
+		wantErr.Payload = &models.SwaggerError{
+			Code:    &codeExp,
+			Message: &msgExp,
+			Details: "small rent period",
+		}
 		assert.Equal(t, wantErr, gotErr)
 	})
 
@@ -153,8 +168,13 @@ func TestIntegration_CreateOrder(t *testing.T) {
 		require.Error(t, gotErr)
 
 		wantErr := orders.NewCreateOrderDefault(http.StatusInternalServerError)
-		wantMsg := "too big reservation period"
-		wantErr.Payload.Message = &wantMsg
+		msgExp := "can't map order"
+		codeExp := int32(http.StatusInternalServerError)
+		wantErr.Payload = &models.SwaggerError{
+			Code:    &codeExp,
+			Message: &msgExp,
+			Details: "too big reservation period",
+		}
 		assert.Equal(t, wantErr, gotErr)
 	})
 
@@ -172,7 +192,12 @@ func TestIntegration_CreateOrder(t *testing.T) {
 		require.Error(t, gotErr)
 
 		wantErr := orders.NewCreateOrderDefault(http.StatusUnprocessableEntity)
-		wantErr.Payload = &models.SwaggerError{Message: nil}
+		msgExp := "equipment_id in body is required"
+		codeExp := int32(602)
+		wantErr.Payload = &models.SwaggerError{
+			Code:    &codeExp,
+			Message: &msgExp,
+		}
 		assert.Equal(t, wantErr, gotErr)
 	})
 
@@ -309,7 +334,12 @@ func TestIntegration_GetUserOrders(t *testing.T) {
 		require.Error(t, gotErr)
 
 		wantErr := orders.NewGetUserOrdersDefault(http.StatusUnauthorized)
-		wantErr.Payload = &models.SwaggerError{Message: nil}
+		msgExp := "token is invalid"
+		codeExp := int32(http.StatusUnauthorized)
+		wantErr.Payload = &models.SwaggerError{
+			Code:    &codeExp,
+			Message: &msgExp,
+		}
 		assert.Equal(t, wantErr, gotErr)
 	})
 
@@ -329,7 +359,12 @@ func TestIntegration_GetUserOrders(t *testing.T) {
 		require.Error(t, gotErr)
 
 		wantErr := orders.NewGetUserOrdersDefault(http.StatusUnprocessableEntity)
-		wantErr.Payload = &models.SwaggerError{Message: nil}
+		msgExp := "order_column in query should be one of [id rent_start]"
+		codeExp := int32(606)
+		wantErr.Payload = &models.SwaggerError{
+			Code:    &codeExp,
+			Message: &msgExp,
+		}
 		assert.Equal(t, wantErr, gotErr)
 	})
 

@@ -39,8 +39,11 @@ func TestIntegration_GetActiveAreas(t *testing.T) {
 		require.Error(t, err)
 
 		errExp := active_areas.NewGetAllActiveAreasDefault(http.StatusUnauthorized)
+		msgExp := "unauthenticated for invalid credentials"
+		codeExp := int32(http.StatusUnauthorized)
 		errExp.Payload = &models.SwaggerError{
-			Message: nil,
+			Code:    &codeExp,
+			Message: &msgExp,
 		}
 		assert.Equal(t, errExp, err)
 	})
@@ -53,8 +56,11 @@ func TestIntegration_GetActiveAreas(t *testing.T) {
 		require.Error(t, err)
 
 		errExp := active_areas.NewGetAllActiveAreasDefault(http.StatusUnauthorized)
+		msgExp := "token is invalid"
+		codeExp := int32(http.StatusUnauthorized)
 		errExp.Payload = &models.SwaggerError{
-			Message: nil,
+			Code:    &codeExp,
+			Message: &msgExp,
 		}
 		assert.Equal(t, errExp, err)
 	})

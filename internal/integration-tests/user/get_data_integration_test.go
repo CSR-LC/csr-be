@@ -55,8 +55,11 @@ func TestIntegration_GetCurrentUser(t *testing.T) {
 		_, err = client.Users.GetCurrentUser(params, authInfo)
 
 		errExp := users.NewGetCurrentUserDefault(http.StatusUnauthorized)
+		msgExp := "token is invalid"
+		codeExp := int32(http.StatusUnauthorized)
 		errExp.Payload = &models.SwaggerError{
-			Message: nil,
+			Code:    &codeExp,
+			Message: &msgExp,
 		}
 		assert.Equal(t, errExp, err)
 	})
@@ -69,8 +72,11 @@ func TestIntegration_GetCurrentUser(t *testing.T) {
 		assert.Error(t, err)
 
 		errExp := users.NewGetCurrentUserDefault(401)
+		msgExp := "unauthenticated for invalid credentials"
+		codeExp := int32(http.StatusUnauthorized)
 		errExp.Payload = &models.SwaggerError{
-			Message: nil,
+			Code:    &codeExp,
+			Message: &msgExp,
 		}
 		assert.Equal(t, errExp, err)
 	})
@@ -104,8 +110,11 @@ func TestIntegration_GetAllUsers(t *testing.T) {
 		assert.Error(t, err)
 
 		errExp := users.NewGetAllUsersDefault(401)
+		msgExp := "unauthenticated for invalid credentials"
+		codeExp := int32(http.StatusUnauthorized)
 		errExp.Payload = &models.SwaggerError{
-			Message: nil,
+			Code:    &codeExp,
+			Message: &msgExp,
 		}
 		assert.Equal(t, errExp, err)
 	})
@@ -118,8 +127,11 @@ func TestIntegration_GetAllUsers(t *testing.T) {
 		_, err := client.Users.GetAllUsers(params, authInfo)
 
 		errExp := users.NewGetAllUsersDefault(http.StatusUnauthorized)
+		msgExp := "token is invalid"
+		codeExp := int32(http.StatusUnauthorized)
 		errExp.Payload = &models.SwaggerError{
-			Message: nil,
+			Code:    &codeExp,
+			Message: &msgExp,
 		}
 		assert.Equal(t, errExp, err)
 	})

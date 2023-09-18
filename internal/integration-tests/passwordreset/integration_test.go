@@ -36,7 +36,7 @@ func TestIntegration_PasswordReset(t *testing.T) {
 		require.NoError(t, err)
 
 		want := &password_reset.SendLinkByLoginOK{
-			Payload: models.PasswordResetResponse("Check your email for a reset link"),
+			Payload: models.PasswordResetResponse("check your email for a reset link"),
 		}
 		assert.Equal(t, want, got)
 	})
@@ -51,8 +51,12 @@ func TestIntegration_PasswordReset(t *testing.T) {
 		require.Error(t, err)
 
 		errExp := password_reset.NewSendLinkByLoginDefault(http.StatusBadRequest)
-		wantMsg := "Login is required"
-		errExp.Payload.Message = &wantMsg
+		msgExp := "login is required"
+		codeExp := int32(http.StatusBadRequest)
+		errExp.Payload = &models.SwaggerError{
+			Code:    &codeExp,
+			Message: &msgExp,
+		}
 		assert.Equal(t, errExp, err)
 	})
 
@@ -66,7 +70,7 @@ func TestIntegration_PasswordReset(t *testing.T) {
 		require.NoError(t, err)
 
 		want := &password_reset.SendLinkByLoginOK{
-			Payload: models.PasswordResetResponse("Check your email for a reset link"),
+			Payload: models.PasswordResetResponse("check your email for a reset link"),
 		}
 		assert.Equal(t, want, got)
 	})

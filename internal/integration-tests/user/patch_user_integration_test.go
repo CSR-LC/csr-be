@@ -78,8 +78,11 @@ func TestIntegration_PatchUpdate(t *testing.T) {
 		assert.Error(t, err)
 
 		errExp := users.NewPatchUserDefault(http.StatusUnauthorized)
+		msgExp := "unauthenticated for invalid credentials"
+		codeExp := int32(http.StatusUnauthorized)
 		errExp.Payload = &models.SwaggerError{
-			Message: nil,
+			Code:    &codeExp,
+			Message: &msgExp,
 		}
 		assert.Equal(t, errExp, err)
 	})
@@ -95,8 +98,11 @@ func TestIntegration_PatchUpdate(t *testing.T) {
 		assert.Error(t, err)
 
 		errExp := users.NewPatchUserDefault(http.StatusUnauthorized)
+		msgExp := "token is invalid"
+		codeExp := int32(http.StatusUnauthorized)
 		errExp.Payload = &models.SwaggerError{
-			Message: nil,
+			Code:    &codeExp,
+			Message: &msgExp,
 		}
 		assert.Equal(t, errExp, err)
 	})
@@ -108,8 +114,11 @@ func TestIntegration_PatchUpdate(t *testing.T) {
 		assert.Error(t, err)
 
 		errExp := users.NewPatchUserDefault(http.StatusUnprocessableEntity)
+		msgExp := "userPatch in body is required"
+		codeExp := int32(602)
 		errExp.Payload = &models.SwaggerError{
-			Message: nil,
+			Code:    &codeExp,
+			Message: &msgExp,
 		}
 		assert.Equal(t, errExp, err)
 	})

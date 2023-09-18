@@ -61,7 +61,12 @@ func TestIntegration_GetAllCategories(t *testing.T) {
 		require.Error(t, gotErr)
 
 		wantErr := categories.NewGetAllCategoriesDefault(http.StatusUnprocessableEntity)
-		wantErr.Payload = &models.SwaggerError{Message: nil}
+		msgExp := "order_column in query should be one of [id name]"
+		codeExp := int32(606)
+		wantErr.Payload = &models.SwaggerError{
+			Code:    &codeExp,
+			Message: &msgExp,
+		}
 		assert.Equal(t, wantErr, gotErr)
 	})
 }
@@ -88,7 +93,12 @@ func TestIntegration_CreateCategory(t *testing.T) {
 		require.Error(t, gotErr)
 
 		wantErr := categories.NewCreateNewCategoryDefault(http.StatusUnauthorized)
-		wantErr.Payload = &models.SwaggerError{Message: nil}
+		msgExp := "token is invalid"
+		codeExp := int32(http.StatusUnauthorized)
+		wantErr.Payload = &models.SwaggerError{
+			Code:    &codeExp,
+			Message: &msgExp,
+		}
 		assert.Equal(t, wantErr, gotErr)
 	})
 
@@ -163,8 +173,13 @@ func TestIntegration_GetCategoryByID(t *testing.T) {
 		require.Error(t, gotErr)
 
 		wantErr := categories.NewGetCategoryByIDDefault(http.StatusInternalServerError)
-		wantMsg := "failed to get category"
-		wantErr.Payload.Message = &wantMsg
+		msgExp := "failed to get category"
+		codeExp := int32(http.StatusInternalServerError)
+		wantErr.Payload = &models.SwaggerError{
+			Code:    &codeExp,
+			Message: &msgExp,
+			Details: "ent: category not found",
+		}
 		assert.Equal(t, wantErr, gotErr)
 	})
 
@@ -174,7 +189,12 @@ func TestIntegration_GetCategoryByID(t *testing.T) {
 		require.Error(t, gotErr)
 
 		wantErr := categories.NewGetCategoryByIDDefault(http.StatusUnauthorized)
-		wantErr.Payload = &models.SwaggerError{Message: nil}
+		msgExp := "token is invalid"
+		codeExp := int32(http.StatusUnauthorized)
+		wantErr.Payload = &models.SwaggerError{
+			Code:    &codeExp,
+			Message: &msgExp,
+		}
 		assert.Equal(t, wantErr, gotErr)
 	})
 }
@@ -256,8 +276,13 @@ func TestIntegration_EditCategory(t *testing.T) {
 		require.Error(t, gotErr)
 
 		wantErr := categories.NewUpdateCategoryDefault(http.StatusInternalServerError)
-		wantMsg := "cant update category"
-		wantErr.Payload.Message = &wantMsg
+		msgExp := "cant update category"
+		codeExp := int32(http.StatusInternalServerError)
+		wantErr.Payload = &models.SwaggerError{
+			Code:    &codeExp,
+			Message: &msgExp,
+			Details: "ent: category not found",
+		}
 		assert.Equal(t, wantErr, gotErr)
 	})
 
@@ -277,7 +302,12 @@ func TestIntegration_EditCategory(t *testing.T) {
 		require.Error(t, gotErr)
 
 		wantErr := categories.NewUpdateCategoryDefault(http.StatusUnauthorized)
-		wantErr.Payload = &models.SwaggerError{Message: nil}
+		msgExp := "token is invalid"
+		codeExp := int32(http.StatusUnauthorized)
+		wantErr.Payload = &models.SwaggerError{
+			Code:    &codeExp,
+			Message: &msgExp,
+		}
 		assert.Equal(t, wantErr, gotErr)
 	})
 
@@ -287,7 +317,12 @@ func TestIntegration_EditCategory(t *testing.T) {
 		require.Error(t, gotErr)
 
 		wantErr := categories.NewUpdateCategoryDefault(http.StatusUnprocessableEntity)
-		wantErr.Payload = &models.SwaggerError{Message: nil}
+		msgExp := "updateCategory in body is required"
+		codeExp := int32(602)
+		wantErr.Payload = &models.SwaggerError{
+			Code:    &codeExp,
+			Message: &msgExp,
+		}
 		assert.Equal(t, wantErr, gotErr)
 	})
 }
@@ -305,8 +340,13 @@ func TestIntegration_DeleteCategory(t *testing.T) {
 		require.Error(t, gotErr)
 
 		wantErr := categories.NewDeleteCategoryDefault(http.StatusInternalServerError)
-		wantMsg := "delete category failed"
-		wantErr.Payload.Message = &wantMsg
+		msgExp := "delete category failed"
+		codeExp := int32(http.StatusInternalServerError)
+		wantErr.Payload = &models.SwaggerError{
+			Code:    &codeExp,
+			Message: &msgExp,
+			Details: "ent: category not found",
+		}
 		assert.Equal(t, wantErr, gotErr)
 
 		_, gotErr = client.Categories.DeleteCategory(categories.NewDeleteCategoryParamsWithContext(ctx).WithCategoryID(-33), auth)
@@ -321,7 +361,12 @@ func TestIntegration_DeleteCategory(t *testing.T) {
 		require.Error(t, gotErr)
 
 		wantErr := categories.NewDeleteCategoryDefault(http.StatusUnauthorized)
-		wantErr.Payload = &models.SwaggerError{Message: nil}
+		msgExp := "token is invalid"
+		codeExp := int32(http.StatusUnauthorized)
+		wantErr.Payload = &models.SwaggerError{
+			Code:    &codeExp,
+			Message: &msgExp,
+		}
 		assert.Equal(t, wantErr, gotErr)
 	})
 

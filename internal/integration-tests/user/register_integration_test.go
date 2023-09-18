@@ -57,9 +57,13 @@ func TestIntegration_RegisterUser(t *testing.T) {
 		r, err := c.Users.PostUser(params)
 		require.Error(t, err, r)
 
-		errExp := users.NewPostUserDefault(417)
-		wantMsg := "login is already used"
-		errExp.Payload.Message = &wantMsg
+		errExp := users.NewPostUserDefault(http.StatusExpectationFailed)
+		msgExp := "login is already used"
+		codeExp := int32(http.StatusExpectationFailed)
+		errExp.Payload = &models.SwaggerError{
+			Code:    &codeExp,
+			Message: &msgExp,
+		}
 		assert.Equal(t, errExp, err)
 	})
 
@@ -115,8 +119,11 @@ func TestIntegration_RegisterUser(t *testing.T) {
 		require.Error(t, err)
 
 		errExp := users.NewPostUserDefault(422)
+		msgExp := "type in body should be one of [person organization]"
+		codeExp := int32(606)
 		errExp.Payload = &models.SwaggerError{
-			Message: nil,
+			Code:    &codeExp,
+			Message: &msgExp,
 		}
 
 		assert.Equal(t, errExp, err)
@@ -131,8 +138,11 @@ func TestIntegration_RegisterUser(t *testing.T) {
 		require.Error(t, err)
 
 		errExp := users.NewPostUserDefault(422)
+		msgExp := "login in body should be at least 3 chars long"
+		codeExp := int32(604)
 		errExp.Payload = &models.SwaggerError{
-			Message: nil,
+			Code:    &codeExp,
+			Message: &msgExp,
 		}
 
 		assert.Equal(t, errExp, err)
@@ -147,8 +157,11 @@ func TestIntegration_RegisterUser(t *testing.T) {
 		require.Error(t, err)
 
 		errExp := users.NewPostUserDefault(422)
+		msgExp := "login in body should be at least 3 chars long"
+		codeExp := int32(604)
 		errExp.Payload = &models.SwaggerError{
-			Message: nil,
+			Code:    &codeExp,
+			Message: &msgExp,
 		}
 
 		assert.Equal(t, errExp, err)
@@ -163,8 +176,11 @@ func TestIntegration_RegisterUser(t *testing.T) {
 		require.Error(t, err)
 
 		errExp := users.NewPostUserDefault(422)
+		msgExp := "login in body should be at least 3 chars long"
+		codeExp := int32(604)
 		errExp.Payload = &models.SwaggerError{
-			Message: nil,
+			Code:    &codeExp,
+			Message: &msgExp,
 		}
 
 		assert.Equal(t, errExp, err)
@@ -178,10 +194,12 @@ func TestIntegration_RegisterUser(t *testing.T) {
 		require.Error(t, err)
 
 		errExp := users.NewPostUserDefault(422)
+		msgExp := "login in body should be at least 3 chars long"
+		codeExp := int32(604)
 		errExp.Payload = &models.SwaggerError{
-			Message: nil,
+			Code:    &codeExp,
+			Message: &msgExp,
 		}
-
 		assert.Equal(t, errExp, err)
 	})
 
@@ -194,8 +212,11 @@ func TestIntegration_RegisterUser(t *testing.T) {
 		require.Error(t, err)
 
 		errExp := users.NewPostUserDefault(422)
+		msgExp := "login in body should be at least 3 chars long"
+		codeExp := int32(604)
 		errExp.Payload = &models.SwaggerError{
-			Message: nil,
+			Code:    &codeExp,
+			Message: &msgExp,
 		}
 
 		assert.Equal(t, errExp, err)
@@ -210,9 +231,12 @@ func TestIntegration_RegisterUser(t *testing.T) {
 		require.Error(t, err)
 
 		errExp := users.NewPostUserDefault(422)
+		msgExp := "login in body should be at least 3 chars long"
+		codeExp := int32(604)
 		errExp.Payload = &models.SwaggerError{
-			Message: nil,
-		}
+			Code:    &codeExp,
+			Message: &msgExp,
+		} // FIX THIS VALDIATIONS
 
 		assert.Equal(t, errExp, err)
 	})

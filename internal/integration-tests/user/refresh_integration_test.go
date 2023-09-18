@@ -2,6 +2,7 @@ package user
 
 import (
 	"context"
+	"net/http"
 	"testing"
 	"time"
 
@@ -79,8 +80,12 @@ func TestIntegration_Refresh(t *testing.T) {
 		require.Error(t, gotErr)
 
 		wantErr := users.NewRefreshDefault(400)
-		wantMsg := "token is invalid"
-		wantErr.Payload.Message = &wantMsg
+		msgExp := "token invalid"
+		codeExp := int32(http.StatusBadRequest)
+		wantErr.Payload = &models.SwaggerError{
+			Code:    &codeExp,
+			Message: &msgExp,
+		}
 		assert.Equal(t, wantErr, gotErr)
 	})
 }
