@@ -3,6 +3,7 @@ package repositories
 import (
 	"context"
 	"errors"
+	"fmt"
 	"time"
 
 	"entgo.io/ent/dialect/sql"
@@ -10,6 +11,7 @@ import (
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/ent"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/ent/category"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/ent/equipment"
+	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/ent/equipmentstatus"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/ent/equipmentstatusname"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/ent/order"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/ent/orderstatusname"
@@ -585,7 +587,15 @@ func (r *equipmentRepository) UnblockEquipment(ctx context.Context, id int) erro
 		return err
 	}
 
-	// Get EquipmentStatusName form DB
+	// Get EquipmentStatusNames form DB
+	eqStatusNotAvailable, err := tx.EquipmentStatusName.
+		Query().
+		Where(equipmentstatusname.Name(domain.EquipmentStatusNotAvailable)).
+		Only(ctx)
+	if err != nil {
+		return err
+	}
+
 	eqStatusAvailable, err := tx.EquipmentStatusName.
 		Query().
 		Where(equipmentstatusname.Name(domain.EquipmentStatusAvailable)).
@@ -600,18 +610,30 @@ func (r *equipmentRepository) UnblockEquipment(ctx context.Context, id int) erro
 		return err
 	}
 
-	// Create a new EquipmentStatus and set the current time, Equipment and EquipmentStatusName
-	_, err = tx.EquipmentStatus.Create().
-		SetCreatedAt(time.Now()).
-		SetEndDate(time.Now()).
-		SetStartDate(time.Now()).
-		SetEquipments(eqToUnblock).
+	// Get last EqupmentStatus for Equipment according to some criteria
+	equipmentStatus, err := tx.EquipmentStatus.
+		Query().
+		Where(equipmentstatus.HasEquipmentsWith(equipment.ID(eqToUnblock.ID))).
+		Where(equipmentstatus.HasEquipmentStatusNameWith(equipmentstatusname.ID(eqStatusNotAvailable.ID))).
+		Order(ent.Asc(equipmentstatus.FieldEndDate)).
+		First(ctx)
+	if err != nil {
+		return err
+	}
+
+	if equipmentStatus == nil {
+		return fmt.Errorf("Blocked equioment status for equipment with ID=%d does not exist", eqToUnblock.ID)
+	}
+
+	_, err = equipmentStatus.
+		Update().
 		SetEquipmentStatusName(eqStatusAvailable).
-		SetUpdatedAt(time.Now()).
+		SetEndDate(equipmentStatus.EndDate.AddDate(0, 0, -1)).
 		Save(ctx)
 	if err != nil {
 		return err
 	}
+
 	return err
 }
 
