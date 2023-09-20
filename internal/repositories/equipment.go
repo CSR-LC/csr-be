@@ -628,7 +628,7 @@ func (r *equipmentRepository) UnblockEquipment(ctx context.Context, id int) erro
 	_, err = equipmentStatus.
 		Update().
 		SetEquipmentStatusName(eqStatusAvailable).
-		SetEndDate(equipmentStatus.EndDate.AddDate(0, 0, -1)).
+		SetEndDate(truncateHours(&equipmentStatus.EndDate)).
 		Save(ctx)
 	if err != nil {
 		return err
@@ -646,4 +646,9 @@ func checkDates(start *time.Time, end *time.Time) (*time.Time, *time.Time, error
 	}
 
 	return &startDate, &endDate, nil
+}
+
+func truncateHours(date *time.Time) time.Time {
+	hours := date.Hour() + 1
+	return date.Add(time.Duration(-hours) * time.Hour)
 }
