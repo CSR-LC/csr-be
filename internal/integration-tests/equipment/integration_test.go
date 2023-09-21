@@ -730,8 +730,12 @@ func TestIntegration_UnblockEquipment(t *testing.T) {
 
 		eqStatusIDUnblocked, err := getEquipmentStatus(ctx, client, *eq.Payload.ID, auth)
 		require.NoError(t, err)
-
 		require.NotEqual(t, eqStatusIDUnblocked, eqStatusIDBlocked)
+
+		orStartDate, orEndDate := time.Now(), time.Now().AddDate(0, 0, 2)
+		firstOrderID, err := createOrder(ctx, client, auth, eq.Payload.ID, orStartDate, orEndDate)
+		require.NoError(t, err)
+		require.NotNil(t, firstOrderID)
 	})
 
 	t.Run("Unblock Equipment is failed, equipment not found", func(t *testing.T) {

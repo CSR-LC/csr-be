@@ -3,7 +3,6 @@ package repositories
 import (
 	"context"
 	"errors"
-	"fmt"
 	"time"
 
 	"entgo.io/ent/dialect/sql"
@@ -621,19 +620,17 @@ func (r *equipmentRepository) UnblockEquipment(ctx context.Context, id int) erro
 		return err
 	}
 
-	if equipmentStatus == nil {
-		return fmt.Errorf("Blocked equioment status for equipment with ID=%d does not exist", eqToUnblock.ID)
-	}
+	if equipmentStatus != nil {
+		_, err = equipmentStatus.
+			Update().
+			SetEquipmentStatusName(eqStatusAvailable).
+			SetEndDate(truncateHours(&equipmentStatus.EndDate)).
+			Save(ctx)
+		if err != nil {
+			return err
+		}
 
-	_, err = equipmentStatus.
-		Update().
-		SetEquipmentStatusName(eqStatusAvailable).
-		SetEndDate(truncateHours(&equipmentStatus.EndDate)).
-		Save(ctx)
-	if err != nil {
-		return err
 	}
-
 	return err
 }
 
@@ -648,7 +645,9 @@ func checkDates(start *time.Time, end *time.Time) (*time.Time, *time.Time, error
 	return &startDate, &endDate, nil
 }
 
+// Set EquipmentStatus EndDate back in time to give access for the unblocked equipment again
 func truncateHours(date *time.Time) time.Time {
-	hours := date.Hour() + 1
+	extraHour := 1
+	hours := date.Hour() + extraHour
 	return date.Add(time.Duration(-hours) * time.Hour)
 }
