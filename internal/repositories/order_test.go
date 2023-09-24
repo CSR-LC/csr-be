@@ -93,7 +93,14 @@ func (s *OrderSuite) SetupTest() {
 			Name:        "equipment 1",
 			Title:       "equipment1",
 			TechIssue:   false,
-			Description: "test equipment",
+			Description: "test equipment 1",
+		},
+		{
+			TermsOfUse:  "http://localhost",
+			Name:        "equipment 2",
+			Title:       "equipment2",
+			TechIssue:   false,
+			Description: "test equipment 2",
 		},
 	}
 	_, err = s.client.Equipment.Delete().Exec(s.ctx)
@@ -176,6 +183,8 @@ func (s *OrderSuite) SetupTest() {
 			SetRentEnd(order.RentEnd).
 			SetUsers(order.Edges.Users).
 			SetCurrentStatus(statusName).
+			AddEquipments(s.equipments[i%2]).
+			AddEquipmentIDs(s.equipments[i%2].ID).
 			Save(s.ctx)
 		if err != nil {
 			t.Fatal(err)
@@ -468,7 +477,7 @@ func (s *OrderSuite) TestOrderRepository_Create_isFirstFieldForPreviousCreatedOr
 			OrderColumn: order.FieldID,
 		},
 	}
-	orderList, err := s.orderRepository.List(ctx, s.user.ID, filter)
+	orderList, err := s.orderRepository.List(ctx, &s.user.ID, filter)
 	require.NoError(t, err)
 
 	for _, order := range orderList {
@@ -485,7 +494,13 @@ func (s *OrderSuite) TestOrderRepository_OrdersTotal() {
 	tx, err := s.client.Tx(ctx)
 	require.NoError(t, err)
 	ctx = context.WithValue(ctx, middlewares.TxContextKey, tx)
-	totalOrders, err := s.orderRepository.OrdersTotal(ctx, s.user.ID)
+	totalOrders, err := s.orderRepository.OrdersTotal(ctx, &s.user.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	require.Equal(t, len(s.orders), totalOrders)
+	// Check orders for all users (should be the same amount because of only user)
+	totalOrders, err = s.orderRepository.OrdersTotal(ctx, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -508,7 +523,7 @@ func (s *OrderSuite) TestOrderRepository_List_EmptyOrderBy() {
 	require.NoError(t, err)
 	ctx = context.WithValue(ctx, middlewares.TxContextKey, tx)
 
-	orders, err := s.orderRepository.List(ctx, s.user.ID, filter)
+	orders, err := s.orderRepository.List(ctx, &s.user.ID, filter)
 	require.Error(t, err)
 	require.NoError(t, tx.Rollback())
 	require.Nil(t, orders)
@@ -528,7 +543,7 @@ func (s *OrderSuite) TestOrderRepository_List_WrongOrderColumn() {
 	tx, err := s.client.Tx(ctx)
 	require.NoError(t, err)
 	ctx = context.WithValue(ctx, middlewares.TxContextKey, tx)
-	orders, err := s.orderRepository.List(ctx, s.user.ID, filter)
+	orders, err := s.orderRepository.List(ctx, &s.user.ID, filter)
 	require.Error(t, err)
 	require.NoError(t, tx.Rollback())
 	require.Nil(t, orders)
@@ -548,7 +563,7 @@ func (s *OrderSuite) TestOrderRepository_List_OrderByIDDesc() {
 	tx, err := s.client.Tx(ctx)
 	require.NoError(t, err)
 	ctx = context.WithValue(ctx, middlewares.TxContextKey, tx)
-	orders, err := s.orderRepository.List(ctx, s.user.ID, filter)
+	orders, err := s.orderRepository.List(ctx, &s.user.ID, filter)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -576,7 +591,7 @@ func (s *OrderSuite) TestOrderRepository_List_OrderByRentStartDesc() {
 	tx, err := s.client.Tx(ctx)
 	require.NoError(t, err)
 	ctx = context.WithValue(ctx, middlewares.TxContextKey, tx)
-	orders, err := s.orderRepository.List(ctx, s.user.ID, filter)
+	orders, err := s.orderRepository.List(ctx, &s.user.ID, filter)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -604,7 +619,7 @@ func (s *OrderSuite) TestOrderRepository_List_OrderByIDAsc() {
 	tx, err := s.client.Tx(ctx)
 	require.NoError(t, err)
 	ctx = context.WithValue(ctx, middlewares.TxContextKey, tx)
-	orders, err := s.orderRepository.List(ctx, s.user.ID, filter)
+	orders, err := s.orderRepository.List(ctx, &s.user.ID, filter)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -632,7 +647,7 @@ func (s *OrderSuite) TestOrderRepository_List_OrderByRentStartAsc() {
 	tx, err := s.client.Tx(ctx)
 	require.NoError(t, err)
 	ctx = context.WithValue(ctx, middlewares.TxContextKey, tx)
-	orders, err := s.orderRepository.List(ctx, s.user.ID, filter)
+	orders, err := s.orderRepository.List(ctx, &s.user.ID, filter)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -660,7 +675,7 @@ func (s *OrderSuite) TestOrderRepository_List_Limit() {
 	tx, err := s.client.Tx(ctx)
 	require.NoError(t, err)
 	ctx = context.WithValue(ctx, middlewares.TxContextKey, tx)
-	orders, err := s.orderRepository.List(ctx, s.user.ID, filter)
+	orders, err := s.orderRepository.List(ctx, &s.user.ID, filter)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -683,7 +698,7 @@ func (s *OrderSuite) TestOrderRepository_List_Offset() {
 	tx, err := s.client.Tx(ctx)
 	require.NoError(t, err)
 	ctx = context.WithValue(ctx, middlewares.TxContextKey, tx)
-	orders, err := s.orderRepository.List(ctx, s.user.ID, filter)
+	orders, err := s.orderRepository.List(ctx, &s.user.ID, filter)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -761,7 +776,7 @@ func (s *OrderSuite) TestOrderRepository_List_StatusFilter() {
 			tx, err := s.client.Tx(ctx)
 			require.NoError(t, err)
 			ctx = context.WithValue(ctx, middlewares.TxContextKey, tx)
-			orders, err := s.orderRepository.List(ctx, s.user.ID, tc.fl)
+			orders, err := s.orderRepository.List(ctx, &s.user.ID, tc.fl)
 			if tc.expectedErr != "" {
 				require.EqualError(t, err, tc.expectedErr)
 				require.NoError(t, tx.Rollback())
@@ -774,6 +789,57 @@ func (s *OrderSuite) TestOrderRepository_List_StatusFilter() {
 				}
 				require.Equal(t, tc.expectedIDs, ids)
 			}
+		})
+	}
+}
+
+func (s *OrderSuite) TestOrderRepository_List_EquipmentFilter() {
+	t := s.T()
+	filter := domain.Filter{
+		Limit:       10,
+		Offset:      0,
+		OrderBy:     utils.AscOrder,
+		OrderColumn: order.FieldID,
+	}
+	tests := map[string]struct {
+		fl          domain.OrderFilter
+		expectedIDs []int // in AscOrder
+	}{
+		"all": {
+			fl: domain.OrderFilter{
+				Filter: filter,
+			},
+			expectedIDs: []int{s.orders[0].ID, s.orders[1].ID, s.orders[2].ID, s.orders[3].ID},
+		},
+		"only Equipment ID 1": {
+			fl: domain.OrderFilter{
+				Filter:      filter,
+				EquipmentID: &s.equipments[0].ID,
+			},
+			expectedIDs: []int{s.orders[0].ID, s.orders[2].ID},
+		},
+		"only Equipment ID 2": {
+			fl: domain.OrderFilter{
+				Filter:      filter,
+				EquipmentID: &s.equipments[1].ID,
+			},
+			expectedIDs: []int{s.orders[1].ID, s.orders[3].ID},
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			ctx := s.ctx
+			tx, err := s.client.Tx(ctx)
+			require.NoError(t, err)
+			ctx = context.WithValue(ctx, middlewares.TxContextKey, tx)
+			orders, err := s.orderRepository.List(ctx, &s.user.ID, tc.fl)
+			require.NoError(t, err)
+			ids := make([]int, 0, len(orders))
+			for _, o := range orders {
+				ids = append(ids, o.ID)
+			}
+			require.Equal(t, tc.expectedIDs, ids)
+			require.NoError(t, tx.Rollback())
 		})
 	}
 }

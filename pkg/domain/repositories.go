@@ -25,7 +25,8 @@ type CategoryFilter struct {
 
 type OrderFilter struct {
 	Filter
-	Status *string
+	Status      *string
+	EquipmentID *int
 }
 
 type CategoryRepository interface {
@@ -50,6 +51,7 @@ type EquipmentRepository interface {
 	EquipmentsByFilterTotal(ctx context.Context, filter models.EquipmentFilter) (int, error)
 	ArchiveEquipment(ctx context.Context, id int) error
 	BlockEquipment(ctx context.Context, id int, startDate, endDate time.Time, userID int) error
+	UnblockEquipment(ctx context.Context, id int) error
 }
 
 type EquipmentStatusRepository interface {
@@ -71,8 +73,8 @@ type EquipmentStatusNameRepository interface {
 }
 
 type OrderRepository interface {
-	List(ctx context.Context, ownerId int, filter OrderFilter) ([]*ent.Order, error)
-	OrdersTotal(ctx context.Context, ownerId int) (int, error)
+	List(ctx context.Context, ownerId *int, filter OrderFilter) ([]*ent.Order, error)
+	OrdersTotal(ctx context.Context, ownerId *int) (int, error)
 	Create(ctx context.Context, data *models.OrderCreateRequest, ownerId int, equipmentIDs []int) (*ent.Order, error)
 	Update(ctx context.Context, id int, data *models.OrderUpdateRequest, ownerId int) (*ent.Order, error)
 }
