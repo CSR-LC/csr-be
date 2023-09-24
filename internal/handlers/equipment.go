@@ -115,7 +115,7 @@ func (c Equipment) DeleteEquipmentFunc(repository domain.EquipmentRepository) eq
 		if err != nil {
 			c.logger.Error(errGetEquipment, zap.Error(err))
 			return equipment.NewDeleteEquipmentDefault(http.StatusInternalServerError).
-				WithPayload(buildInternalErrorPayload(errGetEquipment, err.Error()))
+				WithPayload(buildInternalErrorPayload(errDeleteEquipment, err.Error()))
 		}
 		err = repository.DeleteEquipmentByID(ctx, int(s.EquipmentID))
 		if err != nil {

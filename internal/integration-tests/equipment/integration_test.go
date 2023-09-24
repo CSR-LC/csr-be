@@ -476,6 +476,7 @@ func TestIntegration_ArchiveEquipment(t *testing.T) {
 	t.Run("Archive Equipment with active orders", func(t *testing.T) {
 		orStartDate, orEndDate := time.Now(), time.Now().AddDate(0, 0, 1)
 		orderID, err := createOrder(ctx, client, auth, created.Payload.ID, orStartDate, orEndDate)
+		require.NoError(t, err)
 		params := equipment.NewArchiveEquipmentParamsWithContext(ctx).WithEquipmentID(*created.Payload.ID)
 		var res *equipment.ArchiveEquipmentNoContent
 		res, err = client.Equipment.ArchiveEquipment(params, auth)
@@ -701,7 +702,7 @@ func TestIntegration_DeleteEquipment(t *testing.T) {
 		require.Error(t, gotErr)
 
 		wantErr := equipment.NewDeleteEquipmentDefault(500)
-		msgExp := "error while getting equipment" // FIX strange message for removing
+		msgExp := "error while deleting equipment"
 		codeExp := int32(http.StatusInternalServerError)
 		wantErr.Payload = &models.SwaggerError{
 			Code:    &codeExp,

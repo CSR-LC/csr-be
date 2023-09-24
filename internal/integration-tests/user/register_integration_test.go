@@ -204,6 +204,19 @@ func TestIntegration_RegisterUser(t *testing.T) {
 	})
 
 	t.Run("password validation error: length less than 3", func(t *testing.T) {
+		data = &models.UserRegister{
+			ActiveAreas: []int64{3},
+			Login:       &l,
+			Password:    &p,
+			Type:        &userType,
+			// not provided in documentation, but also required
+			// todo: update documentation
+			Name: gofakeit.Name(),
+			// not provided in documentation, but also required
+			// todo: update documentation
+			Email: strfmt.Email(gofakeit.Email()),
+		}
+
 		notEmpty := "22"
 		data.Password = &notEmpty
 		params.SetData(data)
@@ -212,7 +225,7 @@ func TestIntegration_RegisterUser(t *testing.T) {
 		require.Error(t, err)
 
 		errExp := users.NewPostUserDefault(422)
-		msgExp := "login in body should be at least 3 chars long"
+		msgExp := "password in body should be at least 6 chars long"
 		codeExp := int32(604)
 		errExp.Payload = &models.SwaggerError{
 			Code:    &codeExp,
@@ -223,6 +236,19 @@ func TestIntegration_RegisterUser(t *testing.T) {
 	})
 
 	t.Run("type validation error: type is not person or organization", func(t *testing.T) {
+		data = &models.UserRegister{
+			ActiveAreas: []int64{3},
+			Login:       &l,
+			Password:    &p,
+			Type:        &userType,
+			// not provided in documentation, but also required
+			// todo: update documentation
+			Name: gofakeit.Name(),
+			// not provided in documentation, but also required
+			// todo: update documentation
+			Email: strfmt.Email(gofakeit.Email()),
+		}
+
 		notDefinedType := "some type"
 		data.Type = &notDefinedType
 		params.SetData(data)
@@ -231,12 +257,12 @@ func TestIntegration_RegisterUser(t *testing.T) {
 		require.Error(t, err)
 
 		errExp := users.NewPostUserDefault(422)
-		msgExp := "login in body should be at least 3 chars long"
-		codeExp := int32(604)
+		msgExp := "type in body should be one of [person organization]"
+		codeExp := int32(606)
 		errExp.Payload = &models.SwaggerError{
 			Code:    &codeExp,
 			Message: &msgExp,
-		} // FIX THIS VALDIATIONS
+		} 
 
 		assert.Equal(t, errExp, err)
 	})
