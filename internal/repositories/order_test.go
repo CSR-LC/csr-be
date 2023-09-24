@@ -3,7 +3,6 @@ package repositories
 import (
 	"context"
 	"math"
-	"reflect"
 	"testing"
 	"time"
 
@@ -774,38 +773,6 @@ func (s *OrderSuite) TestOrderRepository_List_StatusFilter() {
 					ids = append(ids, o.ID)
 				}
 				require.Equal(t, tc.expectedIDs, ids)
-			}
-		})
-	}
-}
-
-func Test_orderRepository_Update(t *testing.T) {
-
-	type args struct {
-		ctx    context.Context
-		id     int
-		data   *models.OrderUpdateRequest
-		userId int
-	}
-	tests := []struct {
-		name    string
-		r       *orderRepository
-		args    args
-		want    *ent.Order
-		wantErr bool
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			r := &orderRepository{}
-			got, err := r.Update(tt.args.ctx, tt.args.id, tt.args.data, tt.args.userId)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("orderRepository.Update() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("orderRepository.Update() = %v, want %v", got, tt.want)
 			}
 		})
 	}

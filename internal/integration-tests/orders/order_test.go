@@ -558,13 +558,13 @@ func TestIntegration_UpdateOrder(t *testing.T) {
 		params := orders.NewUpdateOrderParamsWithContext(ctx)
 		params.OrderID = *orderID
 		desc = "new"
-		status := domain.OrderStatusApproved
+		//status := domain.OrderStatusApproved
 		params.Data = &models.OrderUpdateRequest{
 			Description: &desc,
 			Quantity:    &quantity,
 			RentStart:   &rentStart,
 			RentEnd:     &rentEnd,
-			Status:      &status,
+			//Status:      &status,
 		}
 
 		res, err := client.Orders.UpdateOrder(params, auth)

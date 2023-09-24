@@ -198,7 +198,7 @@ func (r *orderRepository) Create(ctx context.Context, data *models.OrderCreateRe
 	return newOrder, nil
 }
 
-func (r *orderRepository) Update(ctx context.Context, id int, data *models.OrderUpdateRequest, userId int) (*ent.Order, error) {
+func (r *orderRepository) Update(ctx context.Context, id int, data *models.OrderUpdateRequest, userID int) (*ent.Order, error) {
 	tx, err := middlewares.TxFromContext(ctx)
 	if err != nil {
 		return nil, err
@@ -222,7 +222,7 @@ func (r *orderRepository) Update(ctx context.Context, id int, data *models.Order
 		return nil, err
 	}
 
-	if owner.ID != userId {
+	if owner.ID != userID {
 		return nil, OrderAccessDenied{Err: errors.New("permission denied")}
 	}
 

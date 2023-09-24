@@ -292,13 +292,17 @@ func (o Order) UpdateOrderFunc(repository domain.OrderRepository) orders.UpdateO
 		order, err := repository.Update(ctx, orderID, p.Data, userID)
 		if err != nil {
 			o.logger.Error("update order failed", zap.Error(err))
-			return orders.NewUpdateOrderDefault(http.StatusInternalServerError).WithPayload(buildErrorPayload(err))
+			return orders.
+				NewUpdateOrderDefault(http.StatusInternalServerError).
+				WithPayload(buildErrorPayload(err))
 		}
 
 		mappedOrder, err := mapOrder(order, o.logger)
 		if err != nil {
 			o.logger.Error("failed to map order", zap.Error(err))
-			return orders.NewUpdateOrderDefault(http.StatusInternalServerError).WithPayload(buildErrorPayload(err))
+			return orders.
+				NewUpdateOrderDefault(http.StatusInternalServerError).
+				WithPayload(buildErrorPayload(err))
 		}
 
 		return orders.NewUpdateOrderOK().WithPayload(mappedOrder)
