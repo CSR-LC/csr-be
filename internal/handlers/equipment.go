@@ -336,19 +336,19 @@ func (c Equipment) UnblockEquipmentFunc(repository domain.EquipmentRepository) e
 		role := principal.Role
 
 		if role != roles.Manager {
-			c.logger.Warn("User have no right to unblock the equipment", zap.Any("principal", principal))
+			c.logger.Warn(errEquipmentUnblockForbidden, zap.Any("principal", principal))
 			return equipment.
 				NewUnblockEquipmentDefault(http.StatusForbidden).
-				WithPayload(buildForbiddenErrorPayload(errEquipmentBlockForbidden, ""))
+				WithPayload(buildForbiddenErrorPayload(errEquipmentUnblockForbidden, ""))
 		}
 
 		err := repository.UnblockEquipment(ctx, int(s.EquipmentID))
 		if err != nil {
 			if ent.IsNotFound(err) {
 				return equipment.NewUnblockEquipmentNotFound().
-				WithPayload(buildNotFoundErrorPayload(errEquipmentNotFound, ""))
+					WithPayload(buildNotFoundErrorPayload(errEquipmentNotFound, ""))
 			}
-			c.logger.Error("Error while unblocking equipment", zap.Error(err))
+			c.logger.Error(errEquipmentUnblock, zap.Error(err))
 			return equipment.NewUnblockEquipmentDefault(http.StatusInternalServerError).
 				WithPayload(buildInternalErrorPayload(errEquipmentUnblock, err.Error()))
 		}

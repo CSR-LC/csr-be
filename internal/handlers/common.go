@@ -51,19 +51,21 @@ const (
 
 	// Equipment
 
-	errCreateEquipment         = "error while creating equipment"
-	errMapEquipment            = "error while mapping equipment"
-	errGetEquipment            = "error while getting equipment"
-	errEquipmentNotFound       = "equipment not found"
-	errEquipmentArchive        = "error while archiving equipment"
-	errEquipmentBlock          = "error while blocking equipment"
-	errDeleteEquipment         = "error while deleting equipment"
-	errQueryTotalEquipments    = "error while getting total of all equipments"
-	errQueryEquipments         = "error while getting all equipments"
-	errUpdateEquipment         = "error while updating equipment"
-	errFindEquipment           = "error while finding equipment"
-	errEquipmentBlockForbidden = "you don't have rights to block the equipment"
-	equipmentDeleted           = "equipment deleted"
+	errCreateEquipment           = "error while creating equipment"
+	errMapEquipment              = "error while mapping equipment"
+	errGetEquipment              = "error while getting equipment"
+	errEquipmentNotFound         = "equipment not found"
+	errEquipmentArchive          = "error while archiving equipment"
+	errEquipmentBlock            = "error while blocking equipment"
+	errEquipmentUnblock          = "error while unblocking equipment"
+	errDeleteEquipment           = "error while deleting equipment"
+	errQueryTotalEquipments      = "error while getting total of all equipments"
+	errQueryEquipments           = "error while getting all equipments"
+	errUpdateEquipment           = "error while updating equipment"
+	errFindEquipment             = "error while finding equipment"
+	errEquipmentBlockForbidden   = "you don't have rights to block the equipment"
+	errEquipmentUnblockForbidden = "you don't have rights to unblock the equipment"
+	equipmentDeleted             = "equipment deleted"
 
 	// Order Status
 

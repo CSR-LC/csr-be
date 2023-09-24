@@ -262,7 +262,7 @@ func TestIntegration_RegisterUser(t *testing.T) {
 		errExp.Payload = &models.SwaggerError{
 			Code:    &codeExp,
 			Message: &msgExp,
-		} 
+		}
 
 		assert.Equal(t, errExp, err)
 	})

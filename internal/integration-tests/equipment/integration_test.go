@@ -755,9 +755,12 @@ func TestIntegration_UnblockEquipment(t *testing.T) {
 		require.Error(t, err)
 
 		wantErr := equipment.NewUnblockEquipmentDefault(http.StatusForbidden)
-		wantErr.Payload = &models.Error{Data: &models.ErrorData{
-			Message: "You don't have rights to unblock the equipment",
-		}}
+		msgExp := "you don't have rights to unblock the equipment"
+		codeExp := int32(http.StatusForbidden)
+		wantErr.Payload = &models.SwaggerError{
+			Code:    &codeExp,
+			Message: &msgExp,
+		}
 		assert.Equal(t, wantErr, err)
 	})
 
@@ -770,9 +773,12 @@ func TestIntegration_UnblockEquipment(t *testing.T) {
 		require.Error(t, err)
 
 		wantErr := equipment.NewUnblockEquipmentDefault(http.StatusForbidden)
-		wantErr.Payload = &models.Error{Data: &models.ErrorData{
-			Message: "You don't have rights to unblock the equipment",
-		}}
+		msgExp := "you don't have rights to unblock the equipment"
+		codeExp := int32(http.StatusForbidden)
+		wantErr.Payload = &models.SwaggerError{
+			Code:    &codeExp,
+			Message: &msgExp,
+		}
 		assert.Equal(t, wantErr, err)
 	})
 
@@ -819,7 +825,12 @@ func TestIntegration_UnblockEquipment(t *testing.T) {
 		require.Error(t, err)
 
 		wantErr := equipment.NewUnblockEquipmentNotFound()
-		wantErr.Payload = &models.Error{Data: &models.ErrorData{Message: handlers.EquipmentNotFoundMsg}}
+		msgExp := "equipment not found"
+		codeExp := int32(http.StatusNotFound)
+		wantErr.Payload = &models.SwaggerError{
+			Code:    &codeExp,
+			Message: &msgExp,
+		}
 		assert.Equal(t, wantErr, err)
 	})
 }
