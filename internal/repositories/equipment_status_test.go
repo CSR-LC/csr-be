@@ -73,7 +73,7 @@ func (s *equipmentStatusTestSuite) SetupTest() {
 		if errCreation != nil {
 			t.Fatal(errCreation)
 		}
-		if statusName == "not available" {
+		if statusName == domain.EquipmentStatusNotAvailable {
 			notAvailableEquipment = eqStatus
 		}
 	}
