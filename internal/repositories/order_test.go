@@ -6,6 +6,10 @@ import (
 	"testing"
 	"time"
 
+	"github.com/go-openapi/strfmt"
+	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/suite"
+
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/ent"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/ent/enttest"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/ent/order"
@@ -14,9 +18,6 @@ import (
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/middlewares"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/utils"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/pkg/domain"
-	"github.com/go-openapi/strfmt"
-	"github.com/stretchr/testify/require"
-	"github.com/stretchr/testify/suite"
 )
 
 type OrderSuite struct {
@@ -28,15 +29,6 @@ type OrderSuite struct {
 	orders                []*ent.Order
 	user                  *ent.User
 	equipments            []*ent.Equipment
-}
-
-// list of statuses with IDs. Amount of statuses is equal to amount of orders.
-var statusNameMap = map[int]string{
-	1: "in review",   // active
-	2: "in progress", // active
-	3: "rejected",    // finished
-	4: "closed",      // finished
-	8: "blocked",
 }
 
 func TestOrdersSuite(t *testing.T) {
@@ -119,6 +111,13 @@ func (s *OrderSuite) SetupTest() {
 		s.equipments[i] = e
 	}
 
+	// list of statuses with IDs. Amount of statuses is equal to amount of orders.
+	statusNameMap := map[int]string{
+		1: "in review",   // active
+		2: "in progress", // active
+		3: "rejected",    // finished
+		4: "closed",      // finished
+	}
 	_, err = s.client.OrderStatusName.Delete().Exec(s.ctx) // clean up
 	if err != nil {
 		t.Fatal(err)
@@ -865,30 +864,25 @@ func (s *OrderSuite) TestOrderRepository_Update_OK() {
 	require.NoError(t, err)
 	require.NoError(t, crtx.Commit())
 
-	for _, status := range statusNameMap {
-		tx, err := s.client.Tx(ctx)
-		require.NoError(t, err)
-		ctx = context.WithValue(ctx, middlewares.TxContextKey, tx)
-		newDesc := "new desc"
-		newStartDate := strfmt.DateTime(time.Now().UTC())
-		newEndDate := strfmt.DateTime(time.Now().UTC().Add(time.Hour * 24 * 10))
-		newQuantity := int64(1)
-
-		req := &models.OrderUpdateRequest{
-			Description: &newDesc,
-			Quantity:    &newQuantity,
-			RentStart:   &newStartDate,
-			RentEnd:     &newEndDate,
-			Status:      &status,
-		}
-		updated, err := s.orderRepository.Update(ctx, createdOrder.ID, req, s.user.ID)
-		require.NoError(t, err)
-		require.NoError(t, tx.Commit())
-		require.Equal(t, newDesc, updated.Description)
-		require.Equal(t, updated.Edges.CurrentStatus.Status, status)
-		require.Equal(t, newEndDate, strfmt.DateTime(updated.RentEnd))
-		require.Equal(t, newStartDate, strfmt.DateTime(updated.RentStart))
+	tx, err := s.client.Tx(ctx)
+	require.NoError(t, err)
+	ctx = context.WithValue(ctx, middlewares.TxContextKey, tx)
+	newDesc := "new desc"
+	newStartDate := strfmt.DateTime(time.Now().UTC())
+	newEndDate := strfmt.DateTime(time.Now().UTC().Add(time.Hour * 24 * 10))
+	newQuantity := int64(1)
+	req := &models.OrderUpdateRequest{
+		Description: &newDesc,
+		Quantity:    &newQuantity,
+		RentStart:   &newStartDate,
+		RentEnd:     &newEndDate,
 	}
+	updated, err := s.orderRepository.Update(ctx, createdOrder.ID, req, s.user.ID)
+	require.NoError(t, err)
+	require.NoError(t, tx.Commit())
+	require.Equal(t, newDesc, updated.Description)
+	require.Equal(t, newEndDate, strfmt.DateTime(updated.RentEnd))
+	require.Equal(t, newStartDate, strfmt.DateTime(updated.RentStart))
 }
 
 func (s *OrderSuite) TestOrderRepository_Update_MissingOrder() {

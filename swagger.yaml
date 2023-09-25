@@ -3212,7 +3212,6 @@ definitions:
       - quantity
       - rent_start
       - rent_end
-      - status
     properties:
       description:
         type: string
@@ -3225,9 +3224,6 @@ definitions:
       rent_end:
         type: string
         format: date-time
-      status:
-        type: string
-        maxLength: 255
   UserOrder:
     type: object
     required:

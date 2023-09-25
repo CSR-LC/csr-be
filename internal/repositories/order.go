@@ -208,21 +208,12 @@ func (r *orderRepository) Create(ctx context.Context, data *models.OrderCreateRe
 	return newOrder, nil
 }
 
-func (r *orderRepository) Update(ctx context.Context, id int, data *models.OrderUpdateRequest, userID int) (*ent.Order, error) {
+func (r *orderRepository) Update(ctx context.Context, id int, data *models.OrderUpdateRequest, userId int) (*ent.Order, error) {
 	tx, err := middlewares.TxFromContext(ctx)
 	if err != nil {
 		return nil, err
 	}
-
 	foundOrder, err := tx.Order.Get(ctx, id)
-	if err != nil {
-		return nil, err
-	}
-
-	foundOrdersStatusName, err := tx.OrderStatusName.
-		Query().
-		Where(orderstatusname.Status(*data.Status)).
-		Only(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -232,7 +223,7 @@ func (r *orderRepository) Update(ctx context.Context, id int, data *models.Order
 		return nil, err
 	}
 
-	if owner.ID != userID {
+	if owner.ID != userId {
 		return nil, OrderAccessDenied{Err: errors.New("permission denied")}
 	}
 
@@ -261,19 +252,13 @@ func (r *orderRepository) Update(ctx context.Context, id int, data *models.Order
 		SetRentEnd(*rentEnd).
 		SetDescription(*data.Description).
 		SetQuantity(*quantity).
-		SetCurrentStatus(foundOrdersStatusName).
 		Save(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	returnOrder, err := tx.Order.
-		Query().
-		Where(order.IDEQ(createdOrder.ID)).
-		WithUsers().
-		WithOrderStatus().
-		WithCurrentStatus().
-		Only(ctx)
+	returnOrder, err := tx.Order.Query().Where(order.IDEQ(createdOrder.ID)). // get order with relations
+											WithUsers().WithOrderStatus().Only(ctx)
 	if err != nil {
 		return nil, err
 	}

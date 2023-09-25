@@ -624,7 +624,6 @@ func TestIntegration_UpdateOrder(t *testing.T) {
 	eqID := equip.ID
 	rentStart := strfmt.DateTime(time.Now())
 	rentEnd := strfmt.DateTime(time.Now().Add(time.Hour * 24))
-
 	createParams.Data = &models.OrderCreateRequest{
 		Description: desc,
 		EquipmentID: eqID,
@@ -640,13 +639,11 @@ func TestIntegration_UpdateOrder(t *testing.T) {
 		params := orders.NewUpdateOrderParamsWithContext(ctx)
 		params.OrderID = *orderID
 		desc = "new"
-		//status := domain.OrderStatusApproved
 		params.Data = &models.OrderUpdateRequest{
 			Description: &desc,
 			Quantity:    &quantity,
 			RentStart:   &rentStart,
 			RentEnd:     &rentEnd,
-			//Status:      &status,
 		}
 
 		res, err := client.Orders.UpdateOrder(params, auth)
@@ -656,7 +653,6 @@ func TestIntegration_UpdateOrder(t *testing.T) {
 		assert.Equal(t, quantity, *res.Payload.Quantity)
 		rentEnd.Equal(*res.Payload.RentEnd)
 		rentStart.Equal(*res.Payload.RentStart)
-		//status.Equal(*res.Payload.CurrentStatus)
 	})
 }
 
