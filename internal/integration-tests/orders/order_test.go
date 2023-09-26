@@ -115,13 +115,12 @@ func TestIntegration_CreateOrder(t *testing.T) {
 		_, gotErr := client.Orders.CreateOrder(params, auth)
 		require.Error(t, gotErr)
 
-		wantErr := orders.NewCreateOrderDefault(http.StatusInternalServerError)
-		msgExp := "can't map order"
-		codeExp := int32(http.StatusInternalServerError)
+		wantErr := orders.NewCreateOrderDefault(http.StatusBadRequest)
+		msgExp := "start date should be before end date"
+		codeExp := int32(http.StatusBadRequest)
 		wantErr.Payload = &models.SwaggerError{
 			Code:    &codeExp,
 			Message: &msgExp,
-			Details: "start date should be before end date",
 		}
 		assert.Equal(t, wantErr, gotErr)
 	})
@@ -141,13 +140,12 @@ func TestIntegration_CreateOrder(t *testing.T) {
 		_, gotErr := client.Orders.CreateOrder(params, auth)
 		require.Error(t, gotErr)
 
-		wantErr := orders.NewCreateOrderDefault(http.StatusInternalServerError)
-		msgExp := "can't map order"
-		codeExp := int32(http.StatusInternalServerError)
+		wantErr := orders.NewCreateOrderDefault(http.StatusBadRequest)
+		msgExp := "small rent period"
+		codeExp := int32(http.StatusBadRequest)
 		wantErr.Payload = &models.SwaggerError{
 			Code:    &codeExp,
 			Message: &msgExp,
-			Details: "small rent period",
 		}
 		assert.Equal(t, wantErr, gotErr)
 	})

@@ -662,6 +662,28 @@ func TestIntegration_BlockEquipment(t *testing.T) {
 		require.NoError(t, err)
 		require.True(t, res.IsCode(http.StatusNoContent))
 	})
+
+	t.Run("Block Equipment is failed, endDate before startDate", func(t *testing.T) {
+		tokens := utils.ManagerUserLogin(t)
+		auth := utils.AuthInfoFunc(tokens.GetPayload().AccessToken)
+		params := equipment.NewBlockEquipmentParamsWithContext(ctx).WithEquipmentID(*eq.Payload.ID)
+		params.Data = &models.ChangeEquipmentStatusToBlockedRequest{
+			StartDate: strfmt.DateTime(endDate),
+			EndDate:   strfmt.DateTime(startDate),
+		}
+
+		_, err := client.Equipment.BlockEquipment(params, auth)
+		require.Error(t, err)
+
+		wantErr := equipment.NewBlockEquipmentDefault(http.StatusBadRequest)
+		msgExp := "start date should be before end date"
+		codeExp := int32(http.StatusBadRequest)
+		wantErr.Payload = &models.SwaggerError{
+			Code:    &codeExp,
+			Message: &msgExp,
+		}
+		assert.Equal(t, wantErr, err)
+	})
 }
 
 func TestIntegration_DeleteEquipment(t *testing.T) {

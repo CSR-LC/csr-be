@@ -314,9 +314,14 @@ func (c Equipment) BlockEquipmentFunc(repository domain.EquipmentRepository) equ
 				WithPayload(buildForbiddenErrorPayload(errEquipmentBlockForbidden, ""))
 		}
 
-		err := repository.BlockEquipment(
-			ctx, int(s.EquipmentID), time.Time(s.Data.StartDate), time.Time(s.Data.EndDate), userID,
-		)
+		startDate := time.Time(s.Data.StartDate)
+		endDate := time.Time(s.Data.EndDate)
+		if startDate.After(endDate) {
+			return equipment.NewBlockEquipmentDefault(http.StatusBadRequest).
+				WithPayload(buildBadRequestErrorPayload(errStartDateAfterEnd, ""))
+		}
+
+		err := repository.BlockEquipment(ctx, int(s.EquipmentID), startDate, endDate, userID)
 		if err != nil {
 			if ent.IsNotFound(err) {
 				return equipment.NewBlockEquipmentNotFound().

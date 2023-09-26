@@ -344,6 +344,19 @@ func (o Order) CreateOrderFunc(
 				WithPayload(buildConflictErrorPayload(errEquipmentIsNotFree, ""))
 		}
 
+		rentStart := time.Time(*p.Data.RentStart)
+		rentEnd := time.Time(*p.Data.RentEnd)
+
+		if rentStart.After(rentEnd) {
+			return orders.NewCreateOrderDefault(http.StatusBadRequest).
+				WithPayload(buildBadRequestErrorPayload(errStartDateAfterEnd, ""))
+		}
+
+		if rentEnd.Sub(rentStart).Hours() < 24 {
+			return orders.NewCreateOrderDefault(http.StatusBadRequest).
+				WithPayload(buildBadRequestErrorPayload(errSmallRentPeriod, ""))
+		}
+
 		order, err := orderRepo.Create(ctx, p.Data, userID, []int{id})
 		if err != nil {
 			o.logger.Error(errMapOrder, zap.Error(err))

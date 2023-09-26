@@ -65,6 +65,7 @@ const (
 	errFindEquipment             = "error while finding equipment"
 	errEquipmentBlockForbidden   = "you don't have rights to block the equipment"
 	errEquipmentUnblockForbidden = "you don't have rights to unblock the equipment"
+	errStartDateAfterEnd         = "start date should be before end date"
 	equipmentDeleted             = "equipment deleted"
 
 	// Order Status
@@ -91,6 +92,7 @@ const (
 	errUpdateOrder         = "update order failed"
 	errEquipmentIsNotFree  = "requested equipment is not free"
 	errCheckEqStatusFailed = "error while checking if equipment is available for period"
+	errSmallRentPeriod     = "small rent period"
 
 	// Password Reset
 
