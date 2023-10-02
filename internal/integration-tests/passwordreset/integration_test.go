@@ -11,6 +11,7 @@ import (
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/swagger/client/password_reset"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/swagger/models"
 	utils "git.epam.com/epm-lstr/epm-lstr-lc/be/internal/integration-tests/common"
+	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/messages"
 )
 
 func TestIntegration_PasswordReset(t *testing.T) {
@@ -51,11 +52,10 @@ func TestIntegration_PasswordReset(t *testing.T) {
 		require.Error(t, err)
 
 		errExp := password_reset.NewSendLinkByLoginDefault(http.StatusBadRequest)
-		msgExp := "login is required"
 		codeExp := int32(http.StatusBadRequest)
 		errExp.Payload = &models.SwaggerError{
 			Code:    &codeExp,
-			Message: &msgExp,
+			Message: &messages.ErrLoginRequired,
 		}
 		assert.Equal(t, errExp, err)
 	})

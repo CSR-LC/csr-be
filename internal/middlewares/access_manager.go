@@ -77,12 +77,12 @@ func allRoleVariation(roles []Role) []Role {
 	variations := []bool{false, true}
 
 	for _, role := range roles {
-		for _, isRegistrationConfirmed := range variations {
+		for _, IsRegistrationConfirmed := range variations {
 			for _, isPersonalDataConfirmed := range variations {
 				for _, isReadonly := range variations {
 					res = append(res, Role{
 						Slug:                    role.Slug,
-						IsRegistrationConfirmed: isRegistrationConfirmed,
+						IsRegistrationConfirmed: IsRegistrationConfirmed,
 						IsPersonalDataConfirmed: isPersonalDataConfirmed,
 						IsReadonly:              isReadonly,
 					})

@@ -16,6 +16,7 @@ import (
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/swagger/client/photos"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/swagger/models"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/integration-tests/common"
+	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/messages"
 )
 
 var (
@@ -130,11 +131,10 @@ func TestIntegration_PhotosUpload(t *testing.T) {
 		require.Error(t, gotErr)
 
 		wantErr := photos.NewCreateNewPhotoDefault(http.StatusUnauthorized)
-		msgExp := "token is invalid"
 		codeExp := int32(http.StatusUnauthorized)
 		wantErr.Payload = &models.SwaggerError{
 			Code:    &codeExp,
-			Message: &msgExp,
+			Message: &messages.ErrInvalidToken,
 		}
 		assert.Equal(t, wantErr, gotErr)
 		f.Close()
@@ -165,11 +165,10 @@ func TestIntegration_DeletePhoto(t *testing.T) {
 		require.Error(t, gotErr)
 
 		wantErr := photos.NewDeletePhotoDefault(http.StatusUnauthorized)
-		msgExp := "token is invalid"
 		codeExp := int32(http.StatusUnauthorized)
 		wantErr.Payload = &models.SwaggerError{
 			Code:    &codeExp,
-			Message: &msgExp,
+			Message: &messages.ErrInvalidToken,
 		}
 		assert.Equal(t, wantErr, gotErr)
 	})
@@ -202,11 +201,10 @@ func TestIntegration_DeletePhoto(t *testing.T) {
 		require.Error(t, gotErr)
 
 		wantErr := photos.NewDeletePhotoDefault(http.StatusInternalServerError)
-		msgExp := "failed to delete photo"
 		codeExp := int32(http.StatusInternalServerError)
 		wantErr.Payload = &models.SwaggerError{
 			Code:    &codeExp,
-			Message: &msgExp,
+			Message: &messages.ErrDeletePhoto,
 			Details: "ent: photo not found",
 		}
 		assert.Equal(t, wantErr, gotErr)
@@ -276,11 +274,10 @@ func TestIntegration_PhotosDownload(t *testing.T) {
 		require.Error(t, gotErr)
 
 		wantErr := photos.NewDownloadPhotoDefault(http.StatusUnauthorized)
-		msgExp := "token is invalid"
 		codeExp := int32(http.StatusUnauthorized)
 		wantErr.Payload = &models.SwaggerError{
 			Code:    &codeExp,
-			Message: &msgExp,
+			Message: &messages.ErrInvalidToken,
 		}
 		assert.Equal(t, wantErr, gotErr)
 		f.Close()
@@ -361,11 +358,10 @@ func TestIntegration_PhotoGet(t *testing.T) {
 		require.Error(t, gotErr)
 
 		wantErr := photos.NewGetPhotoDefault(http.StatusUnauthorized)
-		msgExp := "token is invalid"
 		codeExp := int32(http.StatusUnauthorized)
 		wantErr.Payload = &models.SwaggerError{
 			Code:    &codeExp,
-			Message: &msgExp,
+			Message: &messages.ErrInvalidToken,
 		}
 		assert.Equal(t, wantErr, gotErr)
 		f.Close()

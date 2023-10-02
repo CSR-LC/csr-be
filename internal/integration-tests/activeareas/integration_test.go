@@ -11,6 +11,7 @@ import (
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/swagger/client/active_areas"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/swagger/models"
 	utils "git.epam.com/epm-lstr/epm-lstr-lc/be/internal/integration-tests/common"
+	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/messages"
 )
 
 func TestIntegration_GetActiveAreas(t *testing.T) {
@@ -56,11 +57,10 @@ func TestIntegration_GetActiveAreas(t *testing.T) {
 		require.Error(t, err)
 
 		errExp := active_areas.NewGetAllActiveAreasDefault(http.StatusUnauthorized)
-		msgExp := "token is invalid"
 		codeExp := int32(http.StatusUnauthorized)
 		errExp.Payload = &models.SwaggerError{
 			Code:    &codeExp,
-			Message: &msgExp,
+			Message: &messages.ErrInvalidToken,
 		}
 		assert.Equal(t, errExp, err)
 	})

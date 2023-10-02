@@ -14,6 +14,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/swagger/client/subcategories"
+	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/messages"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/pkg/domain"
 
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/ent/order"
@@ -91,11 +92,10 @@ func TestIntegration_CreateOrder(t *testing.T) {
 		require.Error(t, gotErr)
 
 		wantErr := orders.NewCreateOrderDefault(http.StatusUnauthorized)
-		msgExp := "token is invalid"
 		codeExp := int32(http.StatusUnauthorized)
 		wantErr.Payload = &models.SwaggerError{
 			Code:    &codeExp,
-			Message: &msgExp,
+			Message: &messages.ErrInvalidToken,
 		}
 		assert.Equal(t, wantErr, gotErr)
 	})
@@ -116,11 +116,10 @@ func TestIntegration_CreateOrder(t *testing.T) {
 		require.Error(t, gotErr)
 
 		wantErr := orders.NewCreateOrderDefault(http.StatusBadRequest)
-		msgExp := "start date should be before end date"
 		codeExp := int32(http.StatusBadRequest)
 		wantErr.Payload = &models.SwaggerError{
 			Code:    &codeExp,
-			Message: &msgExp,
+			Message: &messages.ErrStartDateAfterEnd,
 		}
 		assert.Equal(t, wantErr, gotErr)
 	})
@@ -141,11 +140,10 @@ func TestIntegration_CreateOrder(t *testing.T) {
 		require.Error(t, gotErr)
 
 		wantErr := orders.NewCreateOrderDefault(http.StatusBadRequest)
-		msgExp := "small rent period"
 		codeExp := int32(http.StatusBadRequest)
 		wantErr.Payload = &models.SwaggerError{
 			Code:    &codeExp,
-			Message: &msgExp,
+			Message: &messages.ErrSmallRentPeriod,
 		}
 		assert.Equal(t, wantErr, gotErr)
 	})
@@ -166,11 +164,10 @@ func TestIntegration_CreateOrder(t *testing.T) {
 		require.Error(t, gotErr)
 
 		wantErr := orders.NewCreateOrderDefault(http.StatusInternalServerError)
-		msgExp := "can't map order"
 		codeExp := int32(http.StatusInternalServerError)
 		wantErr.Payload = &models.SwaggerError{
 			Code:    &codeExp,
-			Message: &msgExp,
+			Message: &messages.ErrMapOrder,
 			Details: "too big reservation period",
 		}
 		assert.Equal(t, wantErr, gotErr)
@@ -332,11 +329,10 @@ func TestIntegration_GetUserOrders(t *testing.T) {
 		require.Error(t, gotErr)
 
 		wantErr := orders.NewGetUserOrdersDefault(http.StatusUnauthorized)
-		msgExp := "token is invalid"
 		codeExp := int32(http.StatusUnauthorized)
 		wantErr.Payload = &models.SwaggerError{
 			Code:    &codeExp,
-			Message: &msgExp,
+			Message: &messages.ErrInvalidToken,
 		}
 		assert.Equal(t, wantErr, gotErr)
 	})

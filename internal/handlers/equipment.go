@@ -14,6 +14,7 @@ import (
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/swagger/models"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/swagger/restapi/operations"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/swagger/restapi/operations/equipment"
+	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/messages"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/repositories"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/roles"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/utils"
@@ -52,21 +53,21 @@ func (c Equipment) PostEquipmentFunc(eqRepo domain.EquipmentRepository, eqStatus
 		ctx := s.HTTPRequest.Context()
 		status, err := eqStatusNameRepo.GetByName(ctx, domain.EquipmentStatusAvailable)
 		if err != nil {
-			c.logger.Error(errGetEqStatus, zap.Error(err))
+			c.logger.Error(messages.ErrGetEqStatus, zap.Error(err))
 			return equipment.NewCreateNewEquipmentDefault(http.StatusInternalServerError).
-				WithPayload(buildInternalErrorPayload(errCreateEquipment, err.Error()))
+				WithPayload(buildInternalErrorPayload(messages.ErrCreateEquipment, err.Error()))
 		}
 		eq, err := eqRepo.CreateEquipment(ctx, *s.NewEquipment, status)
 		if err != nil {
-			c.logger.Error(errCreateEquipment, zap.Error(err))
+			c.logger.Error(messages.ErrCreateEquipment, zap.Error(err))
 			return equipment.NewCreateNewEquipmentDefault(http.StatusInternalServerError).
-				WithPayload(buildInternalErrorPayload(errCreateEquipment, err.Error()))
+				WithPayload(buildInternalErrorPayload(messages.ErrCreateEquipment, err.Error()))
 		}
 		returnEq, err := mapEquipmentResponse(eq)
 		if err != nil {
-			c.logger.Error(errMapEquipment, zap.Error(err))
+			c.logger.Error(messages.ErrMapEquipment, zap.Error(err))
 			return equipment.NewCreateNewEquipmentDefault(http.StatusInternalServerError).
-				WithPayload(buildInternalErrorPayload(errMapEquipment, err.Error()))
+				WithPayload(buildInternalErrorPayload(messages.ErrMapEquipment, err.Error()))
 		}
 
 		return equipment.NewCreateNewEquipmentCreated().WithPayload(returnEq)
@@ -78,15 +79,15 @@ func (c Equipment) GetEquipmentFunc(repository domain.EquipmentRepository) equip
 		ctx := s.HTTPRequest.Context()
 		eq, err := repository.EquipmentByID(ctx, int(s.EquipmentID))
 		if err != nil {
-			c.logger.Error(errGetEquipment, zap.Error(err))
+			c.logger.Error(messages.ErrGetEquipment, zap.Error(err))
 			return equipment.NewGetEquipmentDefault(http.StatusInternalServerError).
-				WithPayload(buildInternalErrorPayload(errGetEquipment, err.Error()))
+				WithPayload(buildInternalErrorPayload(messages.ErrGetEquipment, err.Error()))
 		}
 		returnEq, err := mapEquipmentResponse(eq)
 		if err != nil {
-			c.logger.Error(errMapEquipment, zap.Error(err))
+			c.logger.Error(messages.ErrMapEquipment, zap.Error(err))
 			return equipment.NewGetEquipmentDefault(http.StatusInternalServerError).
-				WithPayload(buildInternalErrorPayload(errMapEquipment, err.Error()))
+				WithPayload(buildInternalErrorPayload(messages.ErrMapEquipment, err.Error()))
 		}
 		return equipment.NewGetEquipmentOK().WithPayload(returnEq)
 	}
@@ -99,11 +100,11 @@ func (c Equipment) ArchiveEquipmentFunc(repository domain.EquipmentRepository) e
 		if err != nil {
 			if ent.IsNotFound(err) {
 				return equipment.NewArchiveEquipmentNotFound().
-					WithPayload(buildNotFoundErrorPayload(errEquipmentNotFound, ""))
+					WithPayload(buildNotFoundErrorPayload(messages.ErrEquipmentNotFound, ""))
 			}
-			c.logger.Error(errEquipmentArchive, zap.Error(err))
+			c.logger.Error(messages.ErrEquipmentArchive, zap.Error(err))
 			return equipment.NewArchiveEquipmentDefault(http.StatusInternalServerError).
-				WithPayload(buildInternalErrorPayload(errEquipmentArchive, err.Error()))
+				WithPayload(buildInternalErrorPayload(messages.ErrEquipmentArchive, err.Error()))
 		}
 		return equipment.NewArchiveEquipmentNoContent()
 	}
@@ -114,22 +115,22 @@ func (c Equipment) DeleteEquipmentFunc(repository domain.EquipmentRepository) eq
 		ctx := s.HTTPRequest.Context()
 		eq, err := repository.EquipmentByID(ctx, int(s.EquipmentID))
 		if err != nil {
-			c.logger.Error(errGetEquipment, zap.Error(err))
+			c.logger.Error(messages.ErrGetEquipment, zap.Error(err))
 			return equipment.NewDeleteEquipmentDefault(http.StatusInternalServerError).
-				WithPayload(buildInternalErrorPayload(errDeleteEquipment, err.Error()))
+				WithPayload(buildInternalErrorPayload(messages.ErrDeleteEquipment, err.Error()))
 		}
 		err = repository.DeleteEquipmentByID(ctx, int(s.EquipmentID))
 		if err != nil {
-			c.logger.Error(errDeleteEquipment, zap.Error(err))
+			c.logger.Error(messages.ErrDeleteEquipment, zap.Error(err))
 			return equipment.NewDeleteEquipmentDefault(http.StatusInternalServerError).
-				WithPayload(buildInternalErrorPayload(errDeleteEquipment, err.Error()))
+				WithPayload(buildInternalErrorPayload(messages.ErrDeleteEquipment, err.Error()))
 		}
 
 		if err := repository.DeleteEquipmentPhoto(ctx, eq.Edges.Photo.ID); err != nil {
 			c.logger.Error("Error while deleting photo from db", zap.Error(err))
 		}
 
-		return equipment.NewDeleteEquipmentOK().WithPayload(equipmentDeleted)
+		return equipment.NewDeleteEquipmentOK().WithPayload(messages.MsgEquipmentDeleted)
 	}
 }
 
@@ -142,17 +143,17 @@ func (c Equipment) ListEquipmentFunc(repository domain.EquipmentRepository) equi
 		orderColumn := utils.GetValueByPointerOrDefaultValue(s.OrderColumn, order.FieldID)
 		total, err := repository.AllEquipmentsTotal(ctx)
 		if err != nil {
-			c.logger.Error(errQueryTotalEquipments, zap.Error(err))
+			c.logger.Error(messages.ErrQueryTotalEquipments, zap.Error(err))
 			return equipment.NewGetAllEquipmentDefault(http.StatusInternalServerError).
-				WithPayload(buildInternalErrorPayload(errQueryTotalEquipments, err.Error()))
+				WithPayload(buildInternalErrorPayload(messages.ErrQueryTotalEquipments, err.Error()))
 		}
 		var equipments []*ent.Equipment
 		if total > 0 {
 			equipments, err = repository.AllEquipments(ctx, int(limit), int(offset), orderBy, orderColumn)
 			if err != nil {
-				c.logger.Error(errQueryEquipments, zap.Error(err))
+				c.logger.Error(messages.ErrQueryEquipments, zap.Error(err))
 				return equipment.NewGetAllEquipmentDefault(http.StatusInternalServerError).
-					WithPayload(buildInternalErrorPayload(errQueryEquipments, err.Error()))
+					WithPayload(buildInternalErrorPayload(messages.ErrQueryEquipments, err.Error()))
 			}
 		}
 		totalEquipments := int64(total)
@@ -163,9 +164,9 @@ func (c Equipment) ListEquipmentFunc(repository domain.EquipmentRepository) equi
 		for i, eq := range equipments {
 			tmpEq, errMap := mapEquipmentResponse(eq)
 			if errMap != nil {
-				c.logger.Error(errMapEquipment, zap.Error(errMap))
+				c.logger.Error(messages.ErrMapEquipment, zap.Error(errMap))
 				return equipment.NewGetAllEquipmentDefault(http.StatusInternalServerError).
-					WithPayload(buildInternalErrorPayload(errMapEquipment, errMap.Error()))
+					WithPayload(buildInternalErrorPayload(messages.ErrMapEquipment, errMap.Error()))
 			}
 			listEquipment.Items[i] = tmpEq
 		}
@@ -178,15 +179,15 @@ func (c Equipment) EditEquipmentFunc(repository domain.EquipmentRepository) equi
 		ctx := s.HTTPRequest.Context()
 		eq, err := repository.UpdateEquipmentByID(ctx, int(s.EquipmentID), s.EditEquipment)
 		if err != nil {
-			c.logger.Error(errUpdateEquipment, zap.Error(err))
+			c.logger.Error(messages.ErrUpdateEquipment, zap.Error(err))
 			return equipment.NewEditEquipmentDefault(http.StatusInternalServerError).
-				WithPayload(buildInternalErrorPayload(errUpdateEquipment, err.Error()))
+				WithPayload(buildInternalErrorPayload(messages.ErrUpdateEquipment, err.Error()))
 		}
 		returnEq, err := mapEquipmentResponse(eq)
 		if err != nil {
-			c.logger.Error(errMapEquipment, zap.Error(err))
+			c.logger.Error(messages.ErrMapEquipment, zap.Error(err))
 			return equipment.NewEditEquipmentDefault(http.StatusInternalServerError).
-				WithPayload(buildInternalErrorPayload(errMapEquipment, err.Error()))
+				WithPayload(buildInternalErrorPayload(messages.ErrMapEquipment, err.Error()))
 		}
 
 		return equipment.NewEditEquipmentOK().WithPayload(returnEq)
@@ -203,17 +204,17 @@ func (c Equipment) FindEquipmentFunc(repository domain.EquipmentRepository) equi
 		equipmentFilter := *s.FindEquipment
 		total, err := repository.EquipmentsByFilterTotal(ctx, equipmentFilter)
 		if err != nil {
-			c.logger.Error(errQueryTotalEquipments, zap.Error(err))
+			c.logger.Error(messages.ErrQueryTotalEquipments, zap.Error(err))
 			return equipment.NewGetAllEquipmentDefault(http.StatusInternalServerError).
-				WithPayload(buildInternalErrorPayload(errQueryTotalEquipments, err.Error()))
+				WithPayload(buildInternalErrorPayload(messages.ErrQueryTotalEquipments, err.Error()))
 		}
 		var foundEquipment []*ent.Equipment
 		if total > 0 {
 			foundEquipment, err = repository.EquipmentsByFilter(ctx, equipmentFilter, int(limit), int(offset), orderBy, orderColumn)
 			if err != nil {
-				c.logger.Error(errFindEquipment, zap.Error(err))
+				c.logger.Error(messages.ErrFindEquipment, zap.Error(err))
 				return equipment.NewFindEquipmentDefault(http.StatusInternalServerError).
-					WithPayload(buildInternalErrorPayload(errFindEquipment, err.Error()))
+					WithPayload(buildInternalErrorPayload(messages.ErrFindEquipment, err.Error()))
 			}
 		}
 		totalEquipments := int64(total)
@@ -224,9 +225,9 @@ func (c Equipment) FindEquipmentFunc(repository domain.EquipmentRepository) equi
 		for i, eq := range foundEquipment {
 			tmpEq, errMap := mapEquipmentResponse(eq)
 			if errMap != nil {
-				c.logger.Error(errMapEquipment, zap.Error(errMap))
+				c.logger.Error(messages.ErrMapEquipment, zap.Error(errMap))
 				return equipment.NewFindEquipmentDefault(http.StatusInternalServerError).
-					WithPayload(buildInternalErrorPayload(errMapEquipment, errMap.Error()))
+					WithPayload(buildInternalErrorPayload(messages.ErrMapEquipment, errMap.Error()))
 			}
 			returnEquipment.Items[i] = tmpEq
 		}
@@ -311,25 +312,25 @@ func (c Equipment) BlockEquipmentFunc(repository domain.EquipmentRepository) equ
 			c.logger.Warn("User have no right to block the equipment", zap.Any("principal", principal))
 			return equipment.
 				NewBlockEquipmentDefault(http.StatusForbidden).
-				WithPayload(buildForbiddenErrorPayload(errEquipmentBlockForbidden, ""))
+				WithPayload(buildForbiddenErrorPayload(messages.ErrEquipmentBlockForbidden, ""))
 		}
 
 		startDate := time.Time(s.Data.StartDate)
 		endDate := time.Time(s.Data.EndDate)
 		if startDate.After(endDate) {
 			return equipment.NewBlockEquipmentDefault(http.StatusBadRequest).
-				WithPayload(buildBadRequestErrorPayload(errStartDateAfterEnd, ""))
+				WithPayload(buildBadRequestErrorPayload(messages.ErrStartDateAfterEnd, ""))
 		}
 
 		err := repository.BlockEquipment(ctx, int(s.EquipmentID), startDate, endDate, userID)
 		if err != nil {
 			if ent.IsNotFound(err) {
 				return equipment.NewBlockEquipmentNotFound().
-					WithPayload(buildNotFoundErrorPayload(errEquipmentNotFound, ""))
+					WithPayload(buildNotFoundErrorPayload(messages.ErrEquipmentNotFound, ""))
 			}
-			c.logger.Error(errEquipmentBlock, zap.Error(err))
+			c.logger.Error(messages.ErrEquipmentBlock, zap.Error(err))
 			return equipment.NewBlockEquipmentDefault(http.StatusInternalServerError).
-				WithPayload(buildInternalErrorPayload(errEquipmentBlock, err.Error()))
+				WithPayload(buildInternalErrorPayload(messages.ErrEquipmentBlock, err.Error()))
 		}
 		return equipment.NewBlockEquipmentNoContent()
 	}
@@ -341,21 +342,21 @@ func (c Equipment) UnblockEquipmentFunc(repository domain.EquipmentRepository) e
 		role := principal.Role
 
 		if role != roles.Manager {
-			c.logger.Warn(errEquipmentUnblockForbidden, zap.Any("principal", principal))
+			c.logger.Warn(messages.ErrEquipmentUnblockForbidden, zap.Any("principal", principal))
 			return equipment.
 				NewUnblockEquipmentDefault(http.StatusForbidden).
-				WithPayload(buildForbiddenErrorPayload(errEquipmentUnblockForbidden, ""))
+				WithPayload(buildForbiddenErrorPayload(messages.ErrEquipmentUnblockForbidden, ""))
 		}
 
 		err := repository.UnblockEquipment(ctx, int(s.EquipmentID))
 		if err != nil {
 			if ent.IsNotFound(err) {
 				return equipment.NewUnblockEquipmentNotFound().
-					WithPayload(buildNotFoundErrorPayload(errEquipmentNotFound, ""))
+					WithPayload(buildNotFoundErrorPayload(messages.ErrEquipmentNotFound, ""))
 			}
-			c.logger.Error(errEquipmentUnblock, zap.Error(err))
+			c.logger.Error(messages.ErrEquipmentUnblock, zap.Error(err))
 			return equipment.NewUnblockEquipmentDefault(http.StatusInternalServerError).
-				WithPayload(buildInternalErrorPayload(errEquipmentUnblock, err.Error()))
+				WithPayload(buildInternalErrorPayload(messages.ErrEquipmentUnblock, err.Error()))
 		}
 		return equipment.NewUnblockEquipmentNoContent()
 	}

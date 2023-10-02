@@ -11,6 +11,7 @@ import (
 	eqStatusName "git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/swagger/client/equipment_status_name"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/swagger/models"
 	utils "git.epam.com/epm-lstr/epm-lstr-lc/be/internal/integration-tests/common"
+	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/messages"
 )
 
 func TestIntegration_GetStatuses(t *testing.T) {
@@ -40,11 +41,10 @@ func TestIntegration_GetStatuses(t *testing.T) {
 		require.Error(t, gotErr)
 
 		wantErr := eqStatusName.NewListEquipmentStatusNamesDefault(http.StatusUnauthorized)
-		msgExp := "token is invalid"
 		codeExp := int32(http.StatusUnauthorized)
 		wantErr.Payload = &models.SwaggerError{
 			Code:    &codeExp,
-			Message: &msgExp,
+			Message: &messages.ErrInvalidToken,
 		}
 		assert.Equal(t, wantErr, gotErr)
 	})
@@ -79,11 +79,10 @@ func TestIntegration_GetStatus(t *testing.T) {
 		require.Error(t, gotErr)
 
 		wantErr := eqStatusName.NewGetEquipmentStatusNameDefault(500)
-		msgExp := "can't get equipment status"
 		codeExp := int32(http.StatusInternalServerError)
 		wantErr.Payload = &models.SwaggerError{
 			Code:    &codeExp,
-			Message: &msgExp,
+			Message: &messages.ErrGetEqStatus,
 			Details: "ent: equipment_status_name not found",
 		}
 		assert.Equal(t, wantErr, gotErr)
@@ -98,11 +97,10 @@ func TestIntegration_GetStatus(t *testing.T) {
 		require.Error(t, gotErr)
 
 		wantErr := eqStatusName.NewGetEquipmentStatusNameDefault(http.StatusUnauthorized)
-		msgExp := "token is invalid"
 		codeExp := int32(http.StatusUnauthorized)
 		wantErr.Payload = &models.SwaggerError{
 			Code:    &codeExp,
-			Message: &msgExp,
+			Message: &messages.ErrInvalidToken,
 		}
 		assert.Equal(t, wantErr, gotErr)
 	})
@@ -142,11 +140,10 @@ func TestIntegration_PostStatus(t *testing.T) {
 		require.Error(t, gotErr)
 
 		wantErr := eqStatusName.NewPostEquipmentStatusNameDefault(http.StatusInternalServerError)
-		msgExp := "can't create equipment status"
 		codeExp := int32(http.StatusInternalServerError)
 		wantErr.Payload = &models.SwaggerError{
 			Code:    &codeExp,
-			Message: &msgExp,
+			Message: &messages.ErrCreateEqStatus,
 			Details: "ent: constraint failed: ERROR: duplicate key value violates unique constraint \"equipment_status_names_name_key\" (SQLSTATE 23505)",
 		}
 		assert.Equal(t, wantErr, gotErr)
@@ -163,11 +160,10 @@ func TestIntegration_PostStatus(t *testing.T) {
 		require.Error(t, gotErr)
 
 		wantErr := eqStatusName.NewPostEquipmentStatusNameDefault(http.StatusUnauthorized)
-		msgExp := "token is invalid"
 		codeExp := int32(http.StatusUnauthorized)
 		wantErr.Payload = &models.SwaggerError{
 			Code:    &codeExp,
-			Message: &msgExp,
+			Message: &messages.ErrInvalidToken,
 		}
 		assert.Equal(t, wantErr, gotErr)
 	})
@@ -203,11 +199,10 @@ func TestIntegration_DeleteStatus(t *testing.T) {
 		require.Error(t, gotErr)
 
 		wantErr := eqStatusName.NewDeleteEquipmentStatusNameDefault(http.StatusInternalServerError)
-		msgExp := "can't delete equipment status"
 		codeExp := int32(http.StatusInternalServerError)
 		wantErr.Payload = &models.SwaggerError{
 			Code:    &codeExp,
-			Message: &msgExp,
+			Message: &messages.ErrDeleteEqStatus,
 			Details: "ent: equipment_status_name not found",
 		}
 		assert.Equal(t, wantErr, gotErr)
@@ -220,11 +215,10 @@ func TestIntegration_DeleteStatus(t *testing.T) {
 		require.Error(t, gotErr)
 
 		wantErr := eqStatusName.NewDeleteEquipmentStatusNameDefault(http.StatusInternalServerError)
-		msgExp := "can't delete equipment status"
 		codeExp := int32(http.StatusInternalServerError)
 		wantErr.Payload = &models.SwaggerError{
 			Code:    &codeExp,
-			Message: &msgExp,
+			Message: &messages.ErrDeleteEqStatus,
 			Details: "ent: equipment_status_name not found",
 		}
 		assert.Equal(t, wantErr, gotErr)
@@ -239,11 +233,10 @@ func TestIntegration_DeleteStatus(t *testing.T) {
 		require.Error(t, gotErr)
 
 		wantErr := eqStatusName.NewDeleteEquipmentStatusNameDefault(http.StatusUnauthorized)
-		msgExp := "token is invalid"
 		codeExp := int32(http.StatusUnauthorized)
 		wantErr.Payload = &models.SwaggerError{
 			Code:    &codeExp,
-			Message: &msgExp,
+			Message: &messages.ErrInvalidToken,
 		}
 		assert.Equal(t, wantErr, gotErr)
 	})

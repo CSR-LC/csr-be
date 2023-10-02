@@ -8,6 +8,7 @@ import (
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/swagger/client/registration_confirm"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/swagger/models"
 	utils "git.epam.com/epm-lstr/epm-lstr-lc/be/internal/integration-tests/common"
+	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/messages"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -53,11 +54,10 @@ func TestIntegration_SendConfirmLink(t *testing.T) {
 		require.Error(t, err)
 
 		errExp := registration_confirm.NewSendRegistrationConfirmLinkByLoginDefault(http.StatusInternalServerError)
-		msgExp := "Can't find this user, registration confirmation link wasn't send"
 		codeExp := int32(http.StatusInternalServerError)
 		errExp.Payload = &models.SwaggerError{
 			Code:    &codeExp,
-			Message: &msgExp,
+			Message: &messages.ErrRegistrationCannotFindUser,
 		}
 		assert.Equal(t, errExp, err)
 	})

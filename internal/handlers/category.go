@@ -12,6 +12,7 @@ import (
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/swagger/models"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/swagger/restapi/operations"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/swagger/restapi/operations/categories"
+	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/messages"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/repositories"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/utils"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/pkg/domain"
@@ -43,9 +44,9 @@ func (c *Category) CreateNewCategoryFunc(repository domain.CategoryRepository) c
 		ctx := s.HTTPRequest.Context()
 		createdCategory, err := repository.CreateCategory(ctx, *s.NewCategory)
 		if err != nil {
-			c.logger.Error(errCreateCategory, zap.Error(err))
+			c.logger.Error(messages.ErrCreateCategory, zap.Error(err))
 			return categories.NewCreateNewCategoryDefault(http.StatusInternalServerError).
-				WithPayload(buildInternalErrorPayload(errCreateCategory, err.Error()))
+				WithPayload(buildInternalErrorPayload(messages.ErrCreateCategory, err.Error()))
 		}
 		return categories.NewCreateNewCategoryCreated().WithPayload(&models.CreateNewCategoryResponse{
 			Data: mapCategory(createdCategory),
@@ -63,9 +64,9 @@ func (c *Category) GetAllCategoriesFunc(repository domain.CategoryRepository) ca
 
 		total, err := repository.AllCategoriesTotal(ctx)
 		if err != nil {
-			c.logger.Error(errQueryTotalCategories, zap.Error(err))
+			c.logger.Error(messages.ErrQueryTotalCategories, zap.Error(err))
 			return categories.NewGetAllCategoriesDefault(http.StatusInternalServerError).
-				WithPayload(buildInternalErrorPayload(errQueryTotalCategories, err.Error()))
+				WithPayload(buildInternalErrorPayload(messages.ErrQueryTotalCategories, err.Error()))
 		}
 		var allCategories []*ent.Category
 		if total > 0 {
@@ -82,9 +83,9 @@ func (c *Category) GetAllCategoriesFunc(repository domain.CategoryRepository) ca
 			}
 			allCategories, err = repository.AllCategories(ctx, filter)
 			if err != nil {
-				c.logger.Error(errQueryCategories, zap.Error(err))
+				c.logger.Error(messages.ErrQueryCategories, zap.Error(err))
 				return categories.NewGetAllCategoriesDefault(http.StatusInternalServerError).
-					WithPayload(buildInternalErrorPayload(errQueryCategories, err.Error()))
+					WithPayload(buildInternalErrorPayload(messages.ErrQueryCategories, err.Error()))
 			}
 		}
 		mappedCategories := make([]*models.Category, len(allCategories))
@@ -105,9 +106,9 @@ func (c *Category) GetCategoryByIDFunc(repository domain.CategoryRepository) cat
 		ctx := s.HTTPRequest.Context()
 		category, err := repository.CategoryByID(ctx, int(s.CategoryID))
 		if err != nil {
-			c.logger.Error(errGetCategory, zap.Error(err))
+			c.logger.Error(messages.ErrGetCategory, zap.Error(err))
 			return categories.NewGetCategoryByIDDefault(http.StatusInternalServerError).
-				WithPayload(buildInternalErrorPayload(errGetCategory, err.Error()))
+				WithPayload(buildInternalErrorPayload(messages.ErrGetCategory, err.Error()))
 		}
 		return categories.NewGetCategoryByIDOK().WithPayload(&models.GetCategoryByIDResponse{
 			Data: mapCategory(category),
@@ -120,11 +121,11 @@ func (c *Category) DeleteCategoryFunc(repository domain.CategoryRepository) cate
 		ctx := s.HTTPRequest.Context()
 		err := repository.DeleteCategoryByID(ctx, int(s.CategoryID))
 		if err != nil {
-			c.logger.Error(errDeleteCategory, zap.Error(err))
+			c.logger.Error(messages.ErrDeleteCategory, zap.Error(err))
 			return categories.NewDeleteCategoryDefault(http.StatusInternalServerError).
-				WithPayload(buildInternalErrorPayload(errDeleteCategory, err.Error()))
+				WithPayload(buildInternalErrorPayload(messages.ErrDeleteCategory, err.Error()))
 		}
-		return categories.NewDeleteCategoryOK().WithPayload(categoryDeleted)
+		return categories.NewDeleteCategoryOK().WithPayload(messages.MsgCategoryDeleted)
 	}
 }
 
@@ -133,9 +134,9 @@ func (c *Category) UpdateCategoryFunc(repository domain.CategoryRepository) cate
 		ctx := s.HTTPRequest.Context()
 		updatedCategory, err := repository.UpdateCategory(ctx, int(s.CategoryID), *s.UpdateCategory)
 		if err != nil {
-			c.logger.Error(errUpdateCategory, zap.Error(err))
+			c.logger.Error(messages.ErrUpdateCategory, zap.Error(err))
 			return categories.NewUpdateCategoryDefault(http.StatusInternalServerError).
-				WithPayload(buildInternalErrorPayload(errUpdateCategory, err.Error()))
+				WithPayload(buildInternalErrorPayload(messages.ErrUpdateCategory, err.Error()))
 		}
 
 		return categories.NewUpdateCategoryOK().WithPayload(&models.UpdateCategoryResponse{

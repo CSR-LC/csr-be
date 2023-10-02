@@ -8,6 +8,7 @@ import (
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/swagger/client/users"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/swagger/models"
 	utils "git.epam.com/epm-lstr/epm-lstr-lc/be/internal/integration-tests/common"
+	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/messages"
 
 	"github.com/brianvoe/gofakeit/v6"
 	"github.com/go-openapi/strfmt"
@@ -58,11 +59,10 @@ func TestIntegration_RegisterUser(t *testing.T) {
 		require.Error(t, err, r)
 
 		errExp := users.NewPostUserDefault(http.StatusExpectationFailed)
-		msgExp := "login is already used"
 		codeExp := int32(http.StatusExpectationFailed)
 		errExp.Payload = &models.SwaggerError{
 			Code:    &codeExp,
-			Message: &msgExp,
+			Message: &messages.ErrLoginInUse,
 		}
 		assert.Equal(t, errExp, err)
 	})
@@ -149,19 +149,26 @@ func TestIntegration_RegisterUser(t *testing.T) {
 	})
 
 	t.Run("name validation error", func(t *testing.T) {
-		empty := ""
-		data.Name = empty
+		userType = "person"
+		data = &models.UserRegister{
+			ActiveAreas: []int64{3},
+			Login:       &l,
+			Password:    &p,
+			Type:        &userType,
+			Name:        "",
+			Email:       strfmt.Email(gofakeit.Email()),
+		}
 		params.SetData(data)
 
 		_, err := c.Users.PostUser(params)
 		require.Error(t, err)
 
-		errExp := users.NewPostUserDefault(422)
-		msgExp := "login in body should be at least 3 chars long"
-		codeExp := int32(604)
+		errExp := users.NewPostUserDefault(http.StatusInternalServerError)
+		codeExp := int32(http.StatusInternalServerError)
 		errExp.Payload = &models.SwaggerError{
 			Code:    &codeExp,
-			Message: &msgExp,
+			Message: &messages.ErrCreateUser,
+			Details: "ent: validator failed for field \"User.name\": value is less than the required length",
 		}
 
 		assert.Equal(t, errExp, err)
@@ -169,33 +176,48 @@ func TestIntegration_RegisterUser(t *testing.T) {
 
 	t.Run("email validation error", func(t *testing.T) {
 		empty := ""
-		data.Email = strfmt.Email(empty)
+		data = &models.UserRegister{
+			ActiveAreas: []int64{3},
+			Login:       &l,
+			Password:    &p,
+			Type:        &userType,
+			Name:        gofakeit.Name(),
+			Email:       strfmt.Email(empty),
+		}
+
 		params.SetData(data)
 
 		_, err := c.Users.PostUser(params)
 		require.Error(t, err)
 
-		errExp := users.NewPostUserDefault(422)
-		msgExp := "login in body should be at least 3 chars long"
-		codeExp := int32(604)
+		errExp := users.NewPostUserDefault(http.StatusInternalServerError)
+		codeExp := int32(http.StatusInternalServerError)
 		errExp.Payload = &models.SwaggerError{
 			Code:    &codeExp,
-			Message: &msgExp,
+			Message: &messages.ErrCreateUser,
+			Details: "ent: validator failed for field \"User.email\": value is less than the required length",
 		}
 
 		assert.Equal(t, errExp, err)
 	})
 
 	t.Run("password validation error", func(t *testing.T) {
-		data.Password = nil
+		data = &models.UserRegister{
+			ActiveAreas: []int64{3},
+			Login:       &l,
+			Password:    nil,
+			Type:        &userType,
+			Name:        gofakeit.Name(),
+			Email:       strfmt.Email(gofakeit.Email()),
+		}
 		params.SetData(data)
 
 		_, err := c.Users.PostUser(params)
 		require.Error(t, err)
 
 		errExp := users.NewPostUserDefault(422)
-		msgExp := "login in body should be at least 3 chars long"
-		codeExp := int32(604)
+		msgExp := "password in body is required"
+		codeExp := int32(602)
 		errExp.Payload = &models.SwaggerError{
 			Code:    &codeExp,
 			Message: &msgExp,
@@ -209,12 +231,8 @@ func TestIntegration_RegisterUser(t *testing.T) {
 			Login:       &l,
 			Password:    &p,
 			Type:        &userType,
-			// not provided in documentation, but also required
-			// todo: update documentation
-			Name: gofakeit.Name(),
-			// not provided in documentation, but also required
-			// todo: update documentation
-			Email: strfmt.Email(gofakeit.Email()),
+			Name:        gofakeit.Name(),
+			Email:       strfmt.Email(gofakeit.Email()),
 		}
 
 		notEmpty := "22"

@@ -17,6 +17,7 @@ import (
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/swagger/client/categories"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/swagger/models"
 	utils "git.epam.com/epm-lstr/epm-lstr-lc/be/internal/integration-tests/common"
+	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/messages"
 )
 
 var (
@@ -93,11 +94,10 @@ func TestIntegration_CreateCategory(t *testing.T) {
 		require.Error(t, gotErr)
 
 		wantErr := categories.NewCreateNewCategoryDefault(http.StatusUnauthorized)
-		msgExp := "token is invalid"
 		codeExp := int32(http.StatusUnauthorized)
 		wantErr.Payload = &models.SwaggerError{
 			Code:    &codeExp,
-			Message: &msgExp,
+			Message: &messages.ErrInvalidToken,
 		}
 		assert.Equal(t, wantErr, gotErr)
 	})
@@ -173,11 +173,10 @@ func TestIntegration_GetCategoryByID(t *testing.T) {
 		require.Error(t, gotErr)
 
 		wantErr := categories.NewGetCategoryByIDDefault(http.StatusInternalServerError)
-		msgExp := "failed to get category"
 		codeExp := int32(http.StatusInternalServerError)
 		wantErr.Payload = &models.SwaggerError{
 			Code:    &codeExp,
-			Message: &msgExp,
+			Message: &messages.ErrGetCategory,
 			Details: "ent: category not found",
 		}
 		assert.Equal(t, wantErr, gotErr)
@@ -189,11 +188,10 @@ func TestIntegration_GetCategoryByID(t *testing.T) {
 		require.Error(t, gotErr)
 
 		wantErr := categories.NewGetCategoryByIDDefault(http.StatusUnauthorized)
-		msgExp := "token is invalid"
 		codeExp := int32(http.StatusUnauthorized)
 		wantErr.Payload = &models.SwaggerError{
 			Code:    &codeExp,
-			Message: &msgExp,
+			Message: &messages.ErrInvalidToken,
 		}
 		assert.Equal(t, wantErr, gotErr)
 	})
@@ -276,11 +274,10 @@ func TestIntegration_EditCategory(t *testing.T) {
 		require.Error(t, gotErr)
 
 		wantErr := categories.NewUpdateCategoryDefault(http.StatusInternalServerError)
-		msgExp := "cant update category"
 		codeExp := int32(http.StatusInternalServerError)
 		wantErr.Payload = &models.SwaggerError{
 			Code:    &codeExp,
-			Message: &msgExp,
+			Message: &messages.ErrUpdateCategory,
 			Details: "ent: category not found",
 		}
 		assert.Equal(t, wantErr, gotErr)
@@ -302,11 +299,10 @@ func TestIntegration_EditCategory(t *testing.T) {
 		require.Error(t, gotErr)
 
 		wantErr := categories.NewUpdateCategoryDefault(http.StatusUnauthorized)
-		msgExp := "token is invalid"
 		codeExp := int32(http.StatusUnauthorized)
 		wantErr.Payload = &models.SwaggerError{
 			Code:    &codeExp,
-			Message: &msgExp,
+			Message: &messages.ErrInvalidToken,
 		}
 		assert.Equal(t, wantErr, gotErr)
 	})
@@ -340,11 +336,10 @@ func TestIntegration_DeleteCategory(t *testing.T) {
 		require.Error(t, gotErr)
 
 		wantErr := categories.NewDeleteCategoryDefault(http.StatusInternalServerError)
-		msgExp := "delete category failed"
 		codeExp := int32(http.StatusInternalServerError)
 		wantErr.Payload = &models.SwaggerError{
 			Code:    &codeExp,
-			Message: &msgExp,
+			Message: &messages.ErrDeleteCategory,
 			Details: "ent: category not found",
 		}
 		assert.Equal(t, wantErr, gotErr)
@@ -361,11 +356,10 @@ func TestIntegration_DeleteCategory(t *testing.T) {
 		require.Error(t, gotErr)
 
 		wantErr := categories.NewDeleteCategoryDefault(http.StatusUnauthorized)
-		msgExp := "token is invalid"
 		codeExp := int32(http.StatusUnauthorized)
 		wantErr.Payload = &models.SwaggerError{
 			Code:    &codeExp,
-			Message: &msgExp,
+			Message: &messages.ErrInvalidToken,
 		}
 		assert.Equal(t, wantErr, gotErr)
 	})
