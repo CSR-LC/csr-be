@@ -70,7 +70,6 @@ func (s *UserSuite) TearDownSuite() {
 }
 
 func (s *UserSuite) TestUserRepository_UsersListTotal() {
-	fmt.Println(s.users)
 	t := s.T()
 	repository := NewUserRepository()
 	ctx := s.ctx
