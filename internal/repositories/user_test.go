@@ -2,8 +2,8 @@ package repositories
 
 import (
 	"context"
+	"fmt"
 	"math"
-	"strconv"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -40,10 +40,10 @@ func (s *UserSuite) SetupTest() {
 	s.users = make(map[int]*ent.User)
 	for i := 1; i <= 12; i++ {
 		s.users[i] = &ent.User{
-			Login:    "user_" + strconv.Itoa(i),
-			Email:    "user_" + strconv.Itoa(i) + "@mail.com",
+			Login:    fmt.Sprintf("user_%d", i),
+			Email:    fmt.Sprintf("user_%d@mail.com", i),
 			Password: "password",
-			Name:     "user" + strconv.Itoa(i),
+			Name:     fmt.Sprintf("user%d", i),
 		}
 	}
 
@@ -70,6 +70,7 @@ func (s *UserSuite) TearDownSuite() {
 }
 
 func (s *UserSuite) TestUserRepository_UsersListTotal() {
+	fmt.Println(s.users)
 	t := s.T()
 	repository := NewUserRepository()
 	ctx := s.ctx
