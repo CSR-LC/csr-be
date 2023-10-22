@@ -608,6 +608,59 @@ func (s *EquipmentSuite) TestEquipmentRepository_BlockEquipment() {
 	require.NoError(t, tx.Commit())
 }
 
+// Update test
+func (s *EquipmentSuite) TestEquipmentRepository_EditBlockEquipment() {
+	t := s.T()
+	ctx := s.ctx
+	tx, err := s.client.Tx(ctx)
+	require.NoError(t, err)
+
+	blockStartDate := time.Time(strfmt.DateTime(time.Now().AddDate(0, 0, 0)))
+	blockEndDate := time.Time(strfmt.DateTime(time.Now().AddDate(0, 0, 5)))
+	eqToBlock, err := tx.Equipment.Query().WithCurrentStatus().First(ctx)
+	require.NoError(t, err)
+	require.Empty(t, eqToBlock.Edges.EquipmentStatus)
+	approvedStatus, err := tx.OrderStatusName.Create().SetStatus(domain.OrderStatusApproved).Save(ctx)
+	require.NoError(t, err)
+	_, err = tx.OrderStatusName.Create().SetStatus(domain.OrderStatusBlocked).Save(s.ctx)
+	require.NoError(t, err)
+
+	order, err := tx.Order.Create().
+		AddEquipmentIDs(eqToBlock.ID).
+		SetDescription("test order").
+		SetQuantity(1).
+		SetCurrentStatus(approvedStatus).
+		SetRentStart(blockStartDate).
+		SetRentEnd(blockEndDate).
+		SetUsers(s.user).
+		Save(s.ctx)
+	require.NoError(t, err)
+
+	_, err = tx.OrderStatus.Create().
+		SetComment("qwe").
+		SetCurrentDate(time.Now()).
+		SetOrderID(order.ID).
+		SetUsers(s.user).
+		SetOrderStatusName(approvedStatus).
+		Save(ctx)
+	require.NoError(t, err)
+
+	orToBlock, err := tx.Order.Query().WithOrderStatus().WithCurrentStatus().First(ctx)
+	require.NoError(t, err)
+	ctx = context.WithValue(ctx, middlewares.TxContextKey, tx)
+	err = s.repository.BlockEquipment(ctx, eqToBlock.ID, blockStartDate, blockEndDate, s.user.ID)
+	require.NoError(t, err)
+	eqBlocked, err := tx.Equipment.Query().WithEquipmentStatus().WithCurrentStatus().First(ctx)
+	require.NoError(t, err)
+	orBlocked, err := tx.Order.Query().WithOrderStatus().WithCurrentStatus().First(ctx)
+	require.NoError(t, err)
+
+	require.NotEmpty(t, eqBlocked.Edges.EquipmentStatus)
+	require.NotEqual(t, eqToBlock.Edges.CurrentStatus.Name, eqBlocked.Edges.CurrentStatus.Name)
+	require.NotEqual(t, orToBlock.Edges.CurrentStatus.Status, orBlocked.Edges.CurrentStatus.Status)
+	require.NoError(t, tx.Commit())
+}
+
 func (s *EquipmentSuite) TestEquipmentRepository_UnblockEquipment() {
 	t := s.T()
 	ctx := s.ctx
