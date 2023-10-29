@@ -3028,6 +3028,7 @@ definitions:
       - location
       - description
       - photoID
+      - unavailabilityPeriods
     properties:
       id:
         type: integer
@@ -3087,6 +3088,10 @@ definitions:
         type: array
         items:
           $ref: "#/definitions/PetKind"
+      unavailabilityPeriods:
+        type: array
+        items:
+          $ref: "#/definitions/EquipmentUnavailabilityPeriods"
   ListEquipment:
     type: object
     required:
