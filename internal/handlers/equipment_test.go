@@ -57,10 +57,10 @@ func TestSetEquipmentHandler(t *testing.T) {
 
 type EquipmentTestSuite struct {
 	suite.Suite
-	logger         *zap.Logger
-	equipmentRepo  *mocks.EquipmentRepository
-	statusNameRepo *mocks.EquipmentStatusNameRepository
-	equipment      *Equipment
+	logger        *zap.Logger
+	equipmentRepo *mocks.EquipmentRepository
+	statusRepo    *mocks.EquipmentStatusNameRepository
+	equipment     *Equipment
 }
 
 func InvalidEquipment(t *testing.T) *ent.Equipment {
@@ -93,7 +93,7 @@ func TestEquipmentSuite(t *testing.T) {
 func (s *EquipmentTestSuite) SetupTest() {
 	s.logger = zap.NewNop()
 	s.equipmentRepo = &mocks.EquipmentRepository{}
-	s.statusNameRepo = &mocks.EquipmentStatusNameRepository{}
+	s.statusRepo = &mocks.EquipmentStatusNameRepository{}
 	s.equipment = NewEquipment(s.logger)
 }
 
@@ -170,7 +170,7 @@ func (s *EquipmentTestSuite) TestEquipment_PostEquipmentFunc_RepoErr() {
 	request := http.Request{}
 	ctx := request.Context()
 
-	handlerFunc := s.equipment.PostEquipmentFunc(s.equipmentRepo, s.statusNameRepo)
+	handlerFunc := s.equipment.PostEquipmentFunc(s.equipmentRepo, s.statusRepo)
 	equipmentToAdd := models.Equipment{
 		NameSubstring: "test",
 	}
@@ -181,7 +181,7 @@ func (s *EquipmentTestSuite) TestEquipment_PostEquipmentFunc_RepoErr() {
 	}
 	err := errors.New("test error")
 
-	s.statusNameRepo.On("GetByName", ctx, domain.EquipmentStatusAvailable).Return(statusToAdd, nil)
+	s.statusRepo.On("GetByName", ctx, domain.EquipmentStatusAvailable).Return(statusToAdd, nil)
 	s.equipmentRepo.On("CreateEquipment", ctx, equipmentToAdd, statusToAdd).Return(nil, err)
 
 	resp := handlerFunc(data, nil)
@@ -197,7 +197,7 @@ func (s *EquipmentTestSuite) TestEquipment_PostEquipmentFunc_RepoStatusErr() {
 	request := http.Request{}
 	ctx := request.Context()
 
-	handlerFunc := s.equipment.PostEquipmentFunc(s.equipmentRepo, s.statusNameRepo)
+	handlerFunc := s.equipment.PostEquipmentFunc(s.equipmentRepo, s.statusRepo)
 	equipmentToAdd := models.Equipment{
 		NameSubstring: "test",
 	}
@@ -207,7 +207,7 @@ func (s *EquipmentTestSuite) TestEquipment_PostEquipmentFunc_RepoStatusErr() {
 	}
 	err := errors.New("test error")
 
-	s.statusNameRepo.On("GetByName", ctx, domain.EquipmentStatusAvailable).Return(nil, err)
+	s.statusRepo.On("GetByName", ctx, domain.EquipmentStatusAvailable).Return(nil, err)
 
 	resp := handlerFunc(data, nil)
 	responseRecorder := httptest.NewRecorder()
@@ -222,7 +222,7 @@ func (s *EquipmentTestSuite) TestEquipment_PostEquipmentFunc_MapErr() {
 	request := http.Request{}
 	ctx := request.Context()
 
-	handlerFunc := s.equipment.PostEquipmentFunc(s.equipmentRepo, s.statusNameRepo)
+	handlerFunc := s.equipment.PostEquipmentFunc(s.equipmentRepo, s.statusRepo)
 	equipmentToAdd := models.Equipment{
 		NameSubstring: "test",
 	}
@@ -233,7 +233,7 @@ func (s *EquipmentTestSuite) TestEquipment_PostEquipmentFunc_MapErr() {
 	statusToAdd := ValidStatus(t)
 	equipmentToReturn := InvalidEquipment(t)
 
-	s.statusNameRepo.On("GetByName", ctx, domain.EquipmentStatusAvailable).Return(statusToAdd, nil)
+	s.statusRepo.On("GetByName", ctx, domain.EquipmentStatusAvailable).Return(statusToAdd, nil)
 	s.equipmentRepo.On("CreateEquipment", ctx, equipmentToAdd, statusToAdd).Return(equipmentToReturn, nil)
 
 	resp := handlerFunc(data, nil)
@@ -249,7 +249,7 @@ func (s *EquipmentTestSuite) TestEquipment_PostEquipmentFunc_OK() {
 	request := http.Request{}
 	ctx := request.Context()
 
-	handlerFunc := s.equipment.PostEquipmentFunc(s.equipmentRepo, s.statusNameRepo)
+	handlerFunc := s.equipment.PostEquipmentFunc(s.equipmentRepo, s.statusRepo)
 	equipmentToAdd := models.Equipment{
 		NameSubstring: "test",
 	}
@@ -260,7 +260,7 @@ func (s *EquipmentTestSuite) TestEquipment_PostEquipmentFunc_OK() {
 	statusToAdd := ValidStatus(t)
 	equipmentToReturn := ValidEquipment(t, 1)
 
-	s.statusNameRepo.On("GetByName", ctx, domain.EquipmentStatusAvailable).Return(statusToAdd, nil)
+	s.statusRepo.On("GetByName", ctx, domain.EquipmentStatusAvailable).Return(statusToAdd, nil)
 	s.equipmentRepo.On("CreateEquipment", ctx, equipmentToAdd, statusToAdd).Return(equipmentToReturn, nil)
 
 	resp := handlerFunc(data, nil)
