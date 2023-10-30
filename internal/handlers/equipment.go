@@ -161,10 +161,6 @@ func (c Equipment) ListEquipmentFunc(repository domain.EquipmentRepository) equi
 			Items: make([]*models.EquipmentResponse, len(equipments)),
 			Total: &totalEquipments,
 		}
-		eqIDs := make([]int, len(equipments))
-		for i, eq := range equipments {
-			eqIDs[i] = eq.ID
-		}
 		for i, eq := range equipments {
 			tmpEq, errMap := mapEquipmentResponse(eq)
 			if errMap != nil {
