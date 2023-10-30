@@ -60,7 +60,6 @@ type EquipmentTestSuite struct {
 	logger         *zap.Logger
 	equipmentRepo  *mocks.EquipmentRepository
 	statusNameRepo *mocks.EquipmentStatusNameRepository
-	statusRepo     *mocks.EquipmentStatusRepository
 	equipment      *Equipment
 }
 
@@ -95,7 +94,6 @@ func (s *EquipmentTestSuite) SetupTest() {
 	s.logger = zap.NewNop()
 	s.equipmentRepo = &mocks.EquipmentRepository{}
 	s.statusNameRepo = &mocks.EquipmentStatusNameRepository{}
-	s.statusRepo = &mocks.EquipmentStatusRepository{}
 	s.equipment = NewEquipment(s.logger)
 }
 
