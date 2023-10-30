@@ -411,7 +411,7 @@ func (s *EquipmentTestSuite) TestEquipment_ListEquipmentFunc_RepoErr() {
 	request := http.Request{}
 	ctx := request.Context()
 
-	handlerFunc := s.equipment.ListEquipmentFunc(s.equipmentRepo, s.statusRepo)
+	handlerFunc := s.equipment.ListEquipmentFunc(s.equipmentRepo)
 	data := equipment.GetAllEquipmentParams{
 		HTTPRequest: &request,
 	}
@@ -431,7 +431,7 @@ func (s *EquipmentTestSuite) TestEquipment_ListEquipmentFunc_NotFound() {
 	request := http.Request{}
 	ctx := request.Context()
 
-	handlerFunc := s.equipment.ListEquipmentFunc(s.equipmentRepo, s.statusRepo)
+	handlerFunc := s.equipment.ListEquipmentFunc(s.equipmentRepo)
 	data := equipment.GetAllEquipmentParams{
 		HTTPRequest: &request,
 	}
@@ -462,7 +462,7 @@ func (s *EquipmentTestSuite) TestEquipment_ListEquipmentFunc_MapErr() {
 	orderBy := "asc"
 	orderColumn := "id"
 
-	handlerFunc := s.equipment.ListEquipmentFunc(s.equipmentRepo, s.statusRepo)
+	handlerFunc := s.equipment.ListEquipmentFunc(s.equipmentRepo)
 	data := equipment.GetAllEquipmentParams{
 		HTTPRequest: &request,
 	}
@@ -488,7 +488,7 @@ func (s *EquipmentTestSuite) TestEquipment_ListEquipmentFunc_EmptyPaginationPara
 	orderBy := "asc"
 	orderColumn := "id"
 
-	handlerFunc := s.equipment.ListEquipmentFunc(s.equipmentRepo, s.statusRepo)
+	handlerFunc := s.equipment.ListEquipmentFunc(s.equipmentRepo)
 	data := equipment.GetAllEquipmentParams{
 		HTTPRequest: &request,
 	}
@@ -522,7 +522,7 @@ func (s *EquipmentTestSuite) TestEquipment_ListEquipmentFunc_LimitGreaterThanTot
 	var orderBy = "asc"
 	var orderColumn = "id"
 
-	handlerFunc := s.equipment.ListEquipmentFunc(s.equipmentRepo, s.statusRepo)
+	handlerFunc := s.equipment.ListEquipmentFunc(s.equipmentRepo)
 	data := equipment.GetAllEquipmentParams{
 		HTTPRequest: &request,
 		Limit:       &limit,
@@ -560,7 +560,7 @@ func (s *EquipmentTestSuite) TestEquipment_ListEquipmentFunc_LimitLessThanTotal(
 	var orderBy = "asc"
 	var orderColumn = "id"
 
-	handlerFunc := s.equipment.ListEquipmentFunc(s.equipmentRepo, s.statusRepo)
+	handlerFunc := s.equipment.ListEquipmentFunc(s.equipmentRepo)
 	data := equipment.GetAllEquipmentParams{
 		HTTPRequest: &request,
 		Limit:       &limit,
@@ -608,7 +608,7 @@ func (s *EquipmentTestSuite) TestEquipment_ListEquipmentFunc_SecondPage() {
 	var orderBy = "asc"
 	var orderColumn = "id"
 
-	handlerFunc := s.equipment.ListEquipmentFunc(s.equipmentRepo, s.statusRepo)
+	handlerFunc := s.equipment.ListEquipmentFunc(s.equipmentRepo)
 	data := equipment.GetAllEquipmentParams{
 		HTTPRequest: &request,
 		Limit:       &limit,
@@ -656,7 +656,7 @@ func (s *EquipmentTestSuite) TestEquipment_ListEquipmentFunc_SeveralPages() {
 	var orderBy = "asc"
 	var orderColumn = "id"
 
-	handlerFunc := s.equipment.ListEquipmentFunc(s.equipmentRepo, s.statusRepo)
+	handlerFunc := s.equipment.ListEquipmentFunc(s.equipmentRepo)
 	data := equipment.GetAllEquipmentParams{
 		HTTPRequest: &request,
 		Limit:       &limit,

@@ -190,7 +190,15 @@ func (r *equipmentRepository) AllEquipments(ctx context.Context, limit, offset i
 		return nil, err
 	}
 	result, err := tx.Equipment.Query().Order(orderFunc).Limit(limit).Offset(offset).
-		WithCategory().WithSubcategory().WithCurrentStatus().WithPetKinds().WithPetSize().WithPhoto().
+		WithCategory().WithSubcategory().WithCurrentStatus().WithPetKinds().
+		WithPetSize().WithPhoto().
+		WithEquipmentStatus(func(esq *ent.EquipmentStatusQuery) {
+			esq.
+				Where(equipmentstatus.EndDateGTE(time.Now())).
+				Where(equipmentstatus.HasEquipmentStatusNameWith(
+					equipmentstatusname.NameEQ(domain.EquipmentStatusNotAvailable),
+				))
+		}).
 		All(ctx)
 	if err != nil {
 		return nil, err

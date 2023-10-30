@@ -135,44 +135,6 @@ func (r *equipmentStatusRepository) GetUnavailableEquipmentStatusByEquipmentID(
 		All(ctx)
 }
 
-// GetEquipmentsNotAvailablePeriods returns blocking periods ('not available')
-// for each equipment ID if there exists a period where the end date is greater
-// than the current date.
-//
-// According to our business logic, only 1 such period  should be for each equipment
-func (r *equipmentStatusRepository) GetEquipmentsNotAvailablePeriods(
-	ctx context.Context, equipmentIDs []int) (map[int][]*ent.EquipmentStatus, error) {
-	tx, err := middlewares.TxFromContext(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	periods, err := tx.EquipmentStatus.Query().
-		Where(equipmentstatus.HasEquipmentStatusNameWith(
-			equipmentstatusname.NameEQ(domain.EquipmentStatusNotAvailable)),
-		).
-		Where(equipmentstatus.EndDateGTE(time.Now())).
-		Where(equipmentstatus.HasEquipmentsWith(
-			equipment.IDIn(equipmentIDs...),
-		)).WithEquipments().
-		All(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	res := make(map[int][]*ent.EquipmentStatus)
-	for _, p := range periods {
-		periods, found := res[p.Edges.Equipments.ID]
-		if !found {
-			res[p.Edges.Equipments.ID] = make([]*ent.EquipmentStatus, 0)
-		}
-		periods = append(periods, p)
-		res[p.Edges.Equipments.ID] = periods
-	}
-
-	return res, nil
-}
-
 func (r *equipmentStatusRepository) HasStatusByPeriod(ctx context.Context, status string, eqID int,
 	startDate, endDate time.Time) (bool, error) {
 	tx, err := middlewares.TxFromContext(ctx)

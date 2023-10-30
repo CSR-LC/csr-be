@@ -23,13 +23,12 @@ import (
 
 func SetEquipmentHandler(logger *zap.Logger, api *operations.BeAPI) {
 	eqRepo := repositories.NewEquipmentRepository()
-	equipmentStatusRepo := repositories.NewEquipmentStatusRepository()
 	eqStatusNameRepo := repositories.NewEquipmentStatusNameRepository()
 	equipmentHandler := NewEquipment(logger)
 	api.EquipmentCreateNewEquipmentHandler = equipmentHandler.PostEquipmentFunc(eqRepo, eqStatusNameRepo)
 	api.EquipmentGetEquipmentHandler = equipmentHandler.GetEquipmentFunc(eqRepo)
 	api.EquipmentDeleteEquipmentHandler = equipmentHandler.DeleteEquipmentFunc(eqRepo)
-	api.EquipmentGetAllEquipmentHandler = equipmentHandler.ListEquipmentFunc(eqRepo, equipmentStatusRepo)
+	api.EquipmentGetAllEquipmentHandler = equipmentHandler.ListEquipmentFunc(eqRepo)
 	api.EquipmentEditEquipmentHandler = equipmentHandler.EditEquipmentFunc(eqRepo)
 	api.EquipmentFindEquipmentHandler = equipmentHandler.FindEquipmentFunc(eqRepo)
 	api.EquipmentArchiveEquipmentHandler = equipmentHandler.ArchiveEquipmentFunc(eqRepo)
@@ -135,8 +134,7 @@ func (c Equipment) DeleteEquipmentFunc(repository domain.EquipmentRepository) eq
 	}
 }
 
-func (c Equipment) ListEquipmentFunc(repository domain.EquipmentRepository,
-	equipmentStatusRepo domain.EquipmentStatusRepository) equipment.GetAllEquipmentHandlerFunc {
+func (c Equipment) ListEquipmentFunc(repository domain.EquipmentRepository) equipment.GetAllEquipmentHandlerFunc {
 	return func(s equipment.GetAllEquipmentParams, _ *models.Principal) middleware.Responder {
 		ctx := s.HTTPRequest.Context()
 		limit := utils.GetValueByPointerOrDefaultValue(s.Limit, math.MaxInt)
@@ -167,12 +165,6 @@ func (c Equipment) ListEquipmentFunc(repository domain.EquipmentRepository,
 		for i, eq := range equipments {
 			eqIDs[i] = eq.ID
 		}
-		eqBlockPeriods, err := equipmentStatusRepo.GetEquipmentsNotAvailablePeriods(ctx, eqIDs)
-		if err != nil {
-			c.logger.Error(messages.ErrQueryEqStatuses, zap.Error(err))
-			return equipment.NewGetAllEquipmentDefault(http.StatusInternalServerError).
-				WithPayload(buildInternalErrorPayload(messages.ErrQueryEqStatuses, err.Error()))
-		}
 		for i, eq := range equipments {
 			tmpEq, errMap := mapEquipmentResponse(eq)
 			if errMap != nil {
@@ -180,7 +172,7 @@ func (c Equipment) ListEquipmentFunc(repository domain.EquipmentRepository,
 				return equipment.NewGetAllEquipmentDefault(http.StatusInternalServerError).
 					WithPayload(buildInternalErrorPayload(messages.ErrMapEquipment, errMap.Error()))
 			}
-			tmpEq.UnavailabilityPeriods = mapUnavailabilityPeriods(eqBlockPeriods[eq.ID])
+			tmpEq.UnavailabilityPeriods = mapUnavailabilityPeriods(eq.Edges.EquipmentStatus)
 			listEquipment.Items[i] = tmpEq
 		}
 		return equipment.NewGetAllEquipmentOK().WithPayload(listEquipment)
