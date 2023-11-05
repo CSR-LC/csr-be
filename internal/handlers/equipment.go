@@ -89,6 +89,7 @@ func (c Equipment) GetEquipmentFunc(repository domain.EquipmentRepository) equip
 			return equipment.NewGetEquipmentDefault(http.StatusInternalServerError).
 				WithPayload(buildInternalErrorPayload(messages.ErrMapEquipment, err.Error()))
 		}
+		returnEq.UnavailabilityPeriods = mapUnavailabilityPeriods(eq.Edges.EquipmentStatus)
 		return equipment.NewGetEquipmentOK().WithPayload(returnEq)
 	}
 }

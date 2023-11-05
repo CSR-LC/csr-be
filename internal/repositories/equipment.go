@@ -146,7 +146,14 @@ func (r *equipmentRepository) EquipmentByID(ctx context.Context, id int) (*ent.E
 		return nil, err
 	}
 	result, err := tx.Equipment.Query().Where(equipment.ID(id)).
-		WithCategory().WithSubcategory().WithCurrentStatus().WithPetKinds().WithPetSize().WithPhoto().Only(ctx)
+		WithCategory().WithSubcategory().WithCurrentStatus().WithPetKinds().WithPetSize().WithPhoto().
+		WithEquipmentStatus(func(esq *ent.EquipmentStatusQuery) {
+			esq.
+				Where(equipmentstatus.EndDateGTE(time.Now())).
+				Where(equipmentstatus.HasEquipmentStatusNameWith(
+					equipmentstatusname.NameEQ(domain.EquipmentStatusNotAvailable),
+				))
+		}).Only(ctx)
 	if err != nil {
 		return nil, err
 	}
