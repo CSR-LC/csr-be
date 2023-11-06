@@ -710,7 +710,7 @@ func TestIntegration_GetEquipments_WithBlockingPeriods(t *testing.T) {
 		require.NoError(t, err)
 		for _, eq := range res.Payload.Items {
 			if *eq.ID == id {
-				require.Equal(t, 2, len(eq.UnavailabilityPeriods))
+				require.Equal(t, 2, len(eq.BlockingPeriods))
 			}
 		}
 	})
@@ -720,7 +720,7 @@ func TestIntegration_GetEquipments_WithBlockingPeriods(t *testing.T) {
 		params.EquipmentID = id
 		res, err := client.Equipment.GetEquipment(params, auth)
 		require.NoError(t, err)
-		require.Equal(t, 2, len(res.Payload.UnavailabilityPeriods))
+		require.Equal(t, 2, len(res.Payload.BlockingPeriods))
 	})
 
 	t.Run("Get Equipment by ID without block periods", func(t *testing.T) {
@@ -728,7 +728,7 @@ func TestIntegration_GetEquipments_WithBlockingPeriods(t *testing.T) {
 		params.EquipmentID = id + 1
 		res, err := client.Equipment.GetEquipment(params, auth)
 		require.NoError(t, err)
-		require.Nil(t, res.Payload.UnavailabilityPeriods)
+		require.Nil(t, res.Payload.BlockingPeriods)
 	})
 }
 
