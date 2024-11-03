@@ -161,7 +161,7 @@ func mapUserOrder(o *ent.Order, log *zap.Logger) (*models.UserOrder, error) {
 	}, nil
 }
 
-func mapUserOrdersToResponse(entOrders []*ent.Order, log *zap.Logger) ([]*models.UserOrder, error) {
+func mapUserOrdersToResponse(log *zap.Logger, entOrders ...*ent.Order) ([]*models.UserOrder, error) {
 	modelOrders := make([]*models.UserOrder, len(entOrders))
 	for i, o := range entOrders {
 		order, err := mapUserOrder(o, log)
@@ -175,7 +175,7 @@ func mapUserOrdersToResponse(entOrders []*ent.Order, log *zap.Logger) ([]*models
 	return modelOrders, nil
 }
 
-func mapOrdersToResponse(entOrders []*ent.Order, log *zap.Logger) ([]*models.Order, error) {
+func mapOrdersToResponse(log *zap.Logger, entOrders ...*ent.Order) ([]*models.Order, error) {
 	modelOrders := make([]*models.Order, len(entOrders))
 	for i, o := range entOrders {
 		uo, err := mapUserOrder(o, log)
@@ -243,7 +243,7 @@ func (o Order) ListUserOrdersFunc(repository domain.OrderRepository) orders.GetU
 			}
 		}
 
-		mappedOrders, err := mapUserOrdersToResponse(items, o.logger)
+		mappedOrders, err := mapUserOrdersToResponse(o.logger, items...)
 		if err != nil {
 			o.logger.Error(messages.ErrMapOrder, zap.Error(err))
 			return orders.NewGetUserOrdersDefault(http.StatusInternalServerError).
@@ -306,7 +306,7 @@ func (o Order) ListAllOrdersFunc(repository domain.OrderRepository) orders.GetAl
 			}
 		}
 
-		mappedOrders, err := mapOrdersToResponse(items, o.logger)
+		mappedOrders, err := mapOrdersToResponse(o.logger, items...)
 		if err != nil {
 			o.logger.Error(messages.ErrMapOrder, zap.Error(err))
 			return orders.NewGetAllOrdersDefault(http.StatusInternalServerError).
@@ -412,5 +412,33 @@ func (o Order) UpdateOrderFunc(repository domain.OrderRepository) orders.UpdateO
 		}
 
 		return orders.NewUpdateOrderOK().WithPayload(mappedOrder)
+	}
+}
+
+func (o Order) GetOrderFunc(repository domain.OrderRepository) orders.GetOrderHandlerFunc {
+	return func(p orders.GetOrderParams, principal *models.Principal) middleware.Responder {
+		ctx := p.HTTPRequest.Context()
+		orderID := int(p.OrderID)
+
+		order, err := repository.Get(ctx, orderID)
+		if err != nil {
+			if ent.IsNotFound(err) {
+				o.logger.Error(messages.ErrOrderNotFound, zap.Error(err))
+				return orders.NewGetOrderNotFound()
+			} else {
+				o.logger.Error(messages.ErrGetOrder, zap.Error(err))
+				return orders.NewGetOrderDefault(http.StatusInternalServerError).
+					WithPayload(buildInternalErrorPayload(messages.ErrGetOrder, err.Error()))
+			}
+		}
+
+		mappedOrder, err := mapOrdersToResponse(o.logger, order)
+		if err != nil {
+			o.logger.Error(messages.ErrGetOrder, zap.Error(err))
+			return orders.NewGetOrderDefault(http.StatusInternalServerError).
+				WithPayload(buildInternalErrorPayload(messages.ErrGetOrder, err.Error()))
+		}
+
+		return orders.NewGetOrderOK().WithPayload(mappedOrder[0])
 	}
 }
