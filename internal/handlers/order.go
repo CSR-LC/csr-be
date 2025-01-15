@@ -424,7 +424,7 @@ func (o Order) GetOrderFunc(repository domain.OrderRepository) orders.GetOrderHa
 		if err != nil {
 			if ent.IsNotFound(err) {
 				o.logger.Error(messages.ErrOrderNotFound, zap.Error(err))
-				return orders.NewGetOrderNotFound()
+				return orders.NewGetOrderNotFound().WithPayload(buildNotFoundErrorPayload(messages.ErrOrderNotFound, ""))
 			} else {
 				o.logger.Error(messages.ErrGetOrder, zap.Error(err))
 				return orders.NewGetOrderDefault(http.StatusInternalServerError).

@@ -1159,7 +1159,7 @@ paths:
         404:
           description: Not Found
           schema:
-            type: string
+            $ref: "#/definitions/SwaggerError"
         default:
           description: Unexpected error.
           schema:

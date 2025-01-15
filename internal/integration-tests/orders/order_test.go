@@ -721,7 +721,7 @@ func TestIntegration_GetOrder(t *testing.T) {
 		res, err := client.Orders.GetOrder(params, auth)
 		require.NoError(t, err)
 		assert.Equal(t, *order.Payload.ID, *res.Payload.ID)
-		assert.Equal(t, "test", *res.Payload.Description)
+		assert.Equal(t, desc, *res.Payload.Description)
 	})
 
 	t.Run("Get Order Not Found", func(t *testing.T) {
@@ -729,7 +729,7 @@ func TestIntegration_GetOrder(t *testing.T) {
 		params.OrderID = 999999
 
 		res, err := client.Orders.GetOrder(params, auth)
-		require.Equal(t, res.Code(), http.StatusNotFound)
+		require.Equal(t, http.StatusNotFound, res.Code())
 		require.NoError(t, err)
 	})
 }
