@@ -424,7 +424,7 @@ func (o Order) GetOrderFunc(repository domain.OrderRepository) orders.GetOrderHa
 		if err != nil {
 			if ent.IsNotFound(err) {
 				o.logger.Error(messages.ErrOrderNotFound, zap.Error(err))
-				return orders.NewGetOrderNotFound().WithPayload(buildNotFoundErrorPayload(messages.ErrOrderNotFound, ""))
+				return orders.NewGetOrderNotFound().WithPayload(buildNotFoundErrorPayload(messages.ErrOrderNotFound, "Order not found"))
 			} else {
 				o.logger.Error(messages.ErrGetOrder, zap.Error(err))
 				return orders.NewGetOrderDefault(http.StatusInternalServerError).
@@ -436,7 +436,7 @@ func (o Order) GetOrderFunc(repository domain.OrderRepository) orders.GetOrderHa
 		if err != nil {
 			o.logger.Error(messages.ErrGetOrder, zap.Error(err))
 			return orders.NewGetOrderDefault(http.StatusInternalServerError).
-				WithPayload(buildInternalErrorPayload(messages.ErrGetOrder, err.Error()))
+				WithPayload(buildInternalErrorPayload(messages.ErrGetOrder, "Failed to map order to response"))
 		}
 
 		return orders.NewGetOrderOK().WithPayload(mappedOrder[0])
