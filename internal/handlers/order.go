@@ -32,6 +32,7 @@ func SetOrderHandler(logger *zap.Logger, api *operations.BeAPI) {
 	api.OrdersCreateOrderHandler = ordersHandler.CreateOrderFunc(orderRepo, eqStatusRepo, equipmentRepo)
 	api.OrdersUpdateOrderHandler = ordersHandler.UpdateOrderFunc(orderRepo)
 	api.OrdersGetAllOrdersHandler = ordersHandler.ListAllOrdersFunc(orderRepo)
+	api.OrdersGetOrderHandler = ordersHandler.GetOrderFunc(orderRepo)
 }
 
 type Order struct {
@@ -53,7 +54,6 @@ func mapUserOrder(o *ent.Order, log *zap.Logger) (*models.UserOrder, error) {
 	quantity := int64(o.Quantity)
 	rentEnd := strfmt.DateTime(o.RentEnd)
 	rentStart := strfmt.DateTime(o.RentStart)
-	owner := o.Edges.Users
 	equipments := o.Edges.Equipments
 	if equipments == nil {
 		log.Warn("order has no equipments")
@@ -125,8 +125,16 @@ func mapUserOrder(o *ent.Order, log *zap.Logger) (*models.UserOrder, error) {
 			Status:           &statusId,
 		}
 	}
-	ownerId := int64(owner.ID)
-	ownerName := owner.Login
+
+	var ownerId int64
+	var ownerName string
+
+	if o.Edges.Users != nil {
+		ownerId = int64(o.Edges.Users.ID)
+		ownerName = o.Edges.Users.Login
+	} else {
+		log.Warn("Order has no associated user", zap.Int("order_id", o.ID))
+	}
 
 	var statusToOrder *models.OrderStatus
 	allStatuses := o.Edges.OrderStatus
@@ -424,7 +432,9 @@ func (o Order) GetOrderFunc(repository domain.OrderRepository) orders.GetOrderHa
 		if err != nil {
 			if ent.IsNotFound(err) {
 				o.logger.Error(messages.ErrOrderNotFound, zap.Error(err))
-				return orders.NewGetOrderNotFound().WithPayload(buildNotFoundErrorPayload(messages.ErrOrderNotFound, "Order not found"))
+				return orders.NewGetOrderNotFound().WithPayload(
+					buildNotFoundErrorPayload(messages.ErrOrderNotFound, ""),
+				)
 			} else {
 				o.logger.Error(messages.ErrGetOrder, zap.Error(err))
 				return orders.NewGetOrderDefault(http.StatusInternalServerError).
@@ -432,13 +442,21 @@ func (o Order) GetOrderFunc(repository domain.OrderRepository) orders.GetOrderHa
 			}
 		}
 
-		mappedOrder, err := mapOrdersToResponse(o.logger, order)
+		mappedOrders, err := mapOrdersToResponse(o.logger, order)
 		if err != nil {
 			o.logger.Error(messages.ErrGetOrder, zap.Error(err))
 			return orders.NewGetOrderDefault(http.StatusInternalServerError).
-				WithPayload(buildInternalErrorPayload(messages.ErrGetOrder, "Failed to map order to response"))
+				WithPayload(buildInternalErrorPayload(messages.ErrGetOrder,
+					fmt.Sprintf("Failed to map order to response: %v", err.Error())))
 		}
 
-		return orders.NewGetOrderOK().WithPayload(mappedOrder[0])
+		if len(mappedOrders) == 0 {
+			o.logger.Error(messages.ErrOrderNotFound)
+			return orders.NewGetOrderNotFound().WithPayload(
+				buildNotFoundErrorPayload(messages.ErrOrderNotFound, ""),
+			)
+		}
+
+		return orders.NewGetOrderOK().WithPayload(mappedOrders[0])
 	}
 }

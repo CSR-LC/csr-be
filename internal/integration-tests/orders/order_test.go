@@ -726,10 +726,9 @@ func TestIntegration_GetOrder(t *testing.T) {
 
 	t.Run("Get Order Not Found", func(t *testing.T) {
 		params := orders.NewGetOrderParamsWithContext(ctx)
-		params.OrderID = 999999
+		params.OrderID = 999999 // Non-existent order ID
 
 		_, err := client.Orders.GetOrder(params, auth)
-		require.Error(t, err)
 
 		wantErr := orders.NewGetOrderNotFound()
 		codeExp := int32(http.StatusNotFound)
@@ -737,9 +736,7 @@ func TestIntegration_GetOrder(t *testing.T) {
 			Code:    &codeExp,
 			Message: &messages.ErrOrderNotFound,
 		}
-		assert.IsType(t, wantErr, err)
-		assert.Equal(t, wantErr.Payload.Code, err.(*orders.GetOrderNotFound).Payload.Code)
-		assert.Equal(t, wantErr.Payload.Message, err.(*orders.GetOrderNotFound).Payload.Message)
+		assert.Equal(t, wantErr, err)
 	})
 }
 

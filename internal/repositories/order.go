@@ -307,10 +307,14 @@ func (r *orderRepository) Get(ctx context.Context, id int) (*ent.Order, error) {
 	if err != nil {
 		return nil, err
 	}
-	order, err := tx.Order.Get(ctx, id)
+	order, err := tx.Order.
+		Query().
+		Where(order.IDEQ(id)).
+		WithUsers().
+		Only(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	return order, nil
+	return r.getFullOrder(ctx, order)
 }
