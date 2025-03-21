@@ -949,6 +949,54 @@ func (s *OrderSuite) TestOrderRepository_Update_WrongOwner() {
 	require.Nil(t, updated)
 }
 
+func (s *OrderSuite) TestGetOrderRepository_Get_OK() {
+	t := s.T()
+	ctx := s.ctx
+	crtx, err := s.client.Tx(ctx)
+	require.NoError(t, err)
+	ctx = context.WithValue(ctx, middlewares.TxContextKey, crtx)
+
+	description := "test"
+	eqID := int64(1)
+	startDate := strfmt.DateTime(time.Now().UTC())
+	endDate := strfmt.DateTime(time.Now().UTC().Add(time.Hour * 24 * 5))
+	data := &models.OrderCreateRequest{
+		Description: description,
+		EquipmentID: &eqID,
+		RentEnd:     &endDate,
+		RentStart:   &startDate,
+	}
+	createdOrder, err := s.orderRepository.Create(ctx, data, s.user.ID, []int{s.equipments[0].ID})
+	require.NoError(t, err)
+	require.NoError(t, crtx.Commit())
+
+	tx, err := s.client.Tx(ctx)
+	require.NoError(t, err)
+	ctx = context.WithValue(ctx, middlewares.TxContextKey, tx)
+
+	order, err := s.orderRepository.Get(ctx, createdOrder.ID)
+	require.NoError(t, err)
+	require.Equal(t, order.ID, createdOrder.ID)
+	require.Equal(t, order.Description, createdOrder.Description)
+	require.NoError(t, tx.Rollback())
+}
+
+func (s *OrderSuite) TestGetOrderRepository_Get_NotFound() {
+	t := s.T()
+	ctx := s.ctx
+	crtx, err := s.client.Tx(ctx)
+	require.NoError(t, err)
+	ctx = context.WithValue(ctx, middlewares.TxContextKey, crtx)
+
+	tx, err := s.client.Tx(ctx)
+	require.NoError(t, err)
+	ctx = context.WithValue(ctx, middlewares.TxContextKey, tx)
+
+	_, err = s.orderRepository.Get(ctx, 999)
+	require.EqualError(t, err, "ent: order not found")
+	require.NoError(t, tx.Rollback())
+}
+
 func (s *OrderSuite) TestOrderRepository_getQuantity() {
 	t := s.T()
 	valid := int(1)

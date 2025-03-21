@@ -301,3 +301,20 @@ func (r *orderRepository) getFullOrder(ctx context.Context, order *ent.Order) (*
 
 	return order, nil
 }
+
+func (r *orderRepository) Get(ctx context.Context, id int) (*ent.Order, error) {
+	tx, err := middlewares.TxFromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+	order, err := tx.Order.
+		Query().
+		Where(order.IDEQ(id)).
+		WithUsers().
+		Only(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return r.getFullOrder(ctx, order)
+}

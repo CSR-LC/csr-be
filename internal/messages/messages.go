@@ -88,6 +88,7 @@ var (
 	ErrQueryOrders         = "can't get orders"
 	ErrQueryTotalOrders    = "error while getting total of orders"
 	ErrUpdateOrder         = "update order failed"
+	ErrGetOrder            = "can't get order"
 	ErrEquipmentIsNotFree  = "requested equipment is not free"
 	ErrCheckEqStatusFailed = "error while checking if equipment is available for period"
 	ErrSmallRentPeriod     = "small rent period"

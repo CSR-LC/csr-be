@@ -7,6 +7,9 @@ import (
 )
 
 func buildErrorPayload(code int32, msg string, details string) *models.SwaggerError {
+	if msg == "" {
+		msg = "An error occurred"
+	}
 	return &models.SwaggerError{
 		Code:    &code,
 		Message: &msg,

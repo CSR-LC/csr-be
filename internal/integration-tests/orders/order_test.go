@@ -688,6 +688,58 @@ func TestIntegration_UpdateOrder(t *testing.T) {
 	})
 }
 
+func TestIntegration_GetOrder(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping integration test")
+	}
+
+	ctx := context.Background()
+	client := common.SetupClient()
+	equip, err := createEquipment(ctx, client, auth)
+	assert.NoError(t, err)
+
+	createParams := orders.NewCreateOrderParamsWithContext(ctx)
+	desc := "test description"
+	eqID := equip.ID
+	rentStart := strfmt.DateTime(time.Now())
+	rentEnd := strfmt.DateTime(time.Now().Add(time.Hour * 24))
+	createParams.Data = &models.OrderCreateRequest{
+		Description: desc,
+		EquipmentID: eqID,
+		RentEnd:     &rentEnd,
+		RentStart:   &rentStart,
+	}
+	order, err := client.Orders.CreateOrder(createParams, auth)
+	require.NoError(t, err)
+
+	t.Run("Get Order", func(t *testing.T) {
+		params := orders.NewGetOrderParamsWithContext(ctx)
+		params.OrderID = *order.Payload.ID
+
+		res, err := client.Orders.GetOrder(params, auth)
+		require.NoError(t, err)
+		require.NotNil(t, res)
+		require.NotNil(t, res.Payload)
+		assert.Equal(t, *order.Payload.ID, *res.Payload.ID)
+		assert.Equal(t, desc, *res.Payload.Description)
+	})
+
+	t.Run("Get Order Not Found", func(t *testing.T) {
+		params := orders.NewGetOrderParamsWithContext(ctx)
+		params.OrderID = 999999 // Non-existent order ID
+
+		_, err := client.Orders.GetOrder(params, auth)
+
+		wantErr := orders.NewGetOrderNotFound()
+		codeExp := int32(http.StatusNotFound)
+		wantErr.Payload = &models.SwaggerError{
+			Code:    &codeExp,
+			Message: &messages.ErrOrderNotFound,
+		}
+		assert.Equal(t, wantErr, err)
+	})
+}
+
 func createEquipment(ctx context.Context, client *client.Be, auth runtime.ClientAuthInfoWriterFunc) (*models.EquipmentResponse, error) {
 	params := equipment.NewCreateNewEquipmentParamsWithContext(ctx)
 	model, err := setParameters(ctx, client, auth)
