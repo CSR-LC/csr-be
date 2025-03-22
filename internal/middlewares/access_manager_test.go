@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"go.uber.org/zap"
 
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/swagger/models"
 )
@@ -44,8 +45,9 @@ func Test_blackListAccessManager(t *testing.T) {
 				validPathWithParams,
 			},
 		}
+		logger := zap.NewNop()
 		var err error
-		manager, err = NewAccessManager(roles, fullAccessRoles, endpoints)
+		manager, err = NewAccessManager(roles, fullAccessRoles, endpoints, logger)
 		assert.NoError(t, err)
 	})
 

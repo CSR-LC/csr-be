@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	openApiErrors "github.com/go-openapi/errors"
+	"go.uber.org/zap"
 
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/swagger/models"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/utils"
@@ -27,6 +28,7 @@ type blackListAccessManager struct {
 	acceptableRoles []Role
 	fullAccessRoles []Role
 	accessMap       map[Role]map[string][]path
+	logger          *zap.Logger
 }
 
 type ExistingEndpoints map[string][]string
@@ -58,7 +60,7 @@ type Role struct {
 
 // NewAccessManager creates new access manager with admin access to all endpoints.
 // All roles can be declared with slug only.
-func NewAccessManager(acceptableRoles, fullAccessRoles []Role, endpoints ExistingEndpoints) (AccessManager, error) {
+func NewAccessManager(acceptableRoles, fullAccessRoles []Role, endpoints ExistingEndpoints, logger *zap.Logger) (AccessManager, error) {
 	if err := endpoints.Validate(); err != nil {
 		return nil, err
 	}
@@ -69,6 +71,7 @@ func NewAccessManager(acceptableRoles, fullAccessRoles []Role, endpoints Existin
 		acceptableRoles: acceptableRoleVariations,
 		fullAccessRoles: fullAccessRoleVariations,
 		accessMap:       make(map[Role]map[string][]path),
+		logger:          logger,
 	}, nil
 }
 
@@ -199,6 +202,11 @@ func (a *blackListAccessManager) VerifyAccess(role Role, method, path string) er
 	}
 	allowedPaths, ok := a.accessMap[role][method]
 	if !ok {
+		a.logger.Warn("User tried to access the endpoint",
+			zap.String("role", role.Slug),
+			zap.String("method", method),
+			zap.String("endpoint", path),
+		)
 		return openApiErrors.New(http.StatusForbidden, "user is not authorized")
 	}
 	for _, allowedPath := range allowedPaths {
@@ -207,6 +215,8 @@ func (a *blackListAccessManager) VerifyAccess(role Role, method, path string) er
 		}
 	}
 	if !role.IsRegistrationConfirmed {
+		// If there would be a need to log principal_id, add it as int64 and in the func params.
+		a.logger.Warn("User with unconfirmed email tried to access the endpoint")
 		return openApiErrors.New(http.StatusForbidden, "user has no confirmed email")
 	}
 	return openApiErrors.New(http.StatusForbidden, "user is not authorized")
