@@ -1,13 +1,16 @@
 package main
 
 import (
+	"context"
 	"fmt"
+	"time"
 
 	"github.com/go-openapi/loads"
+	"github.com/go-openapi/runtime"
+	"github.com/go-openapi/runtime/security"
 	"github.com/rs/cors"
 	"go.uber.org/zap"
 
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/authentication"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/config"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/docs"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/email"
@@ -18,9 +21,11 @@ import (
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/middlewares"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/overdue"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/repositories"
+	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/roles"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/services"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/utils"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/pkg/domain"
+	"git.epam.com/epm-lstr/epm-lstr-lc/be/pkg/timer"
 )
 
 func SetupAPI(entClient *ent.Client, lg *zap.Logger, conf *config.AppConfig) (*restapi.Server, domain.OrderOverdueCheckup, error) {
@@ -38,8 +43,9 @@ func SetupAPI(entClient *ent.Client, lg *zap.Logger, conf *config.AppConfig) (*r
 	regConfirmRepo := repositories.NewRegistrationConfirmRepository()
 	userRepository := repositories.NewUserRepository()
 	tokenRepository := repositories.NewTokenRepository()
+	emailConfirmRepository := repositories.NewConfirmEmailRepository()
+
 	// conf
-	passwordTTL := conf.Password.ResetExpirationMinutes
 	jwtSecret := conf.JWTSecretKey
 	// services
 	mailSendClient := email.NewSenderSmtp(conf.Email, email.NewWrapperSmtp(
@@ -48,16 +54,23 @@ func SetupAPI(entClient *ent.Client, lg *zap.Logger, conf *config.AppConfig) (*r
 		conf.Email.Password,
 	))
 	regConfirmService := services.NewRegistrationConfirmService(mailSendClient, userRepository, regConfirmRepo,
-		lg, passwordTTL)
-	passwordService := services.NewPasswordResetService(mailSendClient, userRepository, passwordRepo, lg, passwordTTL, passwordGenerator)
+		lg, conf.Email.ConfirmLinkExpiration)
+	passwordService := services.NewPasswordResetService(mailSendClient,
+		userRepository, passwordRepo, lg, conf.Password.ResetLinkExpiration, passwordGenerator)
 	tokenManager := services.NewTokenManager(userRepository, tokenRepository, jwtSecret, lg)
-
+	changeEmailService := services.NewEmailChangeService(
+		mailSendClient, userRepository,
+		emailConfirmRepository, lg,
+	)
 	// swagger api
 	api := operations.NewBeAPI(swaggerSpec)
 	api.UseSwaggerUI()
-	api.BearerAuth = middlewares.BearerAuthenticateFunc(jwtSecret, lg)
+
+	api.APIKeyAuthenticator = func(name string, in string, _ security.TokenAuthentication) runtime.Authenticator {
+		return security.APIKeyAuthCtx(name, in, middlewares.APIKeyAuthFunc(jwtSecret, userRepository))
+	}
+
 	handlers.SetActiveAreaHandler(lg, api)
-	handlers.SetBlockerHandler(lg, api)
 	handlers.SetEquipmentHandler(lg, api)
 	handlers.SetCategoryHandler(lg, api)
 	handlers.SetSubcategoryHandler(lg, api)
@@ -67,11 +80,12 @@ func SetupAPI(entClient *ent.Client, lg *zap.Logger, conf *config.AppConfig) (*r
 	handlers.SetPetSizeHandler(lg, api)
 	handlers.SetPhotoHandler(lg, api)
 	handlers.SetRegistrationHandler(lg, api, regConfirmService)
+	handlers.SetEmailConfirmHandler(lg, api, changeEmailService)
 	handlers.SetRoleHandler(lg, api)
 	handlers.SetEquipmentStatusNameHandler(lg, api)
 	handlers.SetEquipmentStatusHandler(lg, api)
 	handlers.SetEquipmentPeriodsHandler(lg, api)
-	handlers.SetUserHandler(lg, api, tokenManager, regConfirmService)
+	handlers.SetUserHandler(lg, api, tokenManager, regConfirmService, changeEmailService)
 	handlers.SetPetKindHandler(lg, api)
 	handlers.SetHealthHandler(lg, api)
 
@@ -125,33 +139,33 @@ func loadSwaggerSpec() (*loads.Document, error) {
 }
 
 func AccessManager(api *operations.BeAPI, bindings []config.RoleEndpointBinding, logger *zap.Logger) (middlewares.AccessManager, error) {
-	roles := []middlewares.Role{
+	acceptableRoles := []middlewares.Role{
 		{
-			Slug: authentication.AdminSlug,
+			Slug: roles.Admin,
 		},
 		{
-			Slug: authentication.UserSlug,
+			Slug: roles.User,
 		},
 		{
-			Slug: authentication.OperatorSlug,
+			Slug: roles.Operator,
 		},
 		{
-			Slug: authentication.ManagerSlug,
+			Slug: roles.Manager,
 		},
 	}
 	fullAccessRoles := []middlewares.Role{
 		{
-			Slug: authentication.AdminSlug,
+			Slug: roles.Admin,
 		},
 		{
-			Slug: authentication.ManagerSlug,
+			Slug: roles.Manager,
 		},
 		{
-			Slug: authentication.OperatorSlug,
+			Slug: roles.Operator,
 		},
 	}
 
-	manager, err := middlewares.NewAccessManager(roles, fullAccessRoles, api.GetExistingEndpoints(), logger)
+	manager, err := middlewares.NewAccessManager(acceptableRoles, fullAccessRoles, api.GetExistingEndpoints(), logger)
 	if err != nil {
 		return nil, err
 	}
@@ -167,4 +181,24 @@ func AccessManager(api *operations.BeAPI, bindings []config.RoleEndpointBinding,
 		}
 	}
 	return manager, nil
+}
+
+func runUnblockPeriodically(ctx context.Context, client *ent.Client, checkPeriodDuration time.Duration, lg *zap.Logger) {
+	pt := timer.NewPeriodicTimer()
+	i := 0
+	f := func() {
+
+		eqRepo := repositories.NewEquipmentRepository()
+		numDeleted, err := eqRepo.UnblockAllExpiredEquipment(ctx, client)
+		if err != nil {
+			lg.Error("error when performing UnblockAllExpiredEquipment()", zap.Error(err))
+		} else {
+			if numDeleted > 0 {
+				lg.Info(fmt.Sprintf("Clear expired euqipment block: %d quipment_status records deleted", numDeleted))
+			}
+		}
+		i++
+	}
+	pt.Start(checkPeriodDuration, f)
+	f()
 }

@@ -9,21 +9,17 @@ import (
 	openApiErrors "github.com/go-openapi/errors"
 	"go.uber.org/zap"
 
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/authentication"
+	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/swagger/models"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/utils"
 )
 
 const apiPrefix = "/api"
 
-// do not change this values, it is used in swagger spec
-const forbiddenMessage = "User is not authorized"
-const unconfirmedEmailMessage = "User has no confirmed email"
-
-const quantityOfRoleVariations = 4
+const numRoleVariations = 8
 
 type AccessManager interface {
 	AddNewAccess(role Role, method, path string) (bool, error)
-	HasAccess(role Role, method, path string) bool
+	VerifyAccess(role Role, method, path string) error
 	Authorize(r *http.Request, i interface{}) error
 }
 
@@ -57,54 +53,48 @@ func (e ExistingEndpoints) Validate() error {
 
 type Role struct {
 	Slug                    string
-	IsEmailConfirmed        bool
+	IsRegistrationConfirmed bool
 	IsPersonalDataConfirmed bool
+	IsReadonly              bool
 }
 
 // NewAccessManager creates new access manager with admin access to all endpoints.
 // All roles can be declared with slug only.
-func NewAccessManager(roles, fullAccessRoles []Role, endpoints ExistingEndpoints, logger *zap.Logger) (AccessManager, error) {
-	err := endpoints.Validate()
-	if err != nil {
+func NewAccessManager(acceptableRoles, fullAccessRoles []Role, endpoints ExistingEndpoints, logger *zap.Logger) (AccessManager, error) {
+	if err := endpoints.Validate(); err != nil {
 		return nil, err
 	}
-	accessMap := make(map[Role]map[string][]path)
+	acceptableRoleVariations := allRoleVariation(acceptableRoles)
 	fullAccessRoleVariations := allRoleVariation(fullAccessRoles)
-	roleVariations := allRoleVariation(roles)
 	return &blackListAccessManager{
 		endpoints:       endpoints,
-		acceptableRoles: roleVariations,
+		acceptableRoles: acceptableRoleVariations,
 		fullAccessRoles: fullAccessRoleVariations,
-		accessMap:       accessMap,
+		accessMap:       make(map[Role]map[string][]path),
 		logger:          logger,
 	}, nil
 }
 
 func allRoleVariation(roles []Role) []Role {
-	allRoleVariations := make([]Role, 0, quantityOfRoleVariations*len(roles))
+	res := make([]Role, 0, numRoleVariations*len(roles))
+	variations := []bool{false, true}
+
 	for _, role := range roles {
-		allRoleVariations = append(allRoleVariations, Role{
-			Slug:                    role.Slug,
-			IsEmailConfirmed:        role.IsEmailConfirmed,
-			IsPersonalDataConfirmed: role.IsPersonalDataConfirmed,
-		})
-		allRoleVariations = append(allRoleVariations, Role{
-			Slug:                    role.Slug,
-			IsEmailConfirmed:        role.IsEmailConfirmed,
-			IsPersonalDataConfirmed: !role.IsPersonalDataConfirmed,
-		})
-		allRoleVariations = append(allRoleVariations, Role{
-			Slug:                    role.Slug,
-			IsEmailConfirmed:        !role.IsEmailConfirmed,
-			IsPersonalDataConfirmed: role.IsPersonalDataConfirmed,
-		})
-		allRoleVariations = append(allRoleVariations, Role{
-			Slug:                    role.Slug,
-			IsEmailConfirmed:        !role.IsEmailConfirmed,
-			IsPersonalDataConfirmed: !role.IsPersonalDataConfirmed,
-		})
+		for _, IsRegistrationConfirmed := range variations {
+			for _, isPersonalDataConfirmed := range variations {
+				for _, isReadonly := range variations {
+					res = append(res, Role{
+						Slug:                    role.Slug,
+						IsRegistrationConfirmed: IsRegistrationConfirmed,
+						IsPersonalDataConfirmed: isPersonalDataConfirmed,
+						IsReadonly:              isReadonly,
+					})
+				}
+			}
+		}
 	}
-	return allRoleVariations
+
+	return res
 }
 
 type path struct {
@@ -203,42 +193,47 @@ func (a *blackListAccessManager) AddNewAccess(role Role, endpointMethod, endpoin
 
 }
 
-// HasAccess checks if role has access to the endpoint
-func (a *blackListAccessManager) HasAccess(role Role, method, path string) bool {
+// VerifyAccess checks if role has access to the endpoint.
+//
+// It returns the error with description (go-openapi/error) or `nil“ if role has an access
+func (a *blackListAccessManager) VerifyAccess(role Role, method, path string) error {
 	if utils.IsValueInList(role, a.fullAccessRoles) {
-		return true
+		return nil
 	}
 	allowedPaths, ok := a.accessMap[role][method]
 	if !ok {
-		return false
+		a.logger.Warn("User tried to access the endpoint",
+			zap.String("role", role.Slug),
+			zap.String("method", method),
+			zap.String("endpoint", path),
+		)
+		return openApiErrors.New(http.StatusForbidden, "user is not authorized")
 	}
 	for _, allowedPath := range allowedPaths {
 		if allowedPath.isMatch(path) {
-			return true
+			return nil
 		}
 	}
-	return false
+	if !role.IsRegistrationConfirmed {
+		// If there would be a need to log principal_id, add it as int64 and in the func params.
+		a.logger.Warn("User with unconfirmed email tried to access the endpoint")
+		return openApiErrors.New(http.StatusForbidden, "user has no confirmed email")
+	}
+	return openApiErrors.New(http.StatusForbidden, "user is not authorized")
 }
 
 func (a *blackListAccessManager) Authorize(r *http.Request, auth interface{}) error {
-	userInfo, ok := auth.(authentication.Auth)
+	principal, ok := auth.(*models.Principal)
 	if !ok {
-		return openApiErrors.New(http.StatusForbidden, forbiddenMessage)
+		return openApiErrors.New(http.StatusForbidden, "user is not authorized")
 	}
+
 	role := Role{
-		Slug:                    userInfo.Role.Slug,
-		IsEmailConfirmed:        userInfo.IsEmailConfirmed,
-		IsPersonalDataConfirmed: userInfo.IsPersonalDataConfirmed,
+		Slug:                    principal.Role,
+		IsRegistrationConfirmed: principal.IsRegistrationConfirmed,
+		IsPersonalDataConfirmed: principal.IsPersonalDataConfirmed,
+		IsReadonly:              principal.IsReadonly,
 	}
 
-	if !role.IsEmailConfirmed {
-		a.logger.Info("User with unconfirmed email tried to access the endpoint", zap.String("login", userInfo.Login))
-		return openApiErrors.New(http.StatusForbidden, unconfirmedEmailMessage)
-	}
-
-	if !a.HasAccess(role, r.Method, r.URL.Path) {
-		a.logger.Info("User with role %s tried to access the endpoint %s", zap.String("role", userInfo.Role.Slug), zap.String("endpoint", r.URL.Path))
-		return openApiErrors.New(http.StatusForbidden, forbiddenMessage)
-	}
-	return nil
+	return a.VerifyAccess(role, r.Method, r.URL.Path)
 }

@@ -9,6 +9,7 @@ import (
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/swagger/client/users"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/swagger/models"
 	utils "git.epam.com/epm-lstr/epm-lstr-lc/be/internal/integration-tests/common"
+	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/messages"
 
 	"github.com/brianvoe/gofakeit/v6"
 	"github.com/go-openapi/strfmt"
@@ -36,7 +37,7 @@ func TestIntegration_PatchUpdate(t *testing.T) {
 		passportIssueDate := date
 		passportNumber := gofakeit.Digit()
 		passportSeries := gofakeit.Digit()
-		phone := gofakeit.Phone()
+		phoneNumber := gofakeit.Phone()
 		surname := gofakeit.LastName()
 		vk := gofakeit.URL()
 		website := gofakeit.URL()
@@ -47,7 +48,7 @@ func TestIntegration_PatchUpdate(t *testing.T) {
 			PassportIssueDate: strfmt.Date(date),
 			PassportNumber:    passportNumber,
 			PassportSeries:    passportSeries,
-			Phone:             phone,
+			PhoneNumber:       phoneNumber,
 			Surname:           surname,
 			Vk:                vk,
 			Website:           website,
@@ -64,7 +65,7 @@ func TestIntegration_PatchUpdate(t *testing.T) {
 		assert.Equal(t, passportIssueDate.String(), *user.GetPayload().PassportIssueDate)
 		assert.Equal(t, passportNumber, *user.GetPayload().PassportNumber)
 		assert.Equal(t, passportSeries, *user.GetPayload().PassportSeries)
-		assert.Equal(t, phone, *user.GetPayload().PhoneNumber)
+		assert.Equal(t, phoneNumber, *user.GetPayload().PhoneNumber)
 		assert.Equal(t, surname, *user.GetPayload().Surname)
 	})
 
@@ -78,8 +79,11 @@ func TestIntegration_PatchUpdate(t *testing.T) {
 		assert.Error(t, err)
 
 		errExp := users.NewPatchUserDefault(http.StatusUnauthorized)
-		errExp.Payload = &models.Error{
-			Data: nil,
+		msgExp := "unauthenticated for invalid credentials"
+		codeExp := int32(http.StatusUnauthorized)
+		errExp.Payload = &models.SwaggerError{
+			Code:    &codeExp,
+			Message: &msgExp,
 		}
 		assert.Equal(t, errExp, err)
 	})
@@ -95,8 +99,10 @@ func TestIntegration_PatchUpdate(t *testing.T) {
 		assert.Error(t, err)
 
 		errExp := users.NewPatchUserDefault(http.StatusUnauthorized)
-		errExp.Payload = &models.Error{
-			Data: nil,
+		codeExp := int32(http.StatusUnauthorized)
+		errExp.Payload = &models.SwaggerError{
+			Code:    &codeExp,
+			Message: &messages.ErrInvalidToken,
 		}
 		assert.Equal(t, errExp, err)
 	})
@@ -108,8 +114,11 @@ func TestIntegration_PatchUpdate(t *testing.T) {
 		assert.Error(t, err)
 
 		errExp := users.NewPatchUserDefault(http.StatusUnprocessableEntity)
-		errExp.Payload = &models.Error{
-			Data: nil,
+		msgExp := "userPatch in body is required"
+		codeExp := int32(602)
+		errExp.Payload = &models.SwaggerError{
+			Code:    &codeExp,
+			Message: &msgExp,
 		}
 		assert.Equal(t, errExp, err)
 	})
@@ -126,7 +135,7 @@ func TestIntegration_PatchUpdate(t *testing.T) {
 			PassportIssueDate: strfmt.Date{},
 			PassportNumber:    "",
 			PassportSeries:    "",
-			Phone:             "",
+			PhoneNumber:       "",
 			Surname:           "",
 			Vk:                "",
 			Website:           "",

@@ -37,7 +37,7 @@ func (r *userRepository) UsersListTotal(ctx context.Context) (int, error) {
 	if err != nil {
 		return 0, err
 	}
-	return tx.User.Query().Count(ctx)
+	return tx.User.Query().Where(user.IsDeleted(false)).Count(ctx)
 }
 
 func (r *userRepository) UserList(ctx context.Context, limit, offset int,
@@ -53,7 +53,7 @@ func (r *userRepository) UserList(ctx context.Context, limit, offset int,
 	if err != nil {
 		return nil, err
 	}
-	return tx.User.Query().WithRole().Order(orderFunc).Limit(limit).Offset(offset).All(ctx)
+	return tx.User.Query().Where(user.IsDeleted(false)).WithRole().Order(orderFunc).Limit(limit).Offset(offset).All(ctx)
 }
 
 func (r *userRepository) UpdateUserByID(ctx context.Context, id int, patch *models.PatchUserRequest) error {
@@ -74,8 +74,8 @@ func (r *userRepository) UpdateUserByID(ctx context.Context, id int, patch *mode
 	if patch.PassportSeries != "" {
 		userUpdate.SetPassportSeries(patch.PassportSeries)
 	}
-	if patch.Phone != "" {
-		userUpdate.SetPhone(patch.Phone)
+	if patch.PhoneNumber != "" {
+		userUpdate.SetPhone(patch.PhoneNumber)
 	}
 	if patch.PassportNumber != "" {
 		//TODO: if user changes his passport data or name/surname,
@@ -130,6 +130,32 @@ func (r *userRepository) ChangePasswordByLogin(ctx context.Context, login string
 		return err
 	}
 	_, err = tx.User.Update().Where(user.LoginEQ(login)).SetPassword(hash).Save(ctx)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (r *userRepository) ChangeEmailByLogin(ctx context.Context, login string, email string) error {
+	tx, err := middlewares.TxFromContext(ctx)
+	if err != nil {
+		return err
+	}
+
+	_, err = tx.User.Update().Where(user.LoginEQ(login)).SetEmail(email).Save(ctx)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (r *userRepository) UpdateLogin(ctx context.Context, currLogin string, newLogin string) error {
+	tx, err := middlewares.TxFromContext(ctx)
+	if err != nil {
+		return err
+	}
+
+	_, err = tx.User.Update().Where(user.LoginEQ(currLogin)).SetLogin(newLogin).Save(ctx)
 	if err != nil {
 		return err
 	}
@@ -228,17 +254,47 @@ func (r *userRepository) ConfirmRegistration(ctx context.Context, login string) 
 	if err != nil {
 		return err
 	}
-	_, err = tx.User.Update().Where(user.LoginEQ(login)).SetIsConfirmed(true).Save(ctx)
+	_, err = tx.User.Update().Where(user.LoginEQ(login)).SetIsRegistrationConfirmed(true).Save(ctx)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (r *userRepository) Delete(ctx context.Context, id int) error {
+func (r *userRepository) UnConfirmRegistration(ctx context.Context, login string) error {
 	tx, err := middlewares.TxFromContext(ctx)
 	if err != nil {
 		return err
 	}
-	return tx.User.DeleteOneID(id).Exec(ctx)
+	_, err = tx.User.Update().Where(user.LoginEQ(login)).SetIsRegistrationConfirmed(false).Save(ctx)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (r *userRepository) Delete(ctx context.Context, userId int) error {
+	tx, err := middlewares.TxFromContext(ctx)
+	if err != nil {
+		return err
+	}
+
+	_, err = tx.User.UpdateOneID(userId).SetIsDeleted(true).Save(ctx)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (r *userRepository) SetIsReadonly(ctx context.Context, id int, isReadonly bool) error {
+	tx, err := middlewares.TxFromContext(ctx)
+	if err != nil {
+		return err
+	}
+	_, err = tx.User.UpdateOneID(id).SetIsReadonly(isReadonly).Save(ctx)
+	if err != nil {
+		return err
+	}
+	return nil
 }

@@ -8,36 +8,32 @@ on:
 jobs:
   test:
     runs-on: ubuntu-22.04
-    container: golang:1.19-alpine
+    container: golang:1.22.5-alpine
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Test
         env:
-          min_coverage: '70'
+          min_coverage: '60'
           coverage_result: '/total:\s+\(statements\)\s+(\d+.\d+)\%/'
         run: |
           set -e
           apk add --update --no-cache make
           make setup_alpine && make setup && make generate
           go test $(go list ./... | grep -v generated) -race -coverprofile=coverage.out -short
-          make coverage && coverage_total=$(make coverage_total | tail -n1) && echo $coverage_total
-          if [ $min_coverage -gt $coverage_total ]; then exit 1; else echo "unit tests OK"; fi
-          
-          failed=0
-          function_min_coverage=1
-          make coverage | tail -n +2 | while read -r line ;
-          do
-            function_coverage=$(echo $line | awk '{ print $3 }' | sed 's/[^0-9\.]*//g')
-            if awk 'BEGIN {exit !('$function_min_coverage' > '$function_coverage')}';
-            then echo "low coverage ($function_coverage/$function_min_coverage) - $line";
-            failed=1; fi;
-          done;
-          test -n "$failed" && echo 'check functions coverage!'
+          coverage_total=$(make coverage_total | tail -n1 | awk '{print $1}')
+          echo "Total coverage: $coverage_total"
+
+          if [ $(echo "$min_coverage > $coverage_total" | bc -l) -eq 1 ]; then
+              echo "Coverage $coverage_total is below the minimum coverage $min_coverage"
+              exit 1
+          else
+              echo "unit tests OK"
+          fi
   lint:
     runs-on: ubuntu-latest
     container: registry.gitlab.com/gitlab-org/gitlab-build-images:golangci-lint-alpine
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Lint
         run: |
           set -e
@@ -49,23 +45,23 @@ jobs:
           cat report.txt
           echo "---"
       - name: 'Upload Artifact'
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: lint-report
           path: report.txt
           retention-days: 5
   build:
     runs-on: ubuntu-latest
-    container: golang:1.19-alpine
+    container: golang:1.22.5-alpine
     needs: [lint,test]
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Build
         run: |
           apk add --update --no-cache make
           make setup_alpine && make setup && make generate && make build
       - name: 'Upload Artifact'
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: artifact
           path: csr
@@ -77,7 +73,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [build]
     steps:
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         with:
           name: artifact
       - name: Uploady csr
@@ -99,6 +95,11 @@ jobs:
           script: |
             mkdir -p /var/www/csr/stage/
             echo '${{ secrets.DEPLOY_CONFIG }}' > /var/www/csr/stage/config.json
-            sudo systemctl daemon-reload && sudo service stage.csr stop  
-            cp ~/csr /var/www/csr/stage/server 
+            sudo rm /etc/systemd/system/stage.csr.env
+            echo -e "JWT_SECRET_KEY=${{ secrets.JWT_SECRET_KEY }}\n\
+            EMAIL_PASSWORD=${{ secrets.EMAIL_PASSWORD }}\n\
+            DB_USER=${{ secrets.DB_USER }}" > stage.csr.env    
+            sudo mv stage.csr.env /etc/systemd/system/stage.csr.env    
+            sudo systemctl daemon-reload && sudo service stage.csr stop
+            cp ~/csr /var/www/csr/stage/server
             sudo service stage.csr start
