@@ -740,6 +740,55 @@ func TestIntegration_GetOrder(t *testing.T) {
 	})
 }
 
+func TestIntegration_DeleteOrder(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping integration test")
+	}
+
+	ctx := context.Background()
+	client := common.SetupClient()
+	equip, err := createEquipment(ctx, client, auth)
+	assert.NoError(t, err)
+
+	createParams := orders.NewCreateOrderParamsWithContext(ctx)
+	desc := "test description"
+	eqID := equip.ID
+	rentStart := strfmt.DateTime(time.Now())
+	rentEnd := strfmt.DateTime(time.Now().Add(time.Hour * 24))
+	createParams.Data = &models.OrderCreateRequest{
+		Description: desc,
+		EquipmentID: eqID,
+		RentEnd:     &rentEnd,
+		RentStart:   &rentStart,
+	}
+	order, err := client.Orders.CreateOrder(createParams, auth)
+	require.NoError(t, err)
+
+	t.Run("Delete Order", func(t *testing.T) {
+		params := orders.NewDeleteOrderParamsWithContext(ctx)
+		params.OrderID = *order.Payload.ID
+
+		res, err := client.Orders.DeleteOrder(params, auth)
+		require.NoError(t, err)
+		require.IsType(t, &orders.DeleteOrderNoContent{}, res)
+	})
+
+	t.Run("Delete Order Not Found", func(t *testing.T) {
+		params := orders.NewDeleteOrderParamsWithContext(ctx)
+		params.OrderID = 999999 // Non-existent order ID
+
+		_, err := client.Orders.DeleteOrder(params, auth)
+
+		wantErr := orders.NewDeleteOrderNotFound()
+		codeExp := int32(http.StatusNotFound)
+		wantErr.Payload = &models.SwaggerError{
+			Code:    &codeExp,
+			Message: &messages.ErrOrderNotFound,
+		}
+		assert.Equal(t, wantErr, err)
+	})
+}
+
 func createEquipment(ctx context.Context, client *client.Be, auth runtime.ClientAuthInfoWriterFunc) (*models.EquipmentResponse, error) {
 	params := equipment.NewCreateNewEquipmentParamsWithContext(ctx)
 	model, err := setParameters(ctx, client, auth)
