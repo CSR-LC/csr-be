@@ -25,6 +25,8 @@ import (
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/swagger/restapi"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/swagger/restapi/operations"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/swagger/restapi/operations/orders"
+	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/messages"
+	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/repositories"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/utils"
 	"git.epam.com/epm-lstr/epm-lstr-lc/be/pkg/domain"
 )
@@ -1008,6 +1010,117 @@ func (s *orderTestSuite) TestOrder_UpdateOrder_OK() {
 		t.Fatal(err)
 	}
 	require.Equal(t, orderToReturn.ID, int(*responseOrder.ID))
+}
+
+func (s *orderTestSuite) TestOrder_GetOrder_OK() {
+	t := s.T()
+	request := http.Request{}
+	ctx := request.Context()
+
+	orderID := 1
+	entOrder := orderWithAllEdges(t, orderID)
+
+	s.orderRepository.On("Get", ctx, orderID).Return(entOrder, nil)
+
+	handlerFunc := s.orderHandler.GetOrderFunc(s.orderRepository)
+	data := orders.GetOrderParams{
+		HTTPRequest: &request,
+		OrderID:     int64(orderID),
+	}
+	principal := &models.Principal{ID: 1}
+	resp := handlerFunc.Handle(data, principal)
+
+	responseRecorder := httptest.NewRecorder()
+	producer := runtime.JSONProducer()
+	resp.WriteResponse(responseRecorder, producer)
+
+	require.Equal(t, http.StatusOK, responseRecorder.Code)
+
+	var result models.Order
+	err := json.Unmarshal(responseRecorder.Body.Bytes(), &result)
+	require.NoError(t, err)
+	require.Equal(t, entOrder.ID, int(*result.ID))
+	require.Equal(t, entOrder.Description, *result.Description)
+}
+
+func (s *orderTestSuite) TestOrder_GetOrder_NotFound() {
+	t := s.T()
+	request := http.Request{}
+	ctx := request.Context()
+
+	orderID := 999
+	s.orderRepository.On("Get", ctx, orderID).Return(nil, &ent.NotFoundError{})
+
+	handlerFunc := s.orderHandler.GetOrderFunc(s.orderRepository)
+	data := orders.GetOrderParams{
+		HTTPRequest: &request,
+		OrderID:     int64(orderID),
+	}
+	principal := &models.Principal{ID: 1}
+	resp := handlerFunc.Handle(data, principal)
+
+	responseRecorder := httptest.NewRecorder()
+	producer := runtime.JSONProducer()
+	resp.WriteResponse(responseRecorder, producer)
+
+	require.Equal(t, http.StatusNotFound, responseRecorder.Code)
+
+	var errResp models.SwaggerError
+	err := json.Unmarshal(responseRecorder.Body.Bytes(), &errResp)
+	require.NoError(t, err)
+	require.Equal(t, messages.ErrOrderNotFound, *errResp.Message)
+}
+
+func (s *orderTestSuite) TestOrder_DeleteOrder_OK() {
+	t := s.T()
+	request := http.Request{}
+	ctx := request.Context()
+
+	orderID := 1
+	s.orderRepository.On("Delete", ctx, orderID).Return(nil)
+
+	handlerFunc := s.orderHandler.DeleteOrderFunc(s.orderRepository)
+	data := orders.DeleteOrderParams{
+		HTTPRequest: &request,
+		OrderID:     int64(orderID),
+	}
+	principal := &models.Principal{ID: 1}
+	resp := handlerFunc.Handle(data, principal)
+
+	responseRecorder := httptest.NewRecorder()
+	producer := runtime.JSONProducer()
+	resp.WriteResponse(responseRecorder, producer)
+
+	require.Equal(t, http.StatusNoContent, responseRecorder.Code)
+	require.Empty(t, responseRecorder.Body.Bytes())
+}
+
+func (s *orderTestSuite) TestOrder_DeleteOrder_NotFound() {
+	t := s.T()
+	request := http.Request{}
+	ctx := request.Context()
+
+	orderID := 999
+	s.orderRepository.On("Delete", ctx, orderID).Return(repositories.ErrOrderNotFound)
+
+	handlerFunc := s.orderHandler.DeleteOrderFunc(s.orderRepository)
+	data := orders.DeleteOrderParams{
+		HTTPRequest: &request,
+		OrderID:     int64(orderID),
+	}
+	principal := &models.Principal{ID: 1}
+	resp := handlerFunc.Handle(data, principal)
+
+	responseRecorder := httptest.NewRecorder()
+	producer := runtime.JSONProducer()
+	resp.WriteResponse(responseRecorder, producer)
+
+	require.Equal(t, http.StatusNotFound, responseRecorder.Code)
+
+	var errResp models.SwaggerError
+	err := json.Unmarshal(responseRecorder.Body.Bytes(), &errResp)
+	require.NoError(t, err)
+	require.Equal(t, messages.ErrOrderNotFound, *errResp.Message)
 }
 
 func containsOrder(t *testing.T, list []*ent.Order, order *models.UserOrder) bool {
