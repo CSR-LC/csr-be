@@ -30,6 +30,8 @@ func (r OrderValidationError) Error() string {
 	return r.Err.Error()
 }
 
+var ErrOrderNotFound = errors.New("order not found")
+
 var fieldsToOrderOrders = []string{
 	order.FieldID,
 	order.FieldRentStart,
@@ -317,4 +319,19 @@ func (r *orderRepository) Get(ctx context.Context, id int) (*ent.Order, error) {
 	}
 
 	return r.getFullOrder(ctx, order)
+}
+
+func (r *orderRepository) Delete(ctx context.Context, id int) error {
+	tx, err := middlewares.TxFromContext(ctx)
+	if err != nil {
+		return err
+	}
+	count, err := tx.Order.Delete().Where(order.IDEQ(id)).Exec(ctx)
+	if err != nil {
+		return err
+	}
+	if count == 0 {
+		return ErrOrderNotFound
+	}
+	return nil
 }
