@@ -33,6 +33,7 @@ func SetOrderHandler(logger *zap.Logger, api *operations.BeAPI) {
 	api.OrdersUpdateOrderHandler = ordersHandler.UpdateOrderFunc(orderRepo)
 	api.OrdersGetAllOrdersHandler = ordersHandler.ListAllOrdersFunc(orderRepo)
 	api.OrdersGetOrderHandler = ordersHandler.GetOrderFunc(orderRepo)
+	api.OrdersDeleteOrderHandler = ordersHandler.DeleteOrderFunc(orderRepo)
 }
 
 type Order struct {
@@ -458,5 +459,28 @@ func (o Order) GetOrderFunc(repository domain.OrderRepository) orders.GetOrderHa
 		}
 
 		return orders.NewGetOrderOK().WithPayload(mappedOrders[0])
+	}
+}
+
+func (o Order) DeleteOrderFunc(repository domain.OrderRepository) orders.DeleteOrderHandlerFunc {
+	return func(p orders.DeleteOrderParams, principal *models.Principal) middleware.Responder {
+		ctx := p.HTTPRequest.Context()
+		orderID := int(p.OrderID)
+
+		err := repository.Delete(ctx, orderID)
+		if err != nil {
+			if errors.Is(err, repositories.ErrOrderNotFound) {
+				o.logger.Error(messages.ErrOrderNotFound, zap.Error(err))
+				return orders.NewDeleteOrderNotFound().WithPayload(
+					buildNotFoundErrorPayload(messages.ErrOrderNotFound, ""),
+				)
+			} else {
+				o.logger.Error(messages.ErrDeleteOrder, zap.Error(err))
+				return orders.NewDeleteOrderDefault(http.StatusInternalServerError).
+					WithPayload(buildInternalErrorPayload(messages.ErrDeleteOrder, err.Error()))
+			}
+		}
+
+		return orders.NewDeleteOrderNoContent()
 	}
 }

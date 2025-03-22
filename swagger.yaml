@@ -1193,6 +1193,31 @@ paths:
           description: Unexpected error.
           schema:
             $ref: "#/definitions/SwaggerError"
+
+    delete:
+      summary: Delete order by id
+      security:
+        - Bearer: [ ]
+      tags:
+        - Orders
+      operationId: DeleteOrder
+      parameters:
+        - name: orderId
+          in: path
+          required: true
+          description: order id
+          type: integer
+      responses:
+        204:
+          description: Order has been deleted
+        404:
+          description: Not Found
+          schema:
+            $ref: "#/definitions/SwaggerError"
+        default:
+          description: Unexpected error.
+          schema:
+            $ref: "#/definitions/SwaggerError"
   /v1/order_statuses/{orderId}:
     get:
       summary: Get full order status history.
