@@ -19,15 +19,15 @@ import (
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/zap"
 
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/ent"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/ent/enttest"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/mocks"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/swagger/models"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/swagger/restapi"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/swagger/restapi/operations"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/swagger/restapi/operations/equipment"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/roles"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/pkg/domain"
+	"github.com/CSR-LC/csr-be/internal/generated/ent"
+	"github.com/CSR-LC/csr-be/internal/generated/ent/enttest"
+	"github.com/CSR-LC/csr-be/internal/generated/mocks"
+	"github.com/CSR-LC/csr-be/internal/generated/swagger/models"
+	"github.com/CSR-LC/csr-be/internal/generated/swagger/restapi"
+	"github.com/CSR-LC/csr-be/internal/generated/swagger/restapi/operations"
+	"github.com/CSR-LC/csr-be/internal/generated/swagger/restapi/operations/equipment"
+	"github.com/CSR-LC/csr-be/internal/roles"
+	"github.com/CSR-LC/csr-be/pkg/domain"
 )
 
 func TestSetEquipmentHandler(t *testing.T) {
@@ -58,9 +58,9 @@ func TestSetEquipmentHandler(t *testing.T) {
 type EquipmentTestSuite struct {
 	suite.Suite
 	logger              *zap.Logger
-	equipmentRepo       *mocks.EquipmentRepository
-	statusRepo          *mocks.EquipmentStatusNameRepository
-	equipmentStatusRepo *mocks.EquipmentStatusRepository
+	equipmentRepo       *mocks.MockEquipmentRepository
+	statusRepo          *mocks.MockEquipmentStatusNameRepository
+	equipmentStatusRepo *mocks.MockEquipmentStatusRepository
 	equipment           *Equipment
 }
 
@@ -93,9 +93,9 @@ func TestEquipmentSuite(t *testing.T) {
 
 func (s *EquipmentTestSuite) SetupTest() {
 	s.logger = zap.NewNop()
-	s.equipmentRepo = &mocks.EquipmentRepository{}
-	s.statusRepo = &mocks.EquipmentStatusNameRepository{}
-	s.equipmentStatusRepo = &mocks.EquipmentStatusRepository{}
+	s.equipmentRepo = &mocks.MockEquipmentRepository{}
+	s.statusRepo = &mocks.MockEquipmentStatusNameRepository{}
+	s.equipmentStatusRepo = &mocks.MockEquipmentStatusRepository{}
 	s.equipment = NewEquipment(s.logger)
 }
 

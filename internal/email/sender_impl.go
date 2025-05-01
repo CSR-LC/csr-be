@@ -3,8 +3,8 @@ package email
 import (
 	"fmt"
 
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/config"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/pkg/domain"
+	"github.com/CSR-LC/csr-be/internal/config"
+	"github.com/CSR-LC/csr-be/pkg/domain"
 )
 
 const (

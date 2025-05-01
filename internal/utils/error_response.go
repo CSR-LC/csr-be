@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/swagger/models"
+	"github.com/CSR-LC/csr-be/internal/generated/swagger/models"
 )
 
 func WriteErrorResponse(w http.ResponseWriter, code int32, message string) {

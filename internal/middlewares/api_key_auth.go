@@ -8,11 +8,11 @@ import (
 	"github.com/go-openapi/errors"
 	"github.com/golang-jwt/jwt"
 
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/ent"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/swagger/models"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/messages"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/services"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/pkg/domain"
+	"github.com/CSR-LC/csr-be/internal/generated/ent"
+	"github.com/CSR-LC/csr-be/internal/generated/swagger/models"
+	"github.com/CSR-LC/csr-be/internal/messages"
+	"github.com/CSR-LC/csr-be/internal/services"
+	"github.com/CSR-LC/csr-be/pkg/domain"
 )
 
 func TokenInvalidError() error {

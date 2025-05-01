@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/ent"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/middlewares"
+	"github.com/CSR-LC/csr-be/internal/generated/ent"
+	"github.com/CSR-LC/csr-be/internal/middlewares"
 )
 
 type orderStatusNameRepository struct {

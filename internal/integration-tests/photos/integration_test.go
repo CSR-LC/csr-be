@@ -13,10 +13,10 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/swagger/client/photos"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/swagger/models"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/integration-tests/common"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/messages"
+	"github.com/CSR-LC/csr-be/internal/generated/swagger/client/photos"
+	"github.com/CSR-LC/csr-be/internal/generated/swagger/models"
+	"github.com/CSR-LC/csr-be/internal/integration-tests/common"
+	"github.com/CSR-LC/csr-be/internal/messages"
 )
 
 var (

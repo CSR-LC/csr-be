@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"math/big"
 
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/pkg/domain"
+	"github.com/CSR-LC/csr-be/pkg/domain"
 )
 
 const (

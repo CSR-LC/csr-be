@@ -17,18 +17,18 @@ import (
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/zap"
 
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/ent"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/ent/enttest"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/ent/order"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/mocks"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/swagger/models"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/swagger/restapi"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/swagger/restapi/operations"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/swagger/restapi/operations/orders"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/messages"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/repositories"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/utils"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/pkg/domain"
+	"github.com/CSR-LC/csr-be/internal/generated/ent"
+	"github.com/CSR-LC/csr-be/internal/generated/ent/enttest"
+	"github.com/CSR-LC/csr-be/internal/generated/ent/order"
+	"github.com/CSR-LC/csr-be/internal/generated/mocks"
+	"github.com/CSR-LC/csr-be/internal/generated/swagger/models"
+	"github.com/CSR-LC/csr-be/internal/generated/swagger/restapi"
+	"github.com/CSR-LC/csr-be/internal/generated/swagger/restapi/operations"
+	"github.com/CSR-LC/csr-be/internal/generated/swagger/restapi/operations/orders"
+	"github.com/CSR-LC/csr-be/internal/messages"
+	"github.com/CSR-LC/csr-be/internal/repositories"
+	"github.com/CSR-LC/csr-be/internal/utils"
+	"github.com/CSR-LC/csr-be/pkg/domain"
 )
 
 func TestSetOrderHandler(t *testing.T) {
@@ -88,9 +88,9 @@ func orderWithAllEdges(t *testing.T, orderID int) *ent.Order {
 type orderTestSuite struct {
 	suite.Suite
 	logger              *zap.Logger
-	orderRepository     *mocks.OrderRepository
-	eqStatusRepository  *mocks.EquipmentStatusRepository
-	equipmentRepository *mocks.EquipmentRepository
+	orderRepository     *mocks.MockOrderRepository
+	eqStatusRepository  *mocks.MockEquipmentStatusRepository
+	equipmentRepository *mocks.MockEquipmentRepository
 	orderHandler        *Order
 }
 
@@ -100,9 +100,9 @@ func TestOrderSuite(t *testing.T) {
 
 func (s *orderTestSuite) SetupTest() {
 	s.logger = zap.NewExample()
-	s.orderRepository = &mocks.OrderRepository{}
-	s.eqStatusRepository = &mocks.EquipmentStatusRepository{}
-	s.equipmentRepository = &mocks.EquipmentRepository{}
+	s.orderRepository = &mocks.MockOrderRepository{}
+	s.eqStatusRepository = &mocks.MockEquipmentStatusRepository{}
+	s.equipmentRepository = &mocks.MockEquipmentRepository{}
 	s.orderHandler = NewOrder(s.logger)
 }
 

@@ -13,12 +13,12 @@ import (
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/zap"
 
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/ent/enttest"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/mocks"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/swagger/models"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/swagger/restapi"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/swagger/restapi/operations"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/swagger/restapi/operations/password_reset"
+	"github.com/CSR-LC/csr-be/internal/generated/ent/enttest"
+	"github.com/CSR-LC/csr-be/internal/generated/mocks"
+	"github.com/CSR-LC/csr-be/internal/generated/swagger/models"
+	"github.com/CSR-LC/csr-be/internal/generated/swagger/restapi"
+	"github.com/CSR-LC/csr-be/internal/generated/swagger/restapi/operations"
+	"github.com/CSR-LC/csr-be/internal/generated/swagger/restapi/operations/password_reset"
 )
 
 func TestSetPasswordResetHandler(t *testing.T) {
@@ -33,7 +33,7 @@ func TestSetPasswordResetHandler(t *testing.T) {
 	}
 	api := operations.NewBeAPI(swaggerSpec)
 
-	passwordService := &mocks.PasswordResetService{}
+	passwordService := &mocks.MockPasswordResetService{}
 
 	SetPasswordResetHandler(logger, api, passwordService)
 
@@ -44,7 +44,7 @@ func TestSetPasswordResetHandler(t *testing.T) {
 type PasswordResetHandlerTestSuite struct {
 	suite.Suite
 	logger          *zap.Logger
-	passwordService *mocks.PasswordResetService
+	passwordService *mocks.MockPasswordResetService
 	handler         *passwordResetHandler
 }
 
@@ -55,7 +55,7 @@ func TestNewPasswordResetRepository(t *testing.T) {
 
 func (s *PasswordResetHandlerTestSuite) SetupTest() {
 	s.logger = zap.NewNop()
-	s.passwordService = &mocks.PasswordResetService{}
+	s.passwordService = &mocks.MockPasswordResetService{}
 	s.handler = NewPasswordReset(s.logger, s.passwordService)
 }
 

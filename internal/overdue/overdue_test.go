@@ -16,20 +16,20 @@ import (
 	"go.uber.org/zap"
 	"go.uber.org/zap/zaptest/observer"
 
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/ent"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/ent/enttest"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/ent/order"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/mocks"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/swagger/models"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/utils"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/pkg/domain"
+	"github.com/CSR-LC/csr-be/internal/generated/ent"
+	"github.com/CSR-LC/csr-be/internal/generated/ent/enttest"
+	"github.com/CSR-LC/csr-be/internal/generated/ent/order"
+	"github.com/CSR-LC/csr-be/internal/generated/mocks"
+	"github.com/CSR-LC/csr-be/internal/generated/swagger/models"
+	"github.com/CSR-LC/csr-be/internal/utils"
+	"github.com/CSR-LC/csr-be/pkg/domain"
 )
 
 type CheckupTestSuite struct {
 	suite.Suite
-	eqStatusRepo    *mocks.EquipmentStatusRepository
-	orderStatusRepo *mocks.OrderStatusRepository
-	orderFilterRepo *mocks.OrderRepositoryWithFilter
+	eqStatusRepo    *mocks.MockEquipmentStatusRepository
+	orderStatusRepo *mocks.MockOrderStatusRepository
+	orderFilterRepo *mocks.MockOrderRepositoryWithFilter
 	setupApi        domain.OrderOverdueCheckup
 }
 
@@ -38,9 +38,9 @@ func TestStatusSuite(t *testing.T) {
 }
 
 func (s *CheckupTestSuite) SetupTest() {
-	s.eqStatusRepo = &mocks.EquipmentStatusRepository{}
-	s.orderStatusRepo = &mocks.OrderStatusRepository{}
-	s.orderFilterRepo = &mocks.OrderRepositoryWithFilter{}
+	s.eqStatusRepo = &mocks.MockEquipmentStatusRepository{}
+	s.orderStatusRepo = &mocks.MockOrderStatusRepository{}
+	s.orderFilterRepo = &mocks.MockOrderRepositoryWithFilter{}
 	s.setupApi = NewOverdueCheckup(s.orderStatusRepo, s.orderFilterRepo, s.eqStatusRepo, zap.NewNop())
 }
 

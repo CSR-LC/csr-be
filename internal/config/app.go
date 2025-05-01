@@ -7,7 +7,7 @@ import (
 	"github.com/go-playground/validator"
 	"github.com/spf13/viper"
 
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/middlewares"
+	"github.com/CSR-LC/csr-be/internal/middlewares"
 )
 
 type AppConfig struct {
@@ -85,6 +85,21 @@ func GetAppConfig(additionalDirectories ...string) (*AppConfig, error) {
 	if err := viper.ReadInConfig(); err != nil {
 		return nil, fmt.Errorf("failed to read in config: %w", err)
 	}
+
+	// override global settings with local settings
+	localViper := viper.New()
+	localViper.SetConfigName("config.local")
+	localViper.SetConfigType("json")
+	localViper.AddConfigPath(".")
+	for _, d := range additionalDirectories {
+		localViper.AddConfigPath(d)
+	}
+	if err := localViper.ReadInConfig(); err == nil {
+		if err := viper.MergeConfigMap(localViper.AllSettings()); err != nil {
+			return nil, fmt.Errorf("failed to merge local config: %w", err)
+		}
+	}
+
 	bindEnvVars()
 
 	conf := getDefaultConfig()

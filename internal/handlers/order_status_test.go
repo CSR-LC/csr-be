@@ -10,7 +10,7 @@ import (
 	"testing"
 	"time"
 
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/roles"
+	"github.com/CSR-LC/csr-be/internal/roles"
 
 	"github.com/go-openapi/loads"
 	"github.com/go-openapi/runtime"
@@ -20,16 +20,16 @@ import (
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/zap"
 
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/ent"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/ent/enttest"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/ent/order"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/mocks"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/swagger/models"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/swagger/restapi"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/swagger/restapi/operations"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/swagger/restapi/operations/orders"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/utils"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/pkg/domain"
+	"github.com/CSR-LC/csr-be/internal/generated/ent"
+	"github.com/CSR-LC/csr-be/internal/generated/ent/enttest"
+	"github.com/CSR-LC/csr-be/internal/generated/ent/order"
+	"github.com/CSR-LC/csr-be/internal/generated/mocks"
+	"github.com/CSR-LC/csr-be/internal/generated/swagger/models"
+	"github.com/CSR-LC/csr-be/internal/generated/swagger/restapi"
+	"github.com/CSR-LC/csr-be/internal/generated/swagger/restapi/operations"
+	"github.com/CSR-LC/csr-be/internal/generated/swagger/restapi/operations/orders"
+	"github.com/CSR-LC/csr-be/internal/utils"
+	"github.com/CSR-LC/csr-be/pkg/domain"
 )
 
 func TestSetOrderStatusHandler(t *testing.T) {
@@ -54,10 +54,10 @@ func TestSetOrderStatusHandler(t *testing.T) {
 type OrderStatusTestSuite struct {
 	suite.Suite
 	logger                    *zap.Logger
-	statusNameRepository      *mocks.OrderStatusNameRepository
-	orderStatusRepository     *mocks.OrderStatusRepository
-	orderFilterRepository     *mocks.OrderRepositoryWithFilter
-	equipmentStatusRepository *mocks.EquipmentStatusRepository
+	statusNameRepository      *mocks.MockOrderStatusNameRepository
+	orderStatusRepository     *mocks.MockOrderStatusRepository
+	orderFilterRepository     *mocks.MockOrderRepositoryWithFilter
+	equipmentStatusRepository *mocks.MockEquipmentStatusRepository
 	orderStatus               *OrderStatus
 }
 

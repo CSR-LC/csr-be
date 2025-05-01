@@ -6,8 +6,8 @@ packagesToTest=$$(go list ./... | grep -v generated)
 
 setup:
 	go install github.com/go-swagger/go-swagger/cmd/swagger@v0.30.4
-	go install entgo.io/ent/cmd/ent@v0.13.1
-	go install github.com/vektra/mockery/v2@v2.20.2
+	go install entgo.io/ent/cmd/ent@v0.14.4
+	go install github.com/vektra/mockery/v3@v3.2.4
 
 setup_alpine:
 	apk add --update --no-cache git build-base && rm -rf /var/cache/apk/*
@@ -19,7 +19,7 @@ clean/mocks:
 	find ./internal/generated/mocks/* -exec rm -rf {} \; || true
 
 generate/mocks: clean/mocks
-	mockery --all --case snake --dir ./pkg/domain --output ./internal/generated/mocks
+	mockery
 
 clean/swagger:
 	cd ./internal/generated/swagger && rm -rfv client models || true

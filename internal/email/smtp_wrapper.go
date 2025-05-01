@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net/smtp"
 
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/pkg/domain"
+	"github.com/CSR-LC/csr-be/pkg/domain"
 )
 
 func NewWrapperSmtp(host, port, password string) *wrapperSmtp {

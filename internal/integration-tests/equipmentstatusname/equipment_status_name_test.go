@@ -8,11 +8,11 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	eqStatusName "git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/swagger/client/equipment_status_name"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/swagger/models"
-	utils "git.epam.com/epm-lstr/epm-lstr-lc/be/internal/integration-tests/common"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/messages"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/pkg/domain"
+	eqStatusName "github.com/CSR-LC/csr-be/internal/generated/swagger/client/equipment_status_name"
+	"github.com/CSR-LC/csr-be/internal/generated/swagger/models"
+	utils "github.com/CSR-LC/csr-be/internal/integration-tests/common"
+	"github.com/CSR-LC/csr-be/internal/messages"
+	"github.com/CSR-LC/csr-be/pkg/domain"
 )
 
 func TestIntegration_GetStatuses(t *testing.T) {

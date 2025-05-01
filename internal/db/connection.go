@@ -9,8 +9,8 @@ import (
 
 	_ "github.com/jackc/pgx/v5/stdlib"
 
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/config"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/ent"
+	"github.com/CSR-LC/csr-be/internal/config"
+	"github.com/CSR-LC/csr-be/internal/generated/ent"
 )
 
 func GetDB(cfg config.DB) (*ent.Client, *sql.DB, error) {

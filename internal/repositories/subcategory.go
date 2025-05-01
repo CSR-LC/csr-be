@@ -3,13 +3,13 @@ package repositories
 import (
 	"context"
 
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/ent"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/ent/category"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/ent/equipment"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/ent/subcategory"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/swagger/models"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/middlewares"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/pkg/domain"
+	"github.com/CSR-LC/csr-be/internal/generated/ent"
+	"github.com/CSR-LC/csr-be/internal/generated/ent/category"
+	"github.com/CSR-LC/csr-be/internal/generated/ent/equipment"
+	"github.com/CSR-LC/csr-be/internal/generated/ent/subcategory"
+	"github.com/CSR-LC/csr-be/internal/generated/swagger/models"
+	"github.com/CSR-LC/csr-be/internal/middlewares"
+	"github.com/CSR-LC/csr-be/pkg/domain"
 )
 
 type subcategoryRepository struct {

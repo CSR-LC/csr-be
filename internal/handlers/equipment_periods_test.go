@@ -11,13 +11,13 @@ import (
 	"github.com/go-openapi/strfmt"
 	"github.com/stretchr/testify/require"
 
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/ent"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/ent/enttest"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/mocks"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/swagger/models"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/swagger/restapi"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/swagger/restapi/operations"
-	eqPeriods "git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/swagger/restapi/operations/equipment"
+	"github.com/CSR-LC/csr-be/internal/generated/ent"
+	"github.com/CSR-LC/csr-be/internal/generated/ent/enttest"
+	"github.com/CSR-LC/csr-be/internal/generated/mocks"
+	"github.com/CSR-LC/csr-be/internal/generated/swagger/models"
+	"github.com/CSR-LC/csr-be/internal/generated/swagger/restapi"
+	"github.com/CSR-LC/csr-be/internal/generated/swagger/restapi/operations"
+	eqPeriods "github.com/CSR-LC/csr-be/internal/generated/swagger/restapi/operations/equipment"
 
 	"github.com/go-openapi/runtime"
 	"github.com/stretchr/testify/suite"
@@ -42,7 +42,7 @@ func TestSetEquipmentPeriodsHandler(t *testing.T) {
 type EquipmentPeriodsTestSuite struct {
 	suite.Suite
 	logger                    *zap.Logger
-	equipmentStatusRepository *mocks.EquipmentStatusRepository
+	equipmentStatusRepository *mocks.MockEquipmentStatusRepository
 	handler                   *EquipmentPeriods
 }
 
@@ -52,7 +52,7 @@ func TestEquipmentPeriodsSuite(t *testing.T) {
 
 func (s *EquipmentPeriodsTestSuite) SetupTest() {
 	s.logger = zap.NewNop()
-	s.equipmentStatusRepository = &mocks.EquipmentStatusRepository{}
+	s.equipmentStatusRepository = &mocks.MockEquipmentStatusRepository{}
 	s.handler = NewEquipmentPeriods(s.logger)
 }
 
