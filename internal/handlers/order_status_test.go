@@ -121,10 +121,10 @@ func TestOrderStatusSuite(t *testing.T) {
 
 func (s *OrderStatusTestSuite) SetupTest() {
 	s.logger = zap.NewExample()
-	s.statusNameRepository = &mocks.OrderStatusNameRepository{}
-	s.orderStatusRepository = &mocks.OrderStatusRepository{}
-	s.orderFilterRepository = &mocks.OrderRepositoryWithFilter{}
-	s.equipmentStatusRepository = &mocks.EquipmentStatusRepository{}
+	s.statusNameRepository = &mocks.MockOrderStatusNameRepository{}
+	s.orderStatusRepository = &mocks.MockOrderStatusRepository{}
+	s.orderFilterRepository = &mocks.MockOrderRepositoryWithFilter{}
+	s.equipmentStatusRepository = &mocks.MockEquipmentStatusRepository{}
 	s.orderStatus = NewOrderStatus(s.logger)
 }
 
