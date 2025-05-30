@@ -6,7 +6,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/middlewares"
+	"github.com/CSR-LC/csr-be/internal/middlewares"
 )
 
 const equipmentStatusNameEntityName = "equipment_status_name"

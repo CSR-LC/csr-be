@@ -13,13 +13,13 @@ import (
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/zap"
 
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/ent"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/ent/enttest"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/mocks"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/swagger/models"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/swagger/restapi"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/swagger/restapi/operations"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/swagger/restapi/operations/roles"
+	"github.com/CSR-LC/csr-be/internal/generated/ent"
+	"github.com/CSR-LC/csr-be/internal/generated/ent/enttest"
+	"github.com/CSR-LC/csr-be/internal/generated/mocks"
+	"github.com/CSR-LC/csr-be/internal/generated/swagger/models"
+	"github.com/CSR-LC/csr-be/internal/generated/swagger/restapi"
+	"github.com/CSR-LC/csr-be/internal/generated/swagger/restapi/operations"
+	"github.com/CSR-LC/csr-be/internal/generated/swagger/restapi/operations/roles"
 )
 
 func TestSetRoleHandler(t *testing.T) {
@@ -40,7 +40,7 @@ func TestSetRoleHandler(t *testing.T) {
 type RoleTestSuite struct {
 	suite.Suite
 	logger     *zap.Logger
-	repository *mocks.RoleRepository
+	repository *mocks.MockRoleRepository
 	handler    *Role
 }
 
@@ -50,7 +50,7 @@ func TestRoleSuite(t *testing.T) {
 
 func (s *RoleTestSuite) SetupTest() {
 	s.logger = zap.NewNop()
-	s.repository = &mocks.RoleRepository{}
+	s.repository = &mocks.MockRoleRepository{}
 	s.handler = NewRole(s.logger)
 }
 

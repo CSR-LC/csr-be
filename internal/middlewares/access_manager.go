@@ -9,8 +9,8 @@ import (
 	openApiErrors "github.com/go-openapi/errors"
 	"go.uber.org/zap"
 
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/swagger/models"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/utils"
+	"github.com/CSR-LC/csr-be/internal/generated/swagger/models"
+	"github.com/CSR-LC/csr-be/internal/utils"
 )
 
 const apiPrefix = "/api"

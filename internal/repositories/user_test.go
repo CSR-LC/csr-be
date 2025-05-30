@@ -12,11 +12,11 @@ import (
 	"github.com/stretchr/testify/suite"
 	"golang.org/x/crypto/bcrypt"
 
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/ent"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/ent/enttest"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/ent/user"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/middlewares"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/utils"
+	"github.com/CSR-LC/csr-be/internal/generated/ent"
+	"github.com/CSR-LC/csr-be/internal/generated/ent/enttest"
+	"github.com/CSR-LC/csr-be/internal/generated/ent/user"
+	"github.com/CSR-LC/csr-be/internal/middlewares"
+	"github.com/CSR-LC/csr-be/internal/utils"
 )
 
 type UserSuite struct {

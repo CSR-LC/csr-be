@@ -9,7 +9,7 @@ import (
 	"github.com/google/uuid"
 	"go.uber.org/zap"
 
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/pkg/domain"
+	"github.com/CSR-LC/csr-be/pkg/domain"
 )
 
 // Scope of custom errors

@@ -7,10 +7,10 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/ent"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/ent/enttest"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/swagger/models"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/middlewares"
+	"github.com/CSR-LC/csr-be/internal/generated/ent"
+	"github.com/CSR-LC/csr-be/internal/generated/ent/enttest"
+	"github.com/CSR-LC/csr-be/internal/generated/swagger/models"
+	"github.com/CSR-LC/csr-be/internal/middlewares"
 )
 
 const petKindEntityName = "pet_kind"

@@ -6,12 +6,12 @@ import (
 	"github.com/go-openapi/runtime/middleware"
 	"go.uber.org/zap"
 
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/swagger/models"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/swagger/restapi/operations"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/swagger/restapi/operations/pet_kind"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/messages"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/repositories"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/pkg/domain"
+	"github.com/CSR-LC/csr-be/internal/generated/swagger/models"
+	"github.com/CSR-LC/csr-be/internal/generated/swagger/restapi/operations"
+	"github.com/CSR-LC/csr-be/internal/generated/swagger/restapi/operations/pet_kind"
+	"github.com/CSR-LC/csr-be/internal/messages"
+	"github.com/CSR-LC/csr-be/internal/repositories"
+	"github.com/CSR-LC/csr-be/pkg/domain"
 )
 
 func SetPetKindHandler(logger *zap.Logger, api *operations.BeAPI) {

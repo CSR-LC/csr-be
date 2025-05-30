@@ -2,9 +2,9 @@ package main
 
 import (
 	"context"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/config"
-	internalDB "git.epam.com/epm-lstr/epm-lstr-lc/be/internal/db"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/logger"
+	"github.com/CSR-LC/csr-be/internal/config"
+	internalDB "github.com/CSR-LC/csr-be/internal/db"
+	"github.com/CSR-LC/csr-be/internal/logger"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 	_ "github.com/jackc/pgx/v4/stdlib"
 	"go.uber.org/zap"

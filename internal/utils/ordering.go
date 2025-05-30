@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	"entgo.io/ent/dialect/sql"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/ent"
+	"github.com/CSR-LC/csr-be/internal/generated/ent"
 )
 
 const (

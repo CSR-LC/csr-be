@@ -15,13 +15,13 @@ import (
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/zap"
 
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/ent"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/ent/enttest"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/mocks"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/swagger/models"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/swagger/restapi"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/swagger/restapi/operations"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/swagger/restapi/operations/pet_size"
+	"github.com/CSR-LC/csr-be/internal/generated/ent"
+	"github.com/CSR-LC/csr-be/internal/generated/ent/enttest"
+	"github.com/CSR-LC/csr-be/internal/generated/mocks"
+	"github.com/CSR-LC/csr-be/internal/generated/swagger/models"
+	"github.com/CSR-LC/csr-be/internal/generated/swagger/restapi"
+	"github.com/CSR-LC/csr-be/internal/generated/swagger/restapi/operations"
+	"github.com/CSR-LC/csr-be/internal/generated/swagger/restapi/operations/pet_size"
 )
 
 func TestSetPetSizeHandler(t *testing.T) {
@@ -47,7 +47,7 @@ func TestSetPetSizeHandler(t *testing.T) {
 type PetSizeTestSuite struct {
 	suite.Suite
 	logger      *zap.Logger
-	petSizeRepo *mocks.PetSizeRepository
+	petSizeRepo *mocks.MockPetSizeRepository
 	petSize     *PetSize
 }
 
@@ -86,7 +86,7 @@ func TestPetSizeSuite(t *testing.T) {
 
 func (s *PetSizeTestSuite) SetupTest() {
 	s.logger = zap.NewNop()
-	s.petSizeRepo = &mocks.PetSizeRepository{}
+	s.petSizeRepo = &mocks.MockPetSizeRepository{}
 	s.petSize = NewPetSize(s.logger)
 }
 

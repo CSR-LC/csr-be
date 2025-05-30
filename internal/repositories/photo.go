@@ -5,10 +5,10 @@ import (
 	"errors"
 	"fmt"
 
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/ent"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/ent/photo"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/middlewares"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/pkg/domain"
+	"github.com/CSR-LC/csr-be/internal/generated/ent"
+	"github.com/CSR-LC/csr-be/internal/generated/ent/photo"
+	"github.com/CSR-LC/csr-be/internal/middlewares"
+	"github.com/CSR-LC/csr-be/pkg/domain"
 )
 
 type photoRepository struct {

@@ -5,10 +5,10 @@ import (
 	"net/http"
 	"testing"
 
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/swagger/client/users"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/swagger/models"
-	utils "git.epam.com/epm-lstr/epm-lstr-lc/be/internal/integration-tests/common"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/messages"
+	"github.com/CSR-LC/csr-be/internal/generated/swagger/client/users"
+	"github.com/CSR-LC/csr-be/internal/generated/swagger/models"
+	utils "github.com/CSR-LC/csr-be/internal/integration-tests/common"
+	"github.com/CSR-LC/csr-be/internal/messages"
 
 	"github.com/brianvoe/gofakeit/v6"
 	"github.com/go-openapi/strfmt"

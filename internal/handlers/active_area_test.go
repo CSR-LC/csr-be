@@ -16,15 +16,15 @@ import (
 	"go.uber.org/zap"
 	"go.uber.org/zap/zaptest"
 
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/ent"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/ent/activearea"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/ent/enttest"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/mocks"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/swagger/models"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/swagger/restapi"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/swagger/restapi/operations"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/swagger/restapi/operations/active_areas"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/utils"
+	"github.com/CSR-LC/csr-be/internal/generated/ent"
+	"github.com/CSR-LC/csr-be/internal/generated/ent/activearea"
+	"github.com/CSR-LC/csr-be/internal/generated/ent/enttest"
+	"github.com/CSR-LC/csr-be/internal/generated/mocks"
+	"github.com/CSR-LC/csr-be/internal/generated/swagger/models"
+	"github.com/CSR-LC/csr-be/internal/generated/swagger/restapi"
+	"github.com/CSR-LC/csr-be/internal/generated/swagger/restapi/operations"
+	"github.com/CSR-LC/csr-be/internal/generated/swagger/restapi/operations/active_areas"
+	"github.com/CSR-LC/csr-be/internal/utils"
 )
 
 func TestSetActiveAreaHandler(t *testing.T) {
@@ -45,7 +45,7 @@ func TestSetActiveAreaHandler(t *testing.T) {
 type ActiveAreaTestSuite struct {
 	suite.Suite
 	logger     *zap.Logger
-	repository *mocks.ActiveAreaRepository
+	repository *mocks.MockActiveAreaRepository
 	handler    *ActiveArea
 	areas      []*ent.ActiveArea
 }
@@ -56,7 +56,7 @@ func TestActiveAreaSuite(t *testing.T) {
 
 func (s *ActiveAreaTestSuite) SetupTest() {
 	s.logger = zaptest.NewLogger(s.T())
-	s.repository = &mocks.ActiveAreaRepository{}
+	s.repository = &mocks.MockActiveAreaRepository{}
 	s.handler = NewActiveArea(s.logger)
 	s.areas = []*ent.ActiveArea{
 		{

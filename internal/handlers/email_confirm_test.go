@@ -6,11 +6,11 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/ent/enttest"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/mocks"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/swagger/restapi"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/swagger/restapi/operations"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/swagger/restapi/operations/email_confirm"
+	"github.com/CSR-LC/csr-be/internal/generated/ent/enttest"
+	"github.com/CSR-LC/csr-be/internal/generated/mocks"
+	"github.com/CSR-LC/csr-be/internal/generated/swagger/restapi"
+	"github.com/CSR-LC/csr-be/internal/generated/swagger/restapi/operations"
+	"github.com/CSR-LC/csr-be/internal/generated/swagger/restapi/operations/email_confirm"
 	"github.com/go-openapi/loads"
 	"github.com/go-openapi/runtime"
 	"github.com/stretchr/testify/require"
@@ -21,7 +21,7 @@ import (
 type EmailConfirmHandlerTestSuite struct {
 	suite.Suite
 	logger       *zap.Logger
-	emailService *mocks.ChangeEmailService
+	emailService *mocks.MockChangeEmailService
 	handler      *emailConfirmHandler
 }
 
@@ -38,7 +38,7 @@ func TestEmailConfirmHandler(t *testing.T) {
 
 	api := operations.NewBeAPI(swaggerSpec)
 
-	emailService := &mocks.ChangeEmailService{}
+	emailService := &mocks.MockChangeEmailService{}
 
 	SetEmailConfirmHandler(logger, api, emailService)
 
@@ -52,7 +52,7 @@ func TestNewEmailConfirmRepository(t *testing.T) {
 
 func (s *EmailConfirmHandlerTestSuite) SetupTest() {
 	s.logger = zap.NewNop()
-	s.emailService = &mocks.ChangeEmailService{}
+	s.emailService = &mocks.MockChangeEmailService{}
 	s.handler = NewEmailConfirmHandler(s.logger, s.emailService)
 }
 

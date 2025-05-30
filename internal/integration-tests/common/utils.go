@@ -17,11 +17,11 @@ import (
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap"
 
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/config"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/swagger/client"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/swagger/client/users"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/swagger/models"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/utils"
+	"github.com/CSR-LC/csr-be/internal/config"
+	"github.com/CSR-LC/csr-be/internal/generated/swagger/client"
+	"github.com/CSR-LC/csr-be/internal/generated/swagger/client/users"
+	"github.com/CSR-LC/csr-be/internal/generated/swagger/models"
+	"github.com/CSR-LC/csr-be/internal/utils"
 )
 
 var (

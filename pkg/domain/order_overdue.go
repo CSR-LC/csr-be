@@ -6,7 +6,7 @@ import (
 
 	"go.uber.org/zap"
 
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/ent"
+	"github.com/CSR-LC/csr-be/internal/generated/ent"
 )
 
 type OrderOverdueCheckup interface {

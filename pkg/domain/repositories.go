@@ -4,8 +4,8 @@ import (
 	"context"
 	"time"
 
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/ent"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/swagger/models"
+	"github.com/CSR-LC/csr-be/internal/generated/ent"
+	"github.com/CSR-LC/csr-be/internal/generated/swagger/models"
 )
 
 type ActiveAreaRepository interface {

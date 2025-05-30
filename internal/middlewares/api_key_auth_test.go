@@ -6,9 +6,9 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/ent"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/mocks"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/swagger/models"
+	"github.com/CSR-LC/csr-be/internal/generated/ent"
+	"github.com/CSR-LC/csr-be/internal/generated/mocks"
+	"github.com/CSR-LC/csr-be/internal/generated/swagger/models"
 )
 
 const tokenString = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MX0.hd6SCn616Yum7hzklWuFQ5okxz_k3TifhWlqbFFugIQ"
@@ -23,7 +23,7 @@ func TestAPIKeyAuthFunc(t *testing.T) {
 	ctx := context.TODO()
 	userID := 1
 	key := "123"
-	mockUserRepository := &mocks.UserRepository{}
+	mockUserRepository := &mocks.MockUserRepository{}
 
 	expectedUser := &ent.User{
 		ID:    userID,

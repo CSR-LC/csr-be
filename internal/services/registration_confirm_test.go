@@ -11,17 +11,17 @@ import (
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/zap"
 
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/ent"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/mocks"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/pkg/domain"
+	"github.com/CSR-LC/csr-be/internal/generated/ent"
+	"github.com/CSR-LC/csr-be/internal/generated/mocks"
+	"github.com/CSR-LC/csr-be/pkg/domain"
 )
 
 type RegistrationConfirmTestSuite struct {
 	suite.Suite
 	logger            *zap.Logger
-	userRepository    *mocks.UserRepository
-	regConfirmRepo    *mocks.RegistrationConfirmRepository
-	emailClient       *mocks.Sender
+	userRepository    *mocks.MockUserRepository
+	regConfirmRepo    *mocks.MockRegistrationConfirmRepository
+	emailClient       *mocks.MockSender
 	regConfirmService domain.RegistrationConfirmService
 }
 
@@ -31,9 +31,9 @@ func TestRegistrationConfirmSuite(t *testing.T) {
 }
 
 func (s *RegistrationConfirmTestSuite) SetupTest() {
-	s.userRepository = &mocks.UserRepository{}
-	s.regConfirmRepo = &mocks.RegistrationConfirmRepository{}
-	s.emailClient = &mocks.Sender{}
+	s.userRepository = &mocks.MockUserRepository{}
+	s.regConfirmRepo = &mocks.MockRegistrationConfirmRepository{}
+	s.emailClient = &mocks.MockSender{}
 	s.logger = zap.NewExample()
 	ttl := time.Hour
 	service := NewRegistrationConfirmService(s.emailClient, s.userRepository, s.regConfirmRepo, s.logger, ttl)

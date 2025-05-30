@@ -9,15 +9,15 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/ent"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/swagger/models"
-	eqStatus "git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/swagger/restapi/operations/equipment_status"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/pkg/domain"
+	"github.com/CSR-LC/csr-be/internal/generated/ent"
+	"github.com/CSR-LC/csr-be/internal/generated/swagger/models"
+	eqStatus "github.com/CSR-LC/csr-be/internal/generated/swagger/restapi/operations/equipment_status"
+	"github.com/CSR-LC/csr-be/pkg/domain"
 
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/ent/enttest"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/mocks"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/swagger/restapi"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/swagger/restapi/operations"
+	"github.com/CSR-LC/csr-be/internal/generated/ent/enttest"
+	"github.com/CSR-LC/csr-be/internal/generated/mocks"
+	"github.com/CSR-LC/csr-be/internal/generated/swagger/restapi"
+	"github.com/CSR-LC/csr-be/internal/generated/swagger/restapi/operations"
 
 	"github.com/go-openapi/loads"
 	"github.com/go-openapi/runtime"
@@ -47,8 +47,8 @@ func TestSetEquipmentStatusHandler(t *testing.T) {
 type EquipmentStatusTestSuite struct {
 	suite.Suite
 	logger                    *zap.Logger
-	equipmentStatusRepository *mocks.EquipmentStatusRepository
-	orderStatusRepository     *mocks.OrderStatusRepository
+	equipmentStatusRepository *mocks.MockEquipmentStatusRepository
+	orderStatusRepository     *mocks.MockOrderStatusRepository
 	handler                   *EquipmentStatus
 }
 
@@ -58,8 +58,8 @@ func TestStatusSuite(t *testing.T) {
 
 func (s *EquipmentStatusTestSuite) SetupTest() {
 	s.logger = zap.NewNop()
-	s.equipmentStatusRepository = &mocks.EquipmentStatusRepository{}
-	s.orderStatusRepository = &mocks.OrderStatusRepository{}
+	s.equipmentStatusRepository = &mocks.MockEquipmentStatusRepository{}
+	s.orderStatusRepository = &mocks.MockOrderStatusRepository{}
 	s.handler = NewEquipmentStatus(s.logger)
 }
 

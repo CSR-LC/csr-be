@@ -11,18 +11,18 @@ import (
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/zap"
 
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/ent"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/mocks"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/pkg/domain"
+	"github.com/CSR-LC/csr-be/internal/generated/ent"
+	"github.com/CSR-LC/csr-be/internal/generated/mocks"
+	"github.com/CSR-LC/csr-be/pkg/domain"
 )
 
 type PasswordResetTestSuite struct {
 	suite.Suite
 	logger            *zap.Logger
-	userRepository    *mocks.UserRepository
-	passwordRepo      *mocks.PasswordResetRepository
-	emailClient       *mocks.Sender
-	passwordGenerator *mocks.PasswordGenerator
+	userRepository    *mocks.MockUserRepository
+	passwordRepo      *mocks.MockPasswordResetRepository
+	emailClient       *mocks.MockSender
+	passwordGenerator *mocks.MockPasswordGenerator
 	passwordService   domain.PasswordResetService
 }
 
@@ -32,10 +32,10 @@ func TestPasswordClientSuite(t *testing.T) {
 }
 
 func (s *PasswordResetTestSuite) SetupTest() {
-	s.userRepository = &mocks.UserRepository{}
-	s.passwordRepo = &mocks.PasswordResetRepository{}
-	s.emailClient = &mocks.Sender{}
-	s.passwordGenerator = &mocks.PasswordGenerator{}
+	s.userRepository = &mocks.MockUserRepository{}
+	s.passwordRepo = &mocks.MockPasswordResetRepository{}
+	s.emailClient = &mocks.MockSender{}
+	s.passwordGenerator = &mocks.MockPasswordGenerator{}
 	s.logger = zap.NewExample()
 	ttl := time.Hour
 	service := NewPasswordResetService(s.emailClient, s.userRepository, s.passwordRepo, s.logger, ttl, s.passwordGenerator)

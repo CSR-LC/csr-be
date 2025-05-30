@@ -14,14 +14,14 @@ import (
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/zap"
 
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/ent"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/ent/enttest"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/mocks"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/swagger/models"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/swagger/restapi"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/swagger/restapi/operations"
-	eqStatusName "git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/swagger/restapi/operations/equipment_status_name"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/pkg/domain"
+	"github.com/CSR-LC/csr-be/internal/generated/ent"
+	"github.com/CSR-LC/csr-be/internal/generated/ent/enttest"
+	"github.com/CSR-LC/csr-be/internal/generated/mocks"
+	"github.com/CSR-LC/csr-be/internal/generated/swagger/models"
+	"github.com/CSR-LC/csr-be/internal/generated/swagger/restapi"
+	"github.com/CSR-LC/csr-be/internal/generated/swagger/restapi/operations"
+	eqStatusName "github.com/CSR-LC/csr-be/internal/generated/swagger/restapi/operations/equipment_status_name"
+	"github.com/CSR-LC/csr-be/pkg/domain"
 )
 
 func TestSetEquipmentStatusNameHandler(t *testing.T) {
@@ -45,7 +45,7 @@ func TestSetEquipmentStatusNameHandler(t *testing.T) {
 type EquipmentStatusNameTestSuite struct {
 	suite.Suite
 	logger     *zap.Logger
-	repository *mocks.EquipmentStatusNameRepository
+	repository *mocks.MockEquipmentStatusNameRepository
 	handler    *EquipmentStatusName
 }
 
@@ -64,7 +64,7 @@ func TestStatusNameSuite(t *testing.T) {
 
 func (s *EquipmentStatusNameTestSuite) SetupTest() {
 	s.logger = zap.NewNop()
-	s.repository = &mocks.EquipmentStatusNameRepository{}
+	s.repository = &mocks.MockEquipmentStatusNameRepository{}
 	s.handler = NewEquipmentStatusName(s.logger)
 }
 

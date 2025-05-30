@@ -5,12 +5,12 @@ import (
 	"errors"
 	"time"
 
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/ent"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/ent/order"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/ent/orderstatus"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/ent/orderstatusname"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/middlewares"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/utils"
+	"github.com/CSR-LC/csr-be/internal/generated/ent"
+	"github.com/CSR-LC/csr-be/internal/generated/ent/order"
+	"github.com/CSR-LC/csr-be/internal/generated/ent/orderstatus"
+	"github.com/CSR-LC/csr-be/internal/generated/ent/orderstatusname"
+	"github.com/CSR-LC/csr-be/internal/middlewares"
+	"github.com/CSR-LC/csr-be/internal/utils"
 )
 
 type orderFilterRepository struct {

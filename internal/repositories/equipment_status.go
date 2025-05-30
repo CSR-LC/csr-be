@@ -4,15 +4,15 @@ import (
 	"context"
 	"time"
 
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/ent"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/ent/equipment"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/ent/equipmentstatus"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/ent/equipmentstatusname"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/ent/order"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/ent/user"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/swagger/models"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/middlewares"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/pkg/domain"
+	"github.com/CSR-LC/csr-be/internal/generated/ent"
+	"github.com/CSR-LC/csr-be/internal/generated/ent/equipment"
+	"github.com/CSR-LC/csr-be/internal/generated/ent/equipmentstatus"
+	"github.com/CSR-LC/csr-be/internal/generated/ent/equipmentstatusname"
+	"github.com/CSR-LC/csr-be/internal/generated/ent/order"
+	"github.com/CSR-LC/csr-be/internal/generated/ent/user"
+	"github.com/CSR-LC/csr-be/internal/generated/swagger/models"
+	"github.com/CSR-LC/csr-be/internal/middlewares"
+	"github.com/CSR-LC/csr-be/pkg/domain"
 )
 
 const maintenanceTime = time.Hour * 24 // Equipment must be maintained and sanitized after return

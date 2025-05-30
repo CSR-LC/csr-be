@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"time"
 
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/pkg/domain"
+	"github.com/CSR-LC/csr-be/pkg/domain"
 	"github.com/google/uuid"
 	"go.uber.org/zap"
 )

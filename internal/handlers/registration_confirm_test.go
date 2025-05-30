@@ -9,16 +9,16 @@ import (
 	"github.com/go-openapi/loads"
 	"github.com/stretchr/testify/require"
 
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/mocks"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/swagger/restapi"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/swagger/restapi/operations"
+	"github.com/CSR-LC/csr-be/internal/generated/mocks"
+	"github.com/CSR-LC/csr-be/internal/generated/swagger/restapi"
+	"github.com/CSR-LC/csr-be/internal/generated/swagger/restapi/operations"
 
 	"github.com/go-openapi/runtime"
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/zap"
 
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/swagger/models"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/swagger/restapi/operations/registration_confirm"
+	"github.com/CSR-LC/csr-be/internal/generated/swagger/models"
+	"github.com/CSR-LC/csr-be/internal/generated/swagger/restapi/operations/registration_confirm"
 )
 
 func TestSetRegistrationHandler(t *testing.T) {
@@ -28,7 +28,7 @@ func TestSetRegistrationHandler(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	regConfService := &mocks.RegistrationConfirmService{}
+	regConfService := &mocks.MockRegistrationConfirmService{}
 	api := operations.NewBeAPI(swaggerSpec)
 	SetRegistrationHandler(logger, api, regConfService)
 	require.NotEmpty(t, api.RegistrationConfirmSendRegistrationConfirmLinkByLoginHandler)
@@ -38,7 +38,7 @@ func TestSetRegistrationHandler(t *testing.T) {
 type RegistrationConfirmHandlerTestSuite struct {
 	suite.Suite
 	logger            *zap.Logger
-	regConfirmService *mocks.RegistrationConfirmService
+	regConfirmService *mocks.MockRegistrationConfirmService
 	handler           *registrationConfirmHandler
 }
 
@@ -49,7 +49,7 @@ func TestNewRegistrationConfirmHandler(t *testing.T) {
 
 func (s *RegistrationConfirmHandlerTestSuite) SetupTest() {
 	s.logger = zap.NewNop()
-	s.regConfirmService = &mocks.RegistrationConfirmService{}
+	s.regConfirmService = &mocks.MockRegistrationConfirmService{}
 	s.handler = NewRegistrationConfirmHandler(s.logger, s.regConfirmService)
 }
 

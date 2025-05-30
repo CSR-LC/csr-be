@@ -9,13 +9,13 @@ import (
 	"github.com/go-openapi/strfmt"
 	"go.uber.org/zap"
 
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/ent"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/ent/order"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/swagger/models"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/handlers"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/middlewares"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/utils"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/pkg/domain"
+	"github.com/CSR-LC/csr-be/internal/generated/ent"
+	"github.com/CSR-LC/csr-be/internal/generated/ent/order"
+	"github.com/CSR-LC/csr-be/internal/generated/swagger/models"
+	"github.com/CSR-LC/csr-be/internal/handlers"
+	"github.com/CSR-LC/csr-be/internal/middlewares"
+	"github.com/CSR-LC/csr-be/internal/utils"
+	"github.com/CSR-LC/csr-be/pkg/domain"
 )
 
 var ErrNoChangesToCommit = fmt.Errorf("no changes to commit")

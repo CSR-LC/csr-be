@@ -6,10 +6,10 @@ import (
 	"testing"
 	"time"
 
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/swagger/client/users"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/swagger/models"
-	utils "git.epam.com/epm-lstr/epm-lstr-lc/be/internal/integration-tests/common"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/messages"
+	"github.com/CSR-LC/csr-be/internal/generated/swagger/client/users"
+	"github.com/CSR-LC/csr-be/internal/generated/swagger/models"
+	utils "github.com/CSR-LC/csr-be/internal/integration-tests/common"
+	"github.com/CSR-LC/csr-be/internal/messages"
 
 	_ "github.com/jackc/pgx/v4/stdlib"
 	"github.com/stretchr/testify/assert"

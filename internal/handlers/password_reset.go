@@ -6,11 +6,11 @@ import (
 	"github.com/go-openapi/runtime/middleware"
 	"go.uber.org/zap"
 
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/swagger/models"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/swagger/restapi/operations"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/swagger/restapi/operations/password_reset"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/messages"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/pkg/domain"
+	"github.com/CSR-LC/csr-be/internal/generated/swagger/models"
+	"github.com/CSR-LC/csr-be/internal/generated/swagger/restapi/operations"
+	"github.com/CSR-LC/csr-be/internal/generated/swagger/restapi/operations/password_reset"
+	"github.com/CSR-LC/csr-be/internal/messages"
+	"github.com/CSR-LC/csr-be/pkg/domain"
 )
 
 func SetPasswordResetHandler(logger *zap.Logger, api *operations.BeAPI, passwordService domain.PasswordResetService) {

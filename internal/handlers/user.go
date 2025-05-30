@@ -10,15 +10,15 @@ import (
 	"go.uber.org/zap"
 	"golang.org/x/crypto/bcrypt"
 
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/ent"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/ent/user"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/swagger/models"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/swagger/restapi/operations"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/swagger/restapi/operations/users"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/messages"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/repositories"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/utils"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/pkg/domain"
+	"github.com/CSR-LC/csr-be/internal/generated/ent"
+	"github.com/CSR-LC/csr-be/internal/generated/ent/user"
+	"github.com/CSR-LC/csr-be/internal/generated/swagger/models"
+	"github.com/CSR-LC/csr-be/internal/generated/swagger/restapi/operations"
+	"github.com/CSR-LC/csr-be/internal/generated/swagger/restapi/operations/users"
+	"github.com/CSR-LC/csr-be/internal/messages"
+	"github.com/CSR-LC/csr-be/internal/repositories"
+	"github.com/CSR-LC/csr-be/internal/utils"
+	"github.com/CSR-LC/csr-be/pkg/domain"
 )
 
 func SetUserHandler(logger *zap.Logger, api *operations.BeAPI,

@@ -3,7 +3,7 @@ package handlers
 import (
 	"net/http"
 
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/swagger/models"
+	"github.com/CSR-LC/csr-be/internal/generated/swagger/models"
 )
 
 func buildErrorPayload(code int32, msg string, details string) *models.SwaggerError {

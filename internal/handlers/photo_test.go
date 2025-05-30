@@ -20,13 +20,13 @@ import (
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/zap"
 
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/ent"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/ent/enttest"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/mocks"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/swagger/models"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/swagger/restapi"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/swagger/restapi/operations"
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/generated/swagger/restapi/operations/photos"
+	"github.com/CSR-LC/csr-be/internal/generated/ent"
+	"github.com/CSR-LC/csr-be/internal/generated/ent/enttest"
+	"github.com/CSR-LC/csr-be/internal/generated/mocks"
+	"github.com/CSR-LC/csr-be/internal/generated/swagger/models"
+	"github.com/CSR-LC/csr-be/internal/generated/swagger/restapi"
+	"github.com/CSR-LC/csr-be/internal/generated/swagger/restapi/operations"
+	"github.com/CSR-LC/csr-be/internal/generated/swagger/restapi/operations/photos"
 )
 
 func TestSetPhotoHandler(t *testing.T) {
@@ -51,7 +51,7 @@ func TestSetPhotoHandler(t *testing.T) {
 type PhotoTestSuite struct {
 	suite.Suite
 	logger     *zap.Logger
-	repository *mocks.PhotoRepository
+	repository *mocks.MockPhotoRepository
 	handler    *Photo
 }
 
@@ -61,7 +61,7 @@ func TestPhotoSuite(t *testing.T) {
 
 func (s *PhotoTestSuite) SetupTest() {
 	s.logger = zap.NewNop()
-	s.repository = &mocks.PhotoRepository{}
+	s.repository = &mocks.MockPhotoRepository{}
 	s.handler = NewPhoto(s.logger)
 }
 

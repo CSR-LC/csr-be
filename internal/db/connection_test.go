@@ -3,7 +3,7 @@ package db
 import (
 	"testing"
 
-	"git.epam.com/epm-lstr/epm-lstr-lc/be/internal/config"
+	"github.com/CSR-LC/csr-be/internal/config"
 
 	"github.com/stretchr/testify/require"
 )
