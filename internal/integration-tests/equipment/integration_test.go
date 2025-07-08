@@ -507,7 +507,7 @@ func TestIntegration_BlockEquipment(t *testing.T) {
 	tm := time.Now().In(loc)
 
 	// In these number of days the blocking will start/end
-	startNumDays := 1
+	startNumDays := 6
 	endNumDays := 10
 
 	ctx := context.Background()
