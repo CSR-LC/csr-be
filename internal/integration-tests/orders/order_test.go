@@ -213,8 +213,8 @@ func TestIntegration_CreateOrder(t *testing.T) {
 
 		//assert.Equal(t, equipment, res.Payload.Equipments[0].ID)
 		assert.Equal(t, desc, *res.Payload.Description)
-		assert.Equal(t, rentEnd, *res.Payload.RentEnd)
-		assert.Equal(t, rentStart, *res.Payload.RentStart)
+		assert.Equal(t, strfmt.DateTime(time.Unix(0, rentEnd)), *res.Payload.RentEnd)
+		assert.Equal(t, strfmt.DateTime(time.Unix(0, rentStart)), *res.Payload.RentStart)
 	})
 
 	t.Run("Create Order failed: duplicate order", func(t *testing.T) {
@@ -686,8 +686,8 @@ func TestIntegration_UpdateOrder(t *testing.T) {
 
 		assert.Equal(t, desc, *res.Payload.Description)
 		assert.Equal(t, quantity, *res.Payload.Quantity)
-		assert.Equal(t, rentEnd, *res.Payload.RentEnd)
-		assert.Equal(t, rentStart, *res.Payload.RentStart)
+		assert.Equal(t, time.Time(rentEnd).UnixNano(), time.Time(*res.Payload.RentEnd).UnixNano())
+		assert.Equal(t, time.Time(rentStart).UnixNano(), time.Time(*res.Payload.RentStart).UnixNano())
 	})
 }
 
