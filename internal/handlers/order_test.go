@@ -718,13 +718,12 @@ func (s *orderTestSuite) TestOrder_CreateOrder_RepoErr() {
 	ctx := request.Context()
 
 	description := "description"
-	// rentStart := strfmt.DateTime(time.Now())
-	// rentEnd := strfmt.DateTime(time.Now().Add(time.Hour * 24))
+	rentStart := time.Now().UnixNano()
+	rentEnd := time.Now().Add(time.Hour * 24).UnixNano()
 	createOrder := &models.OrderCreateRequest{
 		Description: description,
-		// TODO: Update OrderCreateRequest to use int64 unix nano for RentStart and RentEnd if not already done
-		// RentStart:   ptr(time.Time(rentStart).UnixNano()),
-		// RentEnd:     ptr(time.Time(rentEnd).UnixNano()),
+		RentStart:   &rentStart,
+		RentEnd:     &rentEnd,
 	}
 	userID := 1
 	err := errors.New("error")

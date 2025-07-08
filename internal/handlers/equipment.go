@@ -309,7 +309,6 @@ func mapEquipmentResponse(eq *ent.Equipment) (*models.EquipmentResponse, error) 
 	}, nil
 }
 
-// todo handler
 func (c Equipment) BlockEquipmentFunc(repository domain.EquipmentRepository, eqStatusRepo domain.EquipmentStatusRepository) equipment.BlockEquipmentHandlerFunc {
 	return func(s equipment.BlockEquipmentParams, principal *models.Principal) middleware.Responder {
 		ctx := s.HTTPRequest.Context()
@@ -367,7 +366,6 @@ func (c Equipment) BlockEquipmentFunc(repository domain.EquipmentRepository, eqS
 	}
 }
 
-// todo here too?
 func (c Equipment) UnblockEquipmentFunc(repository domain.EquipmentRepository) equipment.UnblockEquipmentHandlerFunc {
 	return func(s equipment.UnblockEquipmentParams, principal *models.Principal) middleware.Responder {
 		ctx := s.HTTPRequest.Context()

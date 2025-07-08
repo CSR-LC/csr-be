@@ -884,8 +884,8 @@ func (s *OrderSuite) TestOrderRepository_Update_OK() {
 	require.NoError(t, err)
 	require.NoError(t, tx.Commit())
 	require.Equal(t, newDesc, updated.Description)
-	require.Equal(t, time.Unix(0, newEndDate), updated.RentEnd)
-	require.Equal(t, time.Unix(0, newStartDate), updated.RentStart)
+	require.Equal(t, time.Unix(0, newEndDate).UnixNano(), updated.RentEnd.UnixNano())
+	require.Equal(t, time.Unix(0, newStartDate).UnixNano(), updated.RentStart.UnixNano())
 }
 
 func (s *OrderSuite) TestOrderRepository_Update_MissingOrder() {
