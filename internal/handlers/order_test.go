@@ -936,14 +936,13 @@ func (s *orderTestSuite) TestOrder_UpdateOrder_RepoErr() {
 
 	description := "description"
 	quantity := int64(10)
-	// rentStart := strfmt.DateTime(time.Now())
-	// rentEnd := strfmt.DateTime(time.Now().Add(time.Hour * 24))
+	rentStart := strfmt.DateTime(time.Now())
+	rentEnd := strfmt.DateTime(time.Now().Add(time.Hour * 24))
 	createOrder := &models.OrderUpdateRequest{
 		Description: &description,
 		Quantity:    &quantity,
-		// TODO: Update OrderUpdateRequest to use int64 unix nano for RentStart and RentEnd if not already done
-		// RentStart:   ptr(time.Time(rentStart).UnixNano()),
-		// RentEnd:     ptr(time.Time(rentEnd).UnixNano()),
+		RentStart:   &rentStart,
+		RentEnd:     &rentEnd,
 	}
 	userID := 1
 	orderID := 2
@@ -972,14 +971,15 @@ func (s *orderTestSuite) TestOrder_UpdateOrder_MapErr() {
 
 	description := "description"
 	quantity := int64(10)
-	// rentStart := strfmt.DateTime(time.Now())
-	// rentEnd := strfmt.DateTime(time.Now().Add(time.Hour * 24))
+	rentStartTime := time.Now()
+	rentEndTime := rentStartTime.Add(time.Hour * 24)
+	rentStart := strfmt.DateTime(rentStartTime)
+	rentEnd := strfmt.DateTime(rentEndTime)
 	createOrder := &models.OrderUpdateRequest{
 		Description: &description,
 		Quantity:    &quantity,
-		// TODO: Update OrderUpdateRequest to use int64 unix nano for RentStart and RentEnd if not already done
-		// RentStart:   ptr(time.Time(rentStart).UnixNano()),
-		// RentEnd:     ptr(time.Time(rentEnd).UnixNano()),
+		RentStart:   &rentStart,
+		RentEnd:     &rentEnd,
 	}
 	userID := 1
 	orderID := 2
@@ -1008,14 +1008,13 @@ func (s *orderTestSuite) TestOrder_UpdateOrder_OK() {
 
 	description := "description"
 	quantity := int64(10)
-	// rentStart := strfmt.DateTime(time.Now())
-	// rentEnd := strfmt.DateTime(time.Now().Add(time.Hour * 24))
+	rentStart := strfmt.DateTime(time.Now())
+	rentEnd := strfmt.DateTime(time.Now().Add(time.Hour * 24))
 	createOrder := &models.OrderUpdateRequest{
 		Description: &description,
 		Quantity:    &quantity,
-		// TODO: Update OrderUpdateRequest to use int64 unix nano for RentStart and RentEnd if not already done
-		// RentStart:   ptr(time.Time(rentStart).UnixNano()),
-		// RentEnd:     ptr(time.Time(rentEnd).UnixNano()),
+		RentStart:   &rentStart,
+		RentEnd:     &rentEnd,
 	}
 	userID := 1
 	orderID := 2
