@@ -14,6 +14,7 @@ import (
 	"github.com/go-openapi/loads"
 	"github.com/go-openapi/runtime"
 	_ "github.com/mattn/go-sqlite3"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/zap"
@@ -1122,7 +1123,14 @@ func (s *EquipmentTestSuite) TestEquipment_BlockEquipmentFunc_RepoNotFoundErr() 
 	}
 	err := &ent.NotFoundError{}
 
-	s.equipmentRepo.On("BlockEquipment", ctx, equipmentID, startDate, endDate, userID).Return(err)
+	s.equipmentRepo.On(
+		"BlockEquipment",
+		ctx,
+		equipmentID,
+		mock.MatchedBy(func(t time.Time) bool { return t.UnixNano() == startDate.UnixNano() }),
+		mock.MatchedBy(func(t time.Time) bool { return t.UnixNano() == endDate.UnixNano() }),
+		userID,
+	).Return(err)
 	s.equipmentStatusRepo.On("GetLastEquipmentStatusByEquipmentID", ctx, equipmentID).Return(nil, err)
 	responseRecorder := httptest.NewRecorder()
 	producer := runtime.JSONProducer()
@@ -1160,7 +1168,14 @@ func (s *EquipmentTestSuite) TestEquipment_BlockEquipmentFunc_OK() {
 
 	err := &ent.NotFoundError{}
 
-	s.equipmentRepo.On("BlockEquipment", ctx, equipmentID, startDate, endDate, userID).Return(nil)
+	s.equipmentRepo.On(
+		"BlockEquipment",
+		ctx,
+		equipmentID,
+		mock.MatchedBy(func(t time.Time) bool { return t.UnixNano() == startDate.UnixNano() }),
+		mock.MatchedBy(func(t time.Time) bool { return t.UnixNano() == endDate.UnixNano() }),
+		userID,
+	).Return(nil)
 	s.equipmentStatusRepo.On("GetLastEquipmentStatusByEquipmentID", ctx, equipmentID).Return(nil, err)
 	principal := &models.Principal{ID: int64(userID), Role: roles.Manager}
 	resp := handlerFunc(params, principal)

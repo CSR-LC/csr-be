@@ -13,6 +13,7 @@ import (
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/strfmt"
 	_ "github.com/mattn/go-sqlite3"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/zap"
@@ -718,17 +719,27 @@ func (s *orderTestSuite) TestOrder_CreateOrder_RepoErr() {
 	ctx := request.Context()
 
 	description := "description"
-	rentStart := time.Now().UnixNano()
-	rentEnd := time.Now().Add(time.Hour * 24).UnixNano()
+	equipmentID := int64(1)
+	rentStartTime := time.Now()
+	rentEndTime := rentStartTime.Add(time.Hour * 24)
+	rentStart := rentStartTime.UnixNano()
+	rentEnd := rentEndTime.UnixNano()
 	createOrder := &models.OrderCreateRequest{
 		Description: description,
+		EquipmentID: &equipmentID,
 		RentStart:   &rentStart,
 		RentEnd:     &rentEnd,
 	}
 	userID := 1
 	err := errors.New("error")
-	s.eqStatusRepository.On("HasStatusByPeriod", ctx, domain.EquipmentStatusAvailable, 1,
-		time.Now(), time.Now().Add(time.Hour*24)).Return(false, err)
+	s.eqStatusRepository.On(
+		"HasStatusByPeriod",
+		ctx,
+		domain.EquipmentStatusAvailable,
+		int(equipmentID),
+		mock.MatchedBy(func(t time.Time) bool { return t.UnixNano() == rentStartTime.UnixNano() }),
+		mock.MatchedBy(func(t time.Time) bool { return t.UnixNano() == rentEndTime.UnixNano() }),
+	).Return(false, err)
 
 	handlerFunc := s.orderHandler.CreateOrderFunc(s.orderRepository, s.eqStatusRepository, s.equipmentRepository)
 	data := orders.CreateOrderParams{
@@ -749,35 +760,45 @@ func (s *orderTestSuite) TestOrder_CreateOrder_MapErr() {
 	request := http.Request{}
 	ctx := request.Context()
 
+	id := 1
+	eqID := int64(id)
 	description := "description"
-	// rentStart := strfmt.DateTime(time.Now())
-	// rentEnd := strfmt.DateTime(time.Now().Add(time.Hour * 24))
+	rentStartTime := time.Now()
+	rentEndTime := rentStartTime.Add(time.Hour * 24)
+	rentStart := rentStartTime.UnixNano()
+	rentEnd := rentEndTime.UnixNano()
 	createOrder := &models.OrderCreateRequest{
 		Description: description,
-		// TODO: Update OrderCreateRequest to use int64 unix nano for RentStart and RentEnd if not already done
-		// RentStart:   ptr(time.Time(rentStart).UnixNano()),
-		// RentEnd:     ptr(time.Time(rentEnd).UnixNano()),
+		EquipmentID: &eqID,
+		RentStart:   &rentStart,
+		RentEnd:     &rentEnd,
 	}
 	userID := 1
 
 	orderToReturn := orderWithNoEdges()
 	equipment := orderWithEdges(t, 1).Edges.Equipments[0]
 
-	// endDate := time.Time(rentEnd).AddDate(0, 0, 1)
-	// equipmentBookedEndDate := strfmt.DateTime(endDate)
+	endDate := rentEndTime.AddDate(0, 0, 1)
+	equipmentBookedEndDate := strfmt.DateTime(endDate)
 
-	// startDate := time.Time(rentStart).AddDate(0, 0, -1)
-	// equipmentBookedStartDate := strfmt.DateTime(startDate)
+	startDate := rentStartTime.AddDate(0, 0, -1)
+	equipmentBookedStartDate := strfmt.DateTime(startDate)
 
-	s.eqStatusRepository.On("HasStatusByPeriod", ctx, domain.EquipmentStatusAvailable, equipment.ID,
-		time.Now(), time.Now().Add(time.Hour*24)).Return(true, nil)
+	s.eqStatusRepository.On(
+		"HasStatusByPeriod",
+		ctx,
+		domain.EquipmentStatusAvailable,
+		equipment.ID,
+		mock.MatchedBy(func(t time.Time) bool { return t.UnixNano() == rentStartTime.UnixNano() }),
+		mock.MatchedBy(func(t time.Time) bool { return t.UnixNano() == rentEndTime.UnixNano() }),
+	).Return(true, nil)
 	s.orderRepository.On("Create", ctx, createOrder, userID, []int{equipment.ID}).Return(orderToReturn, nil)
 	s.eqStatusRepository.On("Create", ctx, &models.NewEquipmentStatus{
-		// EndDate:     &equipmentBookedEndDate,
-		// EquipmentID: &equipmentID,
-		// OrderID:     int64(orderToReturn.ID),
-		// StartDate:   &equipmentBookedStartDate,
-		// StatusName:  &domain.EquipmentStatusBooked,
+		EndDate:     &equipmentBookedEndDate,
+		EquipmentID: &eqID,
+		OrderID:     int64(orderToReturn.ID),
+		StartDate:   &equipmentBookedStartDate,
+		StatusName:  &domain.EquipmentStatusBooked,
 	}).Return(nil, nil)
 
 	handlerFunc := s.orderHandler.CreateOrderFunc(s.orderRepository, s.eqStatusRepository, s.equipmentRepository)
@@ -800,19 +821,28 @@ func (s *orderTestSuite) TestOrder_CreateOrder_NoAvailableEquipments() {
 	ctx := request.Context()
 
 	description := "description"
-	// rentStart := strfmt.DateTime(time.Now())
-	// rentEnd := strfmt.DateTime(time.Now().Add(time.Hour * 24))
+	equipment := orderWithEdges(t, 1).Edges.Equipments[0]
+	eqID := int64(equipment.ID)
+	rentStartTime := time.Now()
+	rentEndTime := rentStartTime.Add(time.Hour * 24)
+	rentStart := rentStartTime.UnixNano()
+	rentEnd := rentEndTime.UnixNano()
 	createOrder := &models.OrderCreateRequest{
 		Description: description,
-		// TODO: Update OrderCreateRequest to use int64 unix nano for RentStart and RentEnd if not already done
-		// RentStart:   ptr(time.Time(rentStart).UnixNano()),
-		// RentEnd:     ptr(time.Time(rentEnd).UnixNano()),
+		EquipmentID: &eqID,
+		RentStart:   &rentStart,
+		RentEnd:     &rentEnd,
 	}
 	userID := 1
 
-	equipment := orderWithEdges(t, 1).Edges.Equipments[0]
-	s.eqStatusRepository.On("HasStatusByPeriod", ctx, domain.EquipmentStatusAvailable, equipment.ID,
-		time.Now(), time.Now().Add(time.Hour*24)).Return(false, nil)
+	s.eqStatusRepository.On(
+		"HasStatusByPeriod",
+		ctx,
+		domain.EquipmentStatusAvailable,
+		equipment.ID,
+		mock.MatchedBy(func(t time.Time) bool { return t.UnixNano() == rentStartTime.UnixNano() }),
+		mock.MatchedBy(func(t time.Time) bool { return t.UnixNano() == rentEndTime.UnixNano() }),
+	).Return(false, nil)
 
 	handlerFunc := s.orderHandler.CreateOrderFunc(s.orderRepository, s.eqStatusRepository, s.equipmentRepository)
 	data := orders.CreateOrderParams{
@@ -840,34 +870,43 @@ func (s *orderTestSuite) TestOrder_CreateOrder_OK() {
 	ctx := request.Context()
 
 	description := "description"
-	// rentStart := strfmt.DateTime(time.Now())
-	// rentEnd := strfmt.DateTime(time.Now().Add(time.Hour * 24))
+	equipment := orderWithEdges(t, 1).Edges.Equipments[0]
+	eqID := int64(equipment.ID)
+	rentStartTime := time.Now()
+	rentEndTime := rentStartTime.Add(time.Hour * 24)
+	rentStart := rentStartTime.UnixNano()
+	rentEnd := rentEndTime.UnixNano()
 	createOrder := &models.OrderCreateRequest{
 		Description: description,
-		// TODO: Update OrderCreateRequest to use int64 unix nano for RentStart and RentEnd if not already done
-		// RentStart:   ptr(time.Time(rentStart).UnixNano()),
-		// RentEnd:     ptr(time.Time(rentEnd).UnixNano()),
+		EquipmentID: &eqID,
+		RentStart:   &rentStart,
+		RentEnd:     &rentEnd,
 	}
 	userID := 1
 
 	orderToReturn := orderWithAllEdges(t, 1)
-	equipment := orderWithEdges(t, 1).Edges.Equipments[0]
 
-	// endDate := time.Time(rentEnd).AddDate(0, 0, 1)
-	// equipmentBookedEndDate := strfmt.DateTime(endDate)
+	endDate := rentEndTime.AddDate(0, 0, 1)
+	equipmentBookedEndDate := strfmt.DateTime(endDate)
 
-	// startDate := time.Time(rentStart).AddDate(0, 0, -1)
-	// equipmentBookedStartDate := strfmt.DateTime(startDate)
+	startDate := rentStartTime.AddDate(0, 0, -1)
+	equipmentBookedStartDate := strfmt.DateTime(startDate)
 
-	s.eqStatusRepository.On("HasStatusByPeriod", ctx, domain.EquipmentStatusAvailable, equipment.ID,
-		time.Now(), time.Now().Add(time.Hour*24)).Return(true, nil)
+	s.eqStatusRepository.On(
+		"HasStatusByPeriod",
+		ctx,
+		domain.EquipmentStatusAvailable,
+		equipment.ID,
+		mock.MatchedBy(func(t time.Time) bool { return t.UnixNano() == rentStartTime.UnixNano() }),
+		mock.MatchedBy(func(t time.Time) bool { return t.UnixNano() == rentEndTime.UnixNano() }),
+	).Return(true, nil)
 	s.orderRepository.On("Create", ctx, createOrder, userID, []int{equipment.ID}).Return(orderToReturn, nil)
 	s.eqStatusRepository.On("Create", ctx, &models.NewEquipmentStatus{
-		// EndDate:     &equipmentBookedEndDate,
-		// EquipmentID: &equipmentID,
-		// OrderID:     int64(orderToReturn.ID),
-		// StartDate:   &equipmentBookedStartDate,
-		// StatusName:  &domain.EquipmentStatusBooked,
+		EndDate:     &equipmentBookedEndDate,
+		EquipmentID: &eqID,
+		OrderID:     int64(orderToReturn.ID),
+		StartDate:   &equipmentBookedStartDate,
+		StatusName:  &domain.EquipmentStatusBooked,
 	}).Return(nil, nil)
 
 	handlerFunc := s.orderHandler.CreateOrderFunc(s.orderRepository, s.eqStatusRepository, s.equipmentRepository)
