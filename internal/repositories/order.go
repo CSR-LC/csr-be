@@ -56,6 +56,18 @@ func getDates(start *strfmt.DateTime, end *strfmt.DateTime, maxSeconds int) (*ti
 	return &rentStart, &rentEnd, nil
 }
 
+func getDatesV2(start, end *int64, maxSeconds int) (*time.Time, *time.Time, error) {
+	if start == nil || end == nil {
+		return nil, nil, OrderValidationError{Err: errors.New("start or end is nil")}
+	}
+	rentStart := time.Unix(0, *start)
+	rentEnd := time.Unix(0, *end)
+	if int(rentEnd.Sub(rentStart).Seconds()) > maxSeconds {
+		return nil, nil, OrderValidationError{Err: errors.New("too big reservation period")}
+	}
+	return &rentStart, &rentEnd, nil
+}
+
 func getQuantity(quantity int, maxQuantity int) (*int, error) {
 	if quantity > maxQuantity {
 		// This kind of validation cannot be performed on handler's layer
@@ -132,7 +144,7 @@ func (r *orderRepository) Create(ctx context.Context, data *models.OrderCreateRe
 		return nil, err
 	}
 
-	rentStart, rentEnd, err := getDates(data.RentStart, data.RentEnd, int(category.MaxReservationTime))
+	rentStart, rentEnd, err := getDatesV2(data.RentStart, data.RentEnd, int(category.MaxReservationTime))
 	if err != nil {
 		return nil, err
 	}

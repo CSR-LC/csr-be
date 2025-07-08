@@ -309,6 +309,7 @@ func mapEquipmentResponse(eq *ent.Equipment) (*models.EquipmentResponse, error) 
 	}, nil
 }
 
+// todo handler
 func (c Equipment) BlockEquipmentFunc(repository domain.EquipmentRepository, eqStatusRepo domain.EquipmentStatusRepository) equipment.BlockEquipmentHandlerFunc {
 	return func(s equipment.BlockEquipmentParams, principal *models.Principal) middleware.Responder {
 		ctx := s.HTTPRequest.Context()
@@ -329,8 +330,8 @@ func (c Equipment) BlockEquipmentFunc(repository domain.EquipmentRepository, eqS
 				WithPayload(buildForbiddenErrorPayload(messages.ErrEquipmentBlockForbidden, ""))
 		}
 
-		startDate := time.Time(s.Data.StartDate)
-		endDate := time.Time(s.Data.EndDate)
+		startDate := time.Unix(0, s.Data.StartDate)
+		endDate := time.Unix(0, s.Data.EndDate)
 		currentDate := time.Now()
 		isEqStatusBlocked := lastEqStatus != nil &&
 			lastEqStatus.Edges.EquipmentStatusName.Name == domain.EquipmentStatusNotAvailable
@@ -366,6 +367,7 @@ func (c Equipment) BlockEquipmentFunc(repository domain.EquipmentRepository, eqS
 	}
 }
 
+// todo here too?
 func (c Equipment) UnblockEquipmentFunc(repository domain.EquipmentRepository) equipment.UnblockEquipmentHandlerFunc {
 	return func(s equipment.UnblockEquipmentParams, principal *models.Principal) middleware.Responder {
 		ctx := s.HTTPRequest.Context()

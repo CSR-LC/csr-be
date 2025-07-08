@@ -13,7 +13,6 @@ import (
 
 	"github.com/go-openapi/loads"
 	"github.com/go-openapi/runtime"
-	"github.com/go-openapi/strfmt"
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
@@ -1117,8 +1116,8 @@ func (s *EquipmentTestSuite) TestEquipment_BlockEquipmentFunc_RepoNotFoundErr() 
 		HTTPRequest: request.WithContext(ctx),
 		EquipmentID: int64(equipmentID),
 		Data: &models.ChangeEquipmentStatusToBlockedRequest{
-			StartDate: strfmt.DateTime(startDate),
-			EndDate:   strfmt.DateTime(endDate),
+			StartDate: startDate.UnixNano(),
+			EndDate:   endDate.UnixNano(),
 		},
 	}
 	err := &ent.NotFoundError{}
@@ -1154,8 +1153,8 @@ func (s *EquipmentTestSuite) TestEquipment_BlockEquipmentFunc_OK() {
 		HTTPRequest: request.WithContext(ctx),
 		EquipmentID: int64(equipmentID),
 		Data: &models.ChangeEquipmentStatusToBlockedRequest{
-			StartDate: strfmt.DateTime(startDate),
-			EndDate:   strfmt.DateTime(endDate),
+			StartDate: startDate.UnixNano(),
+			EndDate:   endDate.UnixNano(),
 		},
 	}
 

@@ -2583,11 +2583,13 @@ definitions:
     type: object
     properties:
       start_date:
-        type: string
-        format: date-time
+        type: integer
+        format: int64
+        description: Unix timestamp in nanoseconds
       end_date:
-        type: string
-        format: date-time
+        type: integer
+        format: int64
+        description: Unix timestamp in nanoseconds
   #EquipmentStatusRepairConfirmationResponse
   EquipmentStatusRepairConfirmationResponse:
     type: object
@@ -3242,11 +3244,13 @@ definitions:
         type: integer
         minimum: 1
       rent_start:
-        type: string
-        format: date-time
+        type: integer
+        format: int64
+        description: Unix timestamp in nanoseconds
       rent_end:
-        type: string
-        format: date-time
+        type: integer
+        format: int64
+        description: Unix timestamp in nanoseconds
   OrderUpdateRequest:
     type: object
     required:

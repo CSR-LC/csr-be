@@ -340,8 +340,21 @@ func (o Order) CreateOrderFunc(
 		userID := int(principal.ID)
 
 		id := int(*p.Data.EquipmentID)
+		rentStart := time.Unix(0, *p.Data.RentStart)
+		rentEnd := time.Unix(0, *p.Data.RentEnd)
+
+		if rentStart.After(rentEnd) {
+			return orders.NewCreateOrderDefault(http.StatusBadRequest).
+				WithPayload(buildBadRequestErrorPayload(messages.ErrStartDateAfterEnd, ""))
+		}
+
+		if rentEnd.Sub(rentStart).Hours() < 24 {
+			return orders.NewCreateOrderDefault(http.StatusBadRequest).
+				WithPayload(buildBadRequestErrorPayload(messages.ErrSmallRentPeriod, ""))
+		}
+
 		isEquipmentAvailable, err := eqStatusRepo.HasStatusByPeriod(ctx, domain.EquipmentStatusAvailable, id,
-			time.Time(*p.Data.RentStart), time.Time(*p.Data.RentEnd))
+			rentStart, rentEnd)
 		if err != nil {
 			o.logger.Error(messages.ErrCheckEqStatusFailed, zap.Error(err))
 			return orders.NewCreateOrderDefault(http.StatusInternalServerError).
@@ -354,19 +367,6 @@ func (o Order) CreateOrderFunc(
 				WithPayload(buildConflictErrorPayload(messages.ErrEquipmentIsNotFree, ""))
 		}
 
-		rentStart := time.Time(*p.Data.RentStart)
-		rentEnd := time.Time(*p.Data.RentEnd)
-
-		if rentStart.After(rentEnd) {
-			return orders.NewCreateOrderDefault(http.StatusBadRequest).
-				WithPayload(buildBadRequestErrorPayload(messages.ErrStartDateAfterEnd, ""))
-		}
-
-		if rentEnd.Sub(rentStart).Hours() < 24 {
-			return orders.NewCreateOrderDefault(http.StatusBadRequest).
-				WithPayload(buildBadRequestErrorPayload(messages.ErrSmallRentPeriod, ""))
-		}
-
 		order, err := orderRepo.Create(ctx, p.Data, userID, []int{id})
 		if err != nil {
 			o.logger.Error(messages.ErrMapOrder, zap.Error(err))
@@ -374,8 +374,8 @@ func (o Order) CreateOrderFunc(
 				WithPayload(buildInternalErrorPayload(messages.ErrMapOrder, err.Error()))
 		}
 
-		equipmentBookedStartDate := strfmt.DateTime(time.Time(*p.Data.RentStart).AddDate(0, 0, -1))
-		equipmentBookedEndDate := strfmt.DateTime(time.Time(*p.Data.RentEnd).AddDate(0, 0, 1))
+		equipmentBookedStartDate := strfmt.DateTime(rentStart.AddDate(0, 0, -1))
+		equipmentBookedEndDate := strfmt.DateTime(rentEnd.AddDate(0, 0, 1))
 		eqID := int64(id)
 		if _, err = eqStatusRepo.Create(ctx, &models.NewEquipmentStatus{
 			EquipmentID: &eqID,
