@@ -340,18 +340,9 @@ func (o Order) CreateOrderFunc(
 		userID := int(principal.ID)
 
 		id := int(*p.Data.EquipmentID)
+
 		rentStart := time.Unix(0, *p.Data.RentStart)
 		rentEnd := time.Unix(0, *p.Data.RentEnd)
-
-		if rentStart.After(rentEnd) {
-			return orders.NewCreateOrderDefault(http.StatusBadRequest).
-				WithPayload(buildBadRequestErrorPayload(messages.ErrStartDateAfterEnd, ""))
-		}
-
-		if rentEnd.Sub(rentStart).Hours() < 24 {
-			return orders.NewCreateOrderDefault(http.StatusBadRequest).
-				WithPayload(buildBadRequestErrorPayload(messages.ErrSmallRentPeriod, ""))
-		}
 
 		isEquipmentAvailable, err := eqStatusRepo.HasStatusByPeriod(ctx, domain.EquipmentStatusAvailable, id,
 			rentStart, rentEnd)
@@ -365,6 +356,16 @@ func (o Order) CreateOrderFunc(
 			o.logger.Warn(messages.ErrEquipmentIsNotFree)
 			return orders.NewCreateOrderDefault(http.StatusConflict).
 				WithPayload(buildConflictErrorPayload(messages.ErrEquipmentIsNotFree, ""))
+		}
+
+		if rentStart.After(rentEnd) {
+			return orders.NewCreateOrderDefault(http.StatusBadRequest).
+				WithPayload(buildBadRequestErrorPayload(messages.ErrStartDateAfterEnd, ""))
+		}
+
+		if rentEnd.Sub(rentStart).Hours() < 24 {
+			return orders.NewCreateOrderDefault(http.StatusBadRequest).
+				WithPayload(buildBadRequestErrorPayload(messages.ErrSmallRentPeriod, ""))
 		}
 
 		order, err := orderRepo.Create(ctx, p.Data, userID, []int{id})
