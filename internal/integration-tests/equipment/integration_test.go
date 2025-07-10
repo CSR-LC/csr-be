@@ -976,8 +976,8 @@ func TestIntegration_DeleteEquipment(t *testing.T) {
 }
 
 func createOrder(ctx context.Context, be *client.Be, auth runtime.ClientAuthInfoWriterFunc, id *int64, start time.Time, end time.Time) (*int64, error) {
-	rentStart := time.Now().Add(time.Hour).UnixNano()
-	rentEnd := time.Now().Add(time.Hour * 24 * 10).UnixNano()
+	rentStart := start.UnixNano()
+	rentEnd := end.UnixNano()
 
 	orderCreated, err := be.Orders.CreateOrder(&orders.CreateOrderParams{
 		Context: ctx,
