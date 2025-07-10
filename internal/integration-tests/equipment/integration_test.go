@@ -585,10 +585,8 @@ func TestIntegration_BlockEquipment(t *testing.T) {
 		require.NoError(t, err)
 		require.True(t, resp.IsCode(http.StatusOK))
 
-		dsG, err := time.ParseInLocation(time.RFC3339Nano, startDate.String(), loc)
-		require.NoError(t, err)
-		deG, err := time.ParseInLocation(time.RFC3339Nano, endDate.String(), loc)
-		require.NoError(t, err)
+		dsG := startDate.In(loc)
+		deG := endDate.In(loc)
 
 		valStartDate, err := time.ParseInLocation(time.RFC3339Nano, resp.Payload.Items[1].StartDate.String(), loc)
 		require.NoError(t, err)
@@ -732,10 +730,8 @@ func TestIntegration_BlockEquipment(t *testing.T) {
 		require.NoError(t, err)
 		require.True(t, resp.IsCode(http.StatusOK))
 
-		dsG, err := time.ParseInLocation(time.RFC3339Nano, startDate.String(), loc)
-		require.NoError(t, err)
-		deG, err := time.ParseInLocation(time.RFC3339Nano, endDate.String(), loc)
-		require.NoError(t, err)
+		dsG := startDate.In(loc)
+		deG := endDate.In(loc)
 
 		valStartDate, err := time.ParseInLocation(time.RFC3339Nano, resp.Payload.Items[1].StartDate.String(), loc)
 		require.NoError(t, err)
