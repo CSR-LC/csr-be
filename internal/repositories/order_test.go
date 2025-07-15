@@ -210,7 +210,12 @@ func (s *OrderSuite) TearDownSuite() {
 	s.client.Close()
 }
 
-func ptr(i int64) *int64 { return &i }
+func int64Ptr(i int64) *int64 { return &i }
+
+func newStrfmtDateTimePointer(unixTime int64) *strfmt.DateTime {
+	t := strfmt.DateTime(time.Unix(0, unixTime))
+	return &t
+}
 
 func (s *OrderSuite) TestOrderRepository_Create_EmptyEquipments() {
 	t := s.T()
@@ -224,8 +229,8 @@ func (s *OrderSuite) TestOrderRepository_Create_EmptyEquipments() {
 	endDate := time.Now().UTC().Add(time.Hour * 24 * 5).UnixNano()
 	data := &models.OrderCreateRequest{
 		Description: description,
-		RentEnd:     ptr(endDate),
-		RentStart:   ptr(startDate),
+		RentEnd:     int64Ptr(endDate),
+		RentStart:   int64Ptr(startDate),
 	}
 	createdOrder, err := s.orderRepository.Create(ctx, data, s.user.ID, []int{})
 	require.Error(t, err)
@@ -247,8 +252,8 @@ func (s *OrderSuite) TestOrderRepository_Create_OK() {
 	data := &models.OrderCreateRequest{
 		Description: description,
 		EquipmentID: &eqID,
-		RentEnd:     ptr(endDate),
-		RentStart:   ptr(startDate),
+		RentEnd:     int64Ptr(endDate),
+		RentStart:   int64Ptr(startDate),
 	}
 	createdOrder, err := s.orderRepository.Create(ctx, data, s.user.ID, []int{s.equipments[0].ID})
 	require.NoError(t, err)
@@ -279,8 +284,8 @@ func (s *OrderSuite) TestOrderRepository_Create_isFirstCreatedOrderIsFalseIfOneO
 	data := &models.OrderCreateRequest{
 		Description: description,
 		EquipmentID: &equipmentID,
-		RentEnd:     ptr(endDate),
-		RentStart:   ptr(startDate),
+		RentEnd:     int64Ptr(endDate),
+		RentStart:   int64Ptr(startDate),
 	}
 
 	err = s.client.OrderStatusName.Create().
@@ -290,7 +295,7 @@ func (s *OrderSuite) TestOrderRepository_Create_isFirstCreatedOrderIsFalseIfOneO
 	orderId := int64(s.orders[0].ID)
 	testComment := "testComment"
 	model := models.NewOrderStatus{
-		CreatedAt: func() *strfmt.DateTime { t := strfmt.DateTime(time.Unix(0, startDate)); return &t }(),
+		CreatedAt: newStrfmtDateTimePointer(startDate),
 		OrderID:   &orderId,
 		Status:    &domain.OrderStatusApproved,
 		Comment:   &testComment,
@@ -329,15 +334,15 @@ func (s *OrderSuite) TestOrderRepository_Create_isFirstCreatedOrderIsTrueIfOneOf
 	data := &models.OrderCreateRequest{
 		Description: description,
 		EquipmentID: &equipmentID,
-		RentEnd:     ptr(endDate),
-		RentStart:   ptr(startDate),
+		RentEnd:     int64Ptr(endDate),
+		RentStart:   int64Ptr(startDate),
 	}
 
 	require.NoError(t, err)
 	orderId := int64(s.orders[0].ID)
 	testComment := "testComment"
 	model := models.NewOrderStatus{
-		CreatedAt: func() *strfmt.DateTime { t := strfmt.DateTime(time.Unix(0, startDate)); return &t }(),
+		CreatedAt: newStrfmtDateTimePointer(startDate),
 		OrderID:   &orderId,
 		Status:    &domain.OrderStatusRejected,
 		Comment:   &testComment,
@@ -376,8 +381,8 @@ func (s *OrderSuite) TestOrderRepository_Create_isFirstFieldIsTrueForSeveralNewC
 	data := &models.OrderCreateRequest{
 		Description: description,
 		EquipmentID: &equipmentID,
-		RentEnd:     ptr(endDate),
-		RentStart:   ptr(startDate),
+		RentEnd:     int64Ptr(endDate),
+		RentStart:   int64Ptr(startDate),
 	}
 
 	createdFirstOrder, err := s.orderRepository.Create(ctx, data, s.user.ID, []int{s.equipments[0].ID})
@@ -424,14 +429,14 @@ func (s *OrderSuite) TestOrderRepository_Create_isFirstFieldForPreviousCreatedOr
 	data := &models.OrderCreateRequest{
 		Description: description,
 		EquipmentID: &equipmentID,
-		RentEnd:     ptr(endDate),
-		RentStart:   ptr(startDate),
+		RentEnd:     int64Ptr(endDate),
+		RentStart:   int64Ptr(startDate),
 	}
 
 	orderId := int64(s.orders[0].ID)
 	testComment := "testComment"
 	model := models.NewOrderStatus{
-		CreatedAt: func() *strfmt.DateTime { t := strfmt.DateTime(time.Unix(0, startDate)); return &t }(),
+		CreatedAt: newStrfmtDateTimePointer(startDate),
 		OrderID:   &orderId,
 		Status:    &domain.OrderStatusApproved,
 		Comment:   &testComment,
@@ -860,8 +865,8 @@ func (s *OrderSuite) TestOrderRepository_Update_OK() {
 	data := &models.OrderCreateRequest{
 		Description: description,
 		EquipmentID: &eqID,
-		RentEnd:     ptr(endDate),
-		RentStart:   ptr(startDate),
+		RentEnd:     int64Ptr(endDate),
+		RentStart:   int64Ptr(startDate),
 	}
 	createdOrder, err := s.orderRepository.Create(ctx, data, s.user.ID, []int{s.equipments[0].ID})
 	require.NoError(t, err)
@@ -877,8 +882,8 @@ func (s *OrderSuite) TestOrderRepository_Update_OK() {
 	req := &models.OrderUpdateRequest{
 		Description: &newDesc,
 		Quantity:    &newQuantity,
-		RentStart:   func() *strfmt.DateTime { t := strfmt.DateTime(time.Unix(0, newStartDate)); return &t }(),
-		RentEnd:     func() *strfmt.DateTime { t := strfmt.DateTime(time.Unix(0, newEndDate)); return &t }(),
+		RentStart:   newStrfmtDateTimePointer(newStartDate),
+		RentEnd:     newStrfmtDateTimePointer(newEndDate),
 	}
 	updated, err := s.orderRepository.Update(ctx, createdOrder.ID, req, s.user.ID)
 	require.NoError(t, err)
@@ -902,8 +907,8 @@ func (s *OrderSuite) TestOrderRepository_Update_MissingOrder() {
 	req := &models.OrderUpdateRequest{
 		Description: &newDesc,
 		Quantity:    &newQuantity,
-		RentStart:   func() *strfmt.DateTime { t := strfmt.DateTime(time.Unix(0, newStartDate)); return &t }(),
-		RentEnd:     func() *strfmt.DateTime { t := strfmt.DateTime(time.Unix(0, newEndDate)); return &t }(),
+		RentStart:   newStrfmtDateTimePointer(newStartDate),
+		RentEnd:     newStrfmtDateTimePointer(newEndDate),
 	}
 	updated, err := s.orderRepository.Update(ctx, 123, req, s.user.ID)
 	require.EqualError(t, err, "ent: order not found")
@@ -925,8 +930,8 @@ func (s *OrderSuite) TestOrderRepository_Update_WrongOwner() {
 	data := &models.OrderCreateRequest{
 		Description: description,
 		EquipmentID: &eqID,
-		RentEnd:     ptr(endDate),
-		RentStart:   ptr(startDate),
+		RentEnd:     int64Ptr(endDate),
+		RentStart:   int64Ptr(startDate),
 	}
 	createdOrder, err := s.orderRepository.Create(ctx, data, s.user.ID, []int{s.equipments[0].ID})
 	require.NoError(t, err)
@@ -942,8 +947,8 @@ func (s *OrderSuite) TestOrderRepository_Update_WrongOwner() {
 	req := &models.OrderUpdateRequest{
 		Description: &newDesc,
 		Quantity:    &newQuantity,
-		RentStart:   func() *strfmt.DateTime { t := strfmt.DateTime(time.Unix(0, newStartDate)); return &t }(),
-		RentEnd:     func() *strfmt.DateTime { t := strfmt.DateTime(time.Unix(0, newEndDate)); return &t }(),
+		RentStart:   newStrfmtDateTimePointer(newStartDate),
+		RentEnd:     newStrfmtDateTimePointer(newEndDate),
 	}
 	updated, err := s.orderRepository.Update(ctx, createdOrder.ID, req, s.user.ID+1)
 	require.EqualError(t, err, "permission denied")
@@ -965,8 +970,8 @@ func (s *OrderSuite) TestGetOrderRepository_Get_OK() {
 	data := &models.OrderCreateRequest{
 		Description: description,
 		EquipmentID: &eqID,
-		RentEnd:     ptr(endDate),
-		RentStart:   ptr(startDate),
+		RentEnd:     int64Ptr(endDate),
+		RentStart:   int64Ptr(startDate),
 	}
 	createdOrder, err := s.orderRepository.Create(ctx, data, s.user.ID, []int{s.equipments[0].ID})
 	require.NoError(t, err)
@@ -1013,8 +1018,8 @@ func (s *OrderSuite) TestDeleteOrderRepository_Delete_OK() {
 	data := &models.OrderCreateRequest{
 		Description: description,
 		EquipmentID: &eqID,
-		RentEnd:     ptr(endDate),
-		RentStart:   ptr(startDate),
+		RentEnd:     int64Ptr(endDate),
+		RentStart:   int64Ptr(startDate),
 	}
 	createdOrder, err := s.orderRepository.Create(ctx, data, s.user.ID, []int{s.equipments[0].ID})
 	require.NoError(t, err)
