@@ -6,7 +6,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/go-openapi/strfmt"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
@@ -18,6 +17,7 @@ import (
 	"github.com/CSR-LC/csr-be/internal/middlewares"
 	"github.com/CSR-LC/csr-be/internal/utils"
 	"github.com/CSR-LC/csr-be/pkg/domain"
+	"github.com/go-openapi/strfmt"
 )
 
 type OrderSuite struct {
@@ -210,6 +210,13 @@ func (s *OrderSuite) TearDownSuite() {
 	s.client.Close()
 }
 
+func int64Ptr(i int64) *int64 { return &i }
+
+func newStrfmtDateTimePointer(unixTime int64) *strfmt.DateTime {
+	t := strfmt.DateTime(time.Unix(0, unixTime))
+	return &t
+}
+
 func (s *OrderSuite) TestOrderRepository_Create_EmptyEquipments() {
 	t := s.T()
 	ctx := s.ctx
@@ -218,12 +225,12 @@ func (s *OrderSuite) TestOrderRepository_Create_EmptyEquipments() {
 	ctx = context.WithValue(ctx, middlewares.TxContextKey, tx)
 
 	description := "test"
-	startDate := strfmt.DateTime(time.Now().UTC())
-	endDate := strfmt.DateTime(time.Now().UTC().Add(time.Hour * 24 * 5))
+	startDate := time.Now().UTC().UnixNano()
+	endDate := time.Now().UTC().Add(time.Hour * 24 * 5).UnixNano()
 	data := &models.OrderCreateRequest{
 		Description: description,
-		RentEnd:     &endDate,
-		RentStart:   &startDate,
+		RentEnd:     int64Ptr(endDate),
+		RentStart:   int64Ptr(startDate),
 	}
 	createdOrder, err := s.orderRepository.Create(ctx, data, s.user.ID, []int{})
 	require.Error(t, err)
@@ -240,13 +247,13 @@ func (s *OrderSuite) TestOrderRepository_Create_OK() {
 	description := "test"
 	equipmentID := int64(s.equipments[0].ID)
 	eqID := int64(1)
-	startDate := strfmt.DateTime(time.Now().UTC())
-	endDate := strfmt.DateTime(time.Now().UTC().Add(time.Hour * 24 * 5))
+	startDate := time.Now().UTC().UnixNano()
+	endDate := time.Now().UTC().Add(time.Hour * 24 * 5).UnixNano()
 	data := &models.OrderCreateRequest{
 		Description: description,
 		EquipmentID: &eqID,
-		RentEnd:     &endDate,
-		RentStart:   &startDate,
+		RentEnd:     int64Ptr(endDate),
+		RentStart:   int64Ptr(startDate),
 	}
 	createdOrder, err := s.orderRepository.Create(ctx, data, s.user.ID, []int{s.equipments[0].ID})
 	require.NoError(t, err)
@@ -272,13 +279,13 @@ func (s *OrderSuite) TestOrderRepository_Create_isFirstCreatedOrderIsFalseIfOneO
 
 	description := "test"
 	equipmentID := int64(s.equipments[0].ID)
-	startDate := strfmt.DateTime(time.Now().UTC())
-	endDate := strfmt.DateTime(time.Now().UTC().Add(time.Hour * 24 * 5))
+	startDate := time.Now().UTC().UnixNano()
+	endDate := time.Now().UTC().Add(time.Hour * 24 * 5).UnixNano()
 	data := &models.OrderCreateRequest{
 		Description: description,
 		EquipmentID: &equipmentID,
-		RentEnd:     &endDate,
-		RentStart:   &startDate,
+		RentEnd:     int64Ptr(endDate),
+		RentStart:   int64Ptr(startDate),
 	}
 
 	err = s.client.OrderStatusName.Create().
@@ -288,7 +295,7 @@ func (s *OrderSuite) TestOrderRepository_Create_isFirstCreatedOrderIsFalseIfOneO
 	orderId := int64(s.orders[0].ID)
 	testComment := "testComment"
 	model := models.NewOrderStatus{
-		CreatedAt: &startDate,
+		CreatedAt: newStrfmtDateTimePointer(startDate),
 		OrderID:   &orderId,
 		Status:    &domain.OrderStatusApproved,
 		Comment:   &testComment,
@@ -322,20 +329,20 @@ func (s *OrderSuite) TestOrderRepository_Create_isFirstCreatedOrderIsTrueIfOneOf
 
 	description := "test"
 	equipmentID := int64(s.equipments[0].ID)
-	startDate := strfmt.DateTime(time.Now().UTC())
-	endDate := strfmt.DateTime(time.Now().UTC().Add(time.Hour * 24 * 5))
+	startDate := time.Now().UTC().UnixNano()
+	endDate := time.Now().UTC().Add(time.Hour * 24 * 5).UnixNano()
 	data := &models.OrderCreateRequest{
 		Description: description,
 		EquipmentID: &equipmentID,
-		RentEnd:     &endDate,
-		RentStart:   &startDate,
+		RentEnd:     int64Ptr(endDate),
+		RentStart:   int64Ptr(startDate),
 	}
 
 	require.NoError(t, err)
 	orderId := int64(s.orders[0].ID)
 	testComment := "testComment"
 	model := models.NewOrderStatus{
-		CreatedAt: &startDate,
+		CreatedAt: newStrfmtDateTimePointer(startDate),
 		OrderID:   &orderId,
 		Status:    &domain.OrderStatusRejected,
 		Comment:   &testComment,
@@ -369,13 +376,13 @@ func (s *OrderSuite) TestOrderRepository_Create_isFirstFieldIsTrueForSeveralNewC
 
 	description := "test"
 	equipmentID := int64(s.equipments[0].ID)
-	startDate := strfmt.DateTime(time.Now().UTC())
-	endDate := strfmt.DateTime(time.Now().UTC().Add(time.Hour * 24 * 5))
+	startDate := time.Now().UTC().UnixNano()
+	endDate := time.Now().UTC().Add(time.Hour * 24 * 5).UnixNano()
 	data := &models.OrderCreateRequest{
 		Description: description,
 		EquipmentID: &equipmentID,
-		RentEnd:     &endDate,
-		RentStart:   &startDate,
+		RentEnd:     int64Ptr(endDate),
+		RentStart:   int64Ptr(startDate),
 	}
 
 	createdFirstOrder, err := s.orderRepository.Create(ctx, data, s.user.ID, []int{s.equipments[0].ID})
@@ -417,19 +424,19 @@ func (s *OrderSuite) TestOrderRepository_Create_isFirstFieldForPreviousCreatedOr
 
 	description := "test"
 	equipmentID := int64(s.equipments[0].ID)
-	startDate := strfmt.DateTime(time.Now().UTC())
-	endDate := strfmt.DateTime(time.Now().UTC().Add(time.Hour * 24 * 5))
+	startDate := time.Now().UTC().UnixNano()
+	endDate := time.Now().UTC().Add(time.Hour * 24 * 5).UnixNano()
 	data := &models.OrderCreateRequest{
 		Description: description,
 		EquipmentID: &equipmentID,
-		RentEnd:     &endDate,
-		RentStart:   &startDate,
+		RentEnd:     int64Ptr(endDate),
+		RentStart:   int64Ptr(startDate),
 	}
 
 	orderId := int64(s.orders[0].ID)
 	testComment := "testComment"
 	model := models.NewOrderStatus{
-		CreatedAt: &startDate,
+		CreatedAt: newStrfmtDateTimePointer(startDate),
 		OrderID:   &orderId,
 		Status:    &domain.OrderStatusApproved,
 		Comment:   &testComment,
@@ -853,13 +860,13 @@ func (s *OrderSuite) TestOrderRepository_Update_OK() {
 
 	description := "test"
 	eqID := int64(1)
-	startDate := strfmt.DateTime(time.Now().UTC())
-	endDate := strfmt.DateTime(time.Now().UTC().Add(time.Hour * 24 * 5))
+	startDate := time.Now().UTC().UnixNano()
+	endDate := time.Now().UTC().Add(time.Hour * 24 * 5).UnixNano()
 	data := &models.OrderCreateRequest{
 		Description: description,
 		EquipmentID: &eqID,
-		RentEnd:     &endDate,
-		RentStart:   &startDate,
+		RentEnd:     int64Ptr(endDate),
+		RentStart:   int64Ptr(startDate),
 	}
 	createdOrder, err := s.orderRepository.Create(ctx, data, s.user.ID, []int{s.equipments[0].ID})
 	require.NoError(t, err)
@@ -869,21 +876,21 @@ func (s *OrderSuite) TestOrderRepository_Update_OK() {
 	require.NoError(t, err)
 	ctx = context.WithValue(ctx, middlewares.TxContextKey, tx)
 	newDesc := "new desc"
-	newStartDate := strfmt.DateTime(time.Now().UTC())
-	newEndDate := strfmt.DateTime(time.Now().UTC().Add(time.Hour * 24 * 10))
+	newStartDate := time.Now().UTC().UnixNano()
+	newEndDate := time.Now().UTC().Add(time.Hour * 24 * 10).UnixNano()
 	newQuantity := int64(1)
 	req := &models.OrderUpdateRequest{
 		Description: &newDesc,
 		Quantity:    &newQuantity,
-		RentStart:   &newStartDate,
-		RentEnd:     &newEndDate,
+		RentStart:   newStrfmtDateTimePointer(newStartDate),
+		RentEnd:     newStrfmtDateTimePointer(newEndDate),
 	}
 	updated, err := s.orderRepository.Update(ctx, createdOrder.ID, req, s.user.ID)
 	require.NoError(t, err)
 	require.NoError(t, tx.Commit())
 	require.Equal(t, newDesc, updated.Description)
-	require.Equal(t, newEndDate, strfmt.DateTime(updated.RentEnd))
-	require.Equal(t, newStartDate, strfmt.DateTime(updated.RentStart))
+	require.Equal(t, time.Unix(0, newEndDate).UnixNano(), updated.RentEnd.UnixNano())
+	require.Equal(t, time.Unix(0, newStartDate).UnixNano(), updated.RentStart.UnixNano())
 }
 
 func (s *OrderSuite) TestOrderRepository_Update_MissingOrder() {
@@ -894,14 +901,14 @@ func (s *OrderSuite) TestOrderRepository_Update_MissingOrder() {
 	ctx = context.WithValue(ctx, middlewares.TxContextKey, tx)
 
 	newDesc := "new desc"
-	newStartDate := strfmt.DateTime(time.Now().UTC())
-	newEndDate := strfmt.DateTime(time.Now().UTC().Add(time.Hour * 24 * 10))
+	newStartDate := time.Now().UTC().UnixNano()
+	newEndDate := time.Now().UTC().Add(time.Hour * 24 * 10).UnixNano()
 	newQuantity := int64(1)
 	req := &models.OrderUpdateRequest{
 		Description: &newDesc,
 		Quantity:    &newQuantity,
-		RentStart:   &newStartDate,
-		RentEnd:     &newEndDate,
+		RentStart:   newStrfmtDateTimePointer(newStartDate),
+		RentEnd:     newStrfmtDateTimePointer(newEndDate),
 	}
 	updated, err := s.orderRepository.Update(ctx, 123, req, s.user.ID)
 	require.EqualError(t, err, "ent: order not found")
@@ -918,13 +925,13 @@ func (s *OrderSuite) TestOrderRepository_Update_WrongOwner() {
 
 	description := "test"
 	eqID := int64(1)
-	startDate := strfmt.DateTime(time.Now().UTC())
-	endDate := strfmt.DateTime(time.Now().UTC().Add(time.Hour * 24 * 5))
+	startDate := time.Now().UTC().UnixNano()
+	endDate := time.Now().UTC().Add(time.Hour * 24 * 5).UnixNano()
 	data := &models.OrderCreateRequest{
 		Description: description,
 		EquipmentID: &eqID,
-		RentEnd:     &endDate,
-		RentStart:   &startDate,
+		RentEnd:     int64Ptr(endDate),
+		RentStart:   int64Ptr(startDate),
 	}
 	createdOrder, err := s.orderRepository.Create(ctx, data, s.user.ID, []int{s.equipments[0].ID})
 	require.NoError(t, err)
@@ -934,14 +941,14 @@ func (s *OrderSuite) TestOrderRepository_Update_WrongOwner() {
 	require.NoError(t, err)
 	ctx = context.WithValue(ctx, middlewares.TxContextKey, tx)
 	newDesc := "new desc"
-	newStartDate := strfmt.DateTime(time.Now().UTC())
-	newEndDate := strfmt.DateTime(time.Now().UTC().Add(time.Hour * 24 * 10))
+	newStartDate := time.Now().UTC().UnixNano()
+	newEndDate := time.Now().UTC().Add(time.Hour * 24 * 10).UnixNano()
 	newQuantity := int64(1)
 	req := &models.OrderUpdateRequest{
 		Description: &newDesc,
 		Quantity:    &newQuantity,
-		RentStart:   &newStartDate,
-		RentEnd:     &newEndDate,
+		RentStart:   newStrfmtDateTimePointer(newStartDate),
+		RentEnd:     newStrfmtDateTimePointer(newEndDate),
 	}
 	updated, err := s.orderRepository.Update(ctx, createdOrder.ID, req, s.user.ID+1)
 	require.EqualError(t, err, "permission denied")
@@ -958,13 +965,13 @@ func (s *OrderSuite) TestGetOrderRepository_Get_OK() {
 
 	description := "test"
 	eqID := int64(1)
-	startDate := strfmt.DateTime(time.Now().UTC())
-	endDate := strfmt.DateTime(time.Now().UTC().Add(time.Hour * 24 * 5))
+	startDate := time.Now().UTC().UnixNano()
+	endDate := time.Now().UTC().Add(time.Hour * 24 * 5).UnixNano()
 	data := &models.OrderCreateRequest{
 		Description: description,
 		EquipmentID: &eqID,
-		RentEnd:     &endDate,
-		RentStart:   &startDate,
+		RentEnd:     int64Ptr(endDate),
+		RentStart:   int64Ptr(startDate),
 	}
 	createdOrder, err := s.orderRepository.Create(ctx, data, s.user.ID, []int{s.equipments[0].ID})
 	require.NoError(t, err)
@@ -1006,13 +1013,13 @@ func (s *OrderSuite) TestDeleteOrderRepository_Delete_OK() {
 
 	description := "test_delete"
 	eqID := int64(1)
-	startDate := strfmt.DateTime(time.Now().UTC())
-	endDate := strfmt.DateTime(time.Now().UTC().Add(time.Hour * 24 * 5))
+	startDate := time.Now().UTC().UnixNano()
+	endDate := time.Now().UTC().Add(time.Hour * 24 * 5).UnixNano()
 	data := &models.OrderCreateRequest{
 		Description: description,
 		EquipmentID: &eqID,
-		RentEnd:     &endDate,
-		RentStart:   &startDate,
+		RentEnd:     int64Ptr(endDate),
+		RentStart:   int64Ptr(startDate),
 	}
 	createdOrder, err := s.orderRepository.Create(ctx, data, s.user.ID, []int{s.equipments[0].ID})
 	require.NoError(t, err)

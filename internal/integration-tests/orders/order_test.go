@@ -79,8 +79,8 @@ func TestIntegration_CreateOrder(t *testing.T) {
 		params := orders.NewCreateOrderParamsWithContext(ctx)
 		desc := "test description"
 		eqID := int64(1)
-		rentStart := strfmt.DateTime(time.Now())
-		rentEnd := strfmt.DateTime(time.Now().Add(time.Hour * 24))
+		rentStart := time.Now().UnixNano()
+		rentEnd := time.Now().Add(time.Hour * 24).UnixNano()
 		params.Data = &models.OrderCreateRequest{
 			Description: desc,
 			EquipmentID: &eqID,
@@ -104,8 +104,8 @@ func TestIntegration_CreateOrder(t *testing.T) {
 		params := orders.NewCreateOrderParamsWithContext(ctx)
 		desc := "test description"
 		eqID := eq.ID
-		rentEnd := strfmt.DateTime(time.Now())
-		rentStart := strfmt.DateTime(time.Now().Add(time.Hour * 24))
+		rentEnd := time.Now().UnixNano()
+		rentStart := time.Now().Add(time.Hour * 24).UnixNano()
 		params.Data = &models.OrderCreateRequest{
 			Description: desc,
 			EquipmentID: eqID,
@@ -128,8 +128,8 @@ func TestIntegration_CreateOrder(t *testing.T) {
 		params := orders.NewCreateOrderParamsWithContext(ctx)
 		desc := "test description"
 		eqID := eq.ID
-		rentStart := strfmt.DateTime(time.Now())
-		rentEnd := strfmt.DateTime(time.Now().Add(time.Hour))
+		rentStart := time.Now().UnixNano()
+		rentEnd := time.Now().Add(time.Hour).UnixNano()
 		params.Data = &models.OrderCreateRequest{
 			Description: desc,
 			EquipmentID: eqID,
@@ -152,8 +152,8 @@ func TestIntegration_CreateOrder(t *testing.T) {
 		params := orders.NewCreateOrderParamsWithContext(ctx)
 		desc := "test description"
 		eqID := eq.ID
-		rentStart := strfmt.DateTime(time.Now())
-		rentEnd := strfmt.DateTime(time.Now().Add(time.Hour * 1000000))
+		rentStart := time.Now().UnixNano()
+		rentEnd := time.Now().Add(time.Hour * 1000000).UnixNano()
 		params.Data = &models.OrderCreateRequest{
 			Description: desc,
 			EquipmentID: eqID,
@@ -176,8 +176,8 @@ func TestIntegration_CreateOrder(t *testing.T) {
 	t.Run("Create Order failed: validation error, required field", func(t *testing.T) {
 		params := orders.NewCreateOrderParamsWithContext(ctx)
 		desc := "test description"
-		rentStart := strfmt.DateTime(time.Now())
-		rentEnd := strfmt.DateTime(time.Now().Add(time.Hour))
+		rentStart := time.Now().UnixNano()
+		rentEnd := time.Now().Add(time.Hour).UnixNano()
 		params.Data = &models.OrderCreateRequest{
 			Description: desc,
 			RentEnd:     &rentEnd,
@@ -200,8 +200,8 @@ func TestIntegration_CreateOrder(t *testing.T) {
 		params := orders.NewCreateOrderParamsWithContext(ctx)
 		desc := "test description"
 		eqID := eq.ID
-		rentStart := strfmt.DateTime(time.Now())
-		rentEnd := strfmt.DateTime(time.Now().Add(time.Hour * 24))
+		rentStart := time.Now().UnixNano()
+		rentEnd := time.Now().Add(time.Hour * 24).UnixNano()
 		params.Data = &models.OrderCreateRequest{
 			Description: desc,
 			EquipmentID: eqID,
@@ -213,16 +213,16 @@ func TestIntegration_CreateOrder(t *testing.T) {
 
 		//assert.Equal(t, equipment, res.Payload.Equipments[0].ID)
 		assert.Equal(t, desc, *res.Payload.Description)
-		rentEnd.Equal(*res.Payload.RentEnd)
-		rentStart.Equal(*res.Payload.RentStart)
+		assert.InDelta(t, rentEnd, time.Time(*res.Payload.RentEnd).UnixNano(), 1e6)
+		assert.InDelta(t, rentStart, time.Time(*res.Payload.RentStart).UnixNano(), 1e6)
 	})
 
 	t.Run("Create Order failed: duplicate order", func(t *testing.T) {
 		params := orders.NewCreateOrderParamsWithContext(ctx)
 		desc := "test description"
 		eqID := eq.ID
-		rentStart := strfmt.DateTime(time.Now())
-		rentEnd := strfmt.DateTime(time.Now().Add(time.Hour * 24))
+		rentStart := time.Now().UnixNano()
+		rentEnd := time.Now().Add(time.Hour * 24).UnixNano()
 		params.Data = &models.OrderCreateRequest{
 			Description: desc,
 			EquipmentID: eqID,
@@ -261,8 +261,8 @@ func TestIntegration_GetUserOrders(t *testing.T) {
 		createParams := orders.NewCreateOrderParamsWithContext(ctx)
 		desc := "test description"
 		eqID := equip.ID
-		rentStart := strfmt.DateTime(time.Now())
-		rentEnd := strfmt.DateTime(time.Now().Add(time.Hour * 24))
+		rentStart := time.Now().UnixNano()
+		rentEnd := time.Now().Add(time.Hour * 24).UnixNano()
 		createParams.Data = &models.OrderCreateRequest{
 			Description: desc,
 			EquipmentID: eqID,
@@ -291,8 +291,8 @@ func TestIntegration_GetUserOrders(t *testing.T) {
 		createParams := orders.NewCreateOrderParamsWithContext(ctx)
 		desc := "test description"
 		eqID := eq.ID
-		rentStart := strfmt.DateTime(time.Now())
-		rentEnd := strfmt.DateTime(time.Now().Add(time.Hour * 24))
+		rentStart := time.Now().UnixNano()
+		rentEnd := time.Now().Add(time.Hour * 24).UnixNano()
 		createParams.Data = &models.OrderCreateRequest{
 			Description: desc,
 			EquipmentID: eqID,
@@ -396,8 +396,8 @@ func TestIntegration_UserOrdersList_Filtered(t *testing.T) {
 		createParams := orders.NewCreateOrderParamsWithContext(ctx)
 		desc := fmt.Sprintf("order %v", i)
 		eqID := equip.ID
-		rentStart := strfmt.DateTime(time.Now().Add(time.Hour * time.Duration(2*i) * 24))
-		rentEnd := strfmt.DateTime(time.Now().Add(time.Hour * time.Duration(2*i+1) * 24))
+		rentStart := time.Now().Add(time.Hour * time.Duration(2*i) * 24).UnixNano()
+		rentEnd := time.Now().Add(time.Hour * time.Duration(2*i+1) * 24).UnixNano()
 		createParams.Data = &models.OrderCreateRequest{
 			Description: desc,
 			EquipmentID: eqID,
@@ -582,8 +582,8 @@ func TestIntegration_ListAllOrders(t *testing.T) {
 	createParams := orders.NewCreateOrderParamsWithContext(ctx)
 	desc := "order from admin2"
 	eqID := equip.ID
-	rentStart := strfmt.DateTime(time.Now().Add(time.Hour * time.Duration(2) * 24))
-	rentEnd := strfmt.DateTime(time.Now().Add(time.Hour * time.Duration(3) * 24))
+	rentStart := time.Now().Add(time.Hour * time.Duration(2) * 24).UnixNano()
+	rentEnd := time.Now().Add(time.Hour * time.Duration(3) * 24).UnixNano()
 	createParams.Data = &models.OrderCreateRequest{
 		Description: desc,
 		EquipmentID: eqID,
@@ -654,8 +654,8 @@ func TestIntegration_UpdateOrder(t *testing.T) {
 	createParams := orders.NewCreateOrderParamsWithContext(ctx)
 	desc := "test description"
 	eqID := equip.ID
-	rentStart := strfmt.DateTime(time.Now())
-	rentEnd := strfmt.DateTime(time.Now().Add(time.Hour * 24))
+	rentStart := time.Now().UnixNano()
+	rentEnd := time.Now().Add(time.Hour * 24).UnixNano()
 	createParams.Data = &models.OrderCreateRequest{
 		Description: desc,
 		EquipmentID: eqID,
@@ -668,6 +668,9 @@ func TestIntegration_UpdateOrder(t *testing.T) {
 	quantity := int64(1)
 	orderID := order.Payload.ID
 	t.Run("Update Order", func(t *testing.T) {
+		rentStart := strfmt.DateTime(time.Now())
+		rentEnd := strfmt.DateTime(time.Now().Add(time.Hour * 24))
+
 		params := orders.NewUpdateOrderParamsWithContext(ctx)
 		params.OrderID = *orderID
 		desc = "new"
@@ -683,8 +686,8 @@ func TestIntegration_UpdateOrder(t *testing.T) {
 
 		assert.Equal(t, desc, *res.Payload.Description)
 		assert.Equal(t, quantity, *res.Payload.Quantity)
-		rentEnd.Equal(*res.Payload.RentEnd)
-		rentStart.Equal(*res.Payload.RentStart)
+		assert.InDelta(t, time.Time(rentEnd).UnixNano(), time.Time(*res.Payload.RentEnd).UnixNano(), 1e6)
+		assert.InDelta(t, time.Time(rentStart).UnixNano(), time.Time(*res.Payload.RentStart).UnixNano(), 1e6)
 	})
 }
 
@@ -701,8 +704,8 @@ func TestIntegration_GetOrder(t *testing.T) {
 	createParams := orders.NewCreateOrderParamsWithContext(ctx)
 	desc := "test description"
 	eqID := equip.ID
-	rentStart := strfmt.DateTime(time.Now())
-	rentEnd := strfmt.DateTime(time.Now().Add(time.Hour * 24))
+	rentStart := time.Now().UnixNano()
+	rentEnd := time.Now().Add(time.Hour * 24).UnixNano()
 	createParams.Data = &models.OrderCreateRequest{
 		Description: desc,
 		EquipmentID: eqID,
@@ -753,8 +756,8 @@ func TestIntegration_DeleteOrder(t *testing.T) {
 	createParams := orders.NewCreateOrderParamsWithContext(ctx)
 	desc := "test description"
 	eqID := equip.ID
-	rentStart := strfmt.DateTime(time.Now())
-	rentEnd := strfmt.DateTime(time.Now().Add(time.Hour * 24))
+	rentStart := time.Now().UnixNano()
+	rentEnd := time.Now().Add(time.Hour * 24).UnixNano()
 	createParams.Data = &models.OrderCreateRequest{
 		Description: desc,
 		EquipmentID: eqID,

@@ -512,7 +512,7 @@ func TestIntegration_BlockEquipment(t *testing.T) {
 
 	ctx := context.Background()
 	client := utils.SetupClient()
-	startDate, endDate := strfmt.DateTime(tm.AddDate(0, 0, startNumDays)), strfmt.DateTime(tm.AddDate(0, 0, endNumDays))
+	startDate, endDate := tm.AddDate(0, 0, startNumDays), tm.AddDate(0, 0, endNumDays)
 
 	tokens := utils.AdminUserLogin(t)
 	auth := utils.AuthInfoFunc(tokens.GetPayload().AccessToken)
@@ -561,8 +561,8 @@ func TestIntegration_BlockEquipment(t *testing.T) {
 
 		params := equipment.NewBlockEquipmentParamsWithContext(ctx).WithEquipmentID(*eq.Payload.ID)
 		params.Data = &models.ChangeEquipmentStatusToBlockedRequest{
-			StartDate: startDate,
-			EndDate:   endDate,
+			StartDate: startDate.UnixNano(),
+			EndDate:   endDate.UnixNano(),
 		}
 
 		res, err := client.Equipment.BlockEquipment(params, auth)
@@ -585,10 +585,8 @@ func TestIntegration_BlockEquipment(t *testing.T) {
 		require.NoError(t, err)
 		require.True(t, resp.IsCode(http.StatusOK))
 
-		dsG, err := time.ParseInLocation(time.RFC3339Nano, startDate.String(), loc)
-		require.NoError(t, err)
-		deG, err := time.ParseInLocation(time.RFC3339Nano, endDate.String(), loc)
-		require.NoError(t, err)
+		dsG := startDate.In(loc)
+		deG := endDate.In(loc)
 
 		valStartDate, err := time.ParseInLocation(time.RFC3339Nano, resp.Payload.Items[1].StartDate.String(), loc)
 		require.NoError(t, err)
@@ -614,8 +612,8 @@ func TestIntegration_BlockEquipment(t *testing.T) {
 
 		params := equipment.NewBlockEquipmentParamsWithContext(ctx).WithEquipmentID(fakeID)
 		params.Data = &models.ChangeEquipmentStatusToBlockedRequest{
-			StartDate: startDate,
-			EndDate:   endDate,
+			StartDate: startDate.UnixNano(),
+			EndDate:   endDate.UnixNano(),
 		}
 
 		_, err := client.Equipment.BlockEquipment(params, auth)
@@ -635,8 +633,8 @@ func TestIntegration_BlockEquipment(t *testing.T) {
 		auth := utils.AuthInfoFunc(tokens.GetPayload().AccessToken)
 		params := equipment.NewBlockEquipmentParamsWithContext(ctx).WithEquipmentID(*eq.Payload.ID)
 		params.Data = &models.ChangeEquipmentStatusToBlockedRequest{
-			StartDate: startDate,
-			EndDate:   endDate,
+			StartDate: startDate.UnixNano(),
+			EndDate:   endDate.UnixNano(),
 		}
 
 		_, err = client.Equipment.BlockEquipment(params, auth)
@@ -656,8 +654,8 @@ func TestIntegration_BlockEquipment(t *testing.T) {
 		auth := utils.AuthInfoFunc(tokens.GetPayload().AccessToken)
 		params := equipment.NewBlockEquipmentParamsWithContext(ctx).WithEquipmentID(*eq.Payload.ID)
 		params.Data = &models.ChangeEquipmentStatusToBlockedRequest{
-			StartDate: startDate,
-			EndDate:   endDate,
+			StartDate: startDate.UnixNano(),
+			EndDate:   endDate.UnixNano(),
 		}
 
 		_, err = client.Equipment.BlockEquipment(params, auth)
@@ -677,8 +675,8 @@ func TestIntegration_BlockEquipment(t *testing.T) {
 		auth := utils.AuthInfoFunc(tokens.GetPayload().AccessToken)
 		params := equipment.NewBlockEquipmentParamsWithContext(ctx).WithEquipmentID(*eq.Payload.ID)
 		params.Data = &models.ChangeEquipmentStatusToBlockedRequest{
-			StartDate: startDate,
-			EndDate:   endDate,
+			StartDate: startDate.UnixNano(),
+			EndDate:   endDate.UnixNano(),
 		}
 
 		res, err := client.Equipment.BlockEquipment(params, auth)
@@ -691,8 +689,8 @@ func TestIntegration_BlockEquipment(t *testing.T) {
 		auth := utils.AuthInfoFunc(tokens.GetPayload().AccessToken)
 		params := equipment.NewBlockEquipmentParamsWithContext(ctx).WithEquipmentID(*eq.Payload.ID)
 		params.Data = &models.ChangeEquipmentStatusToBlockedRequest{
-			StartDate: endDate,
-			EndDate:   startDate,
+			StartDate: endDate.UnixNano(),
+			EndDate:   startDate.UnixNano(),
 		}
 
 		_, err := client.Equipment.BlockEquipment(params, auth)
@@ -718,8 +716,8 @@ func TestIntegration_BlockEquipment(t *testing.T) {
 
 		params := equipment.NewBlockEquipmentParamsWithContext(ctx).WithEquipmentID(*eq.Payload.ID)
 		params.Data = &models.ChangeEquipmentStatusToBlockedRequest{
-			StartDate: strfmt.DateTime(updateStartDate),
-			EndDate:   strfmt.DateTime(updateEndDate),
+			StartDate: updateStartDate.UnixNano(),
+			EndDate:   updateEndDate.UnixNano(),
 		}
 
 		res, err := client.Equipment.BlockEquipment(params, auth)
@@ -732,10 +730,8 @@ func TestIntegration_BlockEquipment(t *testing.T) {
 		require.NoError(t, err)
 		require.True(t, resp.IsCode(http.StatusOK))
 
-		dsG, err := time.ParseInLocation(time.RFC3339Nano, startDate.String(), loc)
-		require.NoError(t, err)
-		deG, err := time.ParseInLocation(time.RFC3339Nano, endDate.String(), loc)
-		require.NoError(t, err)
+		dsG := startDate.In(loc)
+		deG := endDate.In(loc)
 
 		valStartDate, err := time.ParseInLocation(time.RFC3339Nano, resp.Payload.Items[1].StartDate.String(), loc)
 		require.NoError(t, err)
@@ -769,19 +765,19 @@ func TestIntegration_GetEquipments_WithBlockingPeriods(t *testing.T) {
 	require.NoError(t, err)
 
 	blockParams := equipment.NewBlockEquipmentParamsWithContext(ctx).WithEquipmentID(*equip.Payload.ID)
-	startDate1 := strfmt.DateTime(strfmt.DateTime(time.Now().AddDate(0, 0, 1)))
-	endDate1 := strfmt.DateTime(time.Now().AddDate(0, 0, 11))
+	startDate1 := time.Now().AddDate(0, 0, 1)
+	endDate1 := time.Now().AddDate(0, 0, 11)
 	blockParams.Data = &models.ChangeEquipmentStatusToBlockedRequest{
-		StartDate: startDate1,
-		EndDate:   endDate1,
+		StartDate: startDate1.UnixNano(),
+		EndDate:   endDate1.UnixNano(),
 	}
 	_, err = client.Equipment.BlockEquipment(blockParams, auth)
 	require.NoError(t, err)
-	startDate2 := strfmt.DateTime(strfmt.DateTime(time.Now().AddDate(0, 1, 0)))
-	endDate2 := strfmt.DateTime(time.Now().AddDate(0, 1, 10))
+	startDate2 := time.Now().AddDate(0, 1, 0)
+	endDate2 := time.Now().AddDate(0, 1, 10)
 	blockParams.Data = &models.ChangeEquipmentStatusToBlockedRequest{
-		StartDate: startDate2,
-		EndDate:   endDate2,
+		StartDate: startDate2.UnixNano(),
+		EndDate:   endDate2.UnixNano(),
 	}
 	_, err = client.Equipment.BlockEquipment(blockParams, auth)
 	require.NoError(t, err)
@@ -861,11 +857,11 @@ func TestIntegration_UnblockEquipment(t *testing.T) {
 		token := utils.ManagerUserLogin(t)
 		auth := utils.AuthInfoFunc(token.GetPayload().AccessToken)
 
-		startDate, endDate := strfmt.DateTime(time.Now().AddDate(0, 0, 1)), strfmt.DateTime(time.Now().AddDate(0, 0, 11))
+		startDate, endDate := time.Now().AddDate(0, 0, 1), time.Now().AddDate(0, 0, 11)
 		blockParams := equipment.NewBlockEquipmentParamsWithContext(ctx).WithEquipmentID(*eq.Payload.ID)
 		blockParams.Data = &models.ChangeEquipmentStatusToBlockedRequest{
-			StartDate: strfmt.DateTime(startDate),
-			EndDate:   strfmt.DateTime(endDate),
+			StartDate: startDate.UnixNano(),
+			EndDate:   endDate.UnixNano(),
 		}
 
 		blockRes, err := client.Equipment.BlockEquipment(blockParams, auth)
@@ -976,17 +972,8 @@ func TestIntegration_DeleteEquipment(t *testing.T) {
 }
 
 func createOrder(ctx context.Context, be *client.Be, auth runtime.ClientAuthInfoWriterFunc, id *int64, start time.Time, end time.Time) (*int64, error) {
-	rentStart := strfmt.NewDateTime()
-	dateTimeFmt := "2006-01-02 15:04:05"
-	err := rentStart.UnmarshalText([]byte(start.Format(dateTimeFmt)))
-	if err != nil {
-		return nil, err
-	}
-	rentEnd := strfmt.NewDateTime()
-	err = rentEnd.UnmarshalText([]byte(end.Format(dateTimeFmt)))
-	if err != nil {
-		return nil, err
-	}
+	rentStart := start.UnixNano()
+	rentEnd := end.UnixNano()
 
 	orderCreated, err := be.Orders.CreateOrder(&orders.CreateOrderParams{
 		Context: ctx,

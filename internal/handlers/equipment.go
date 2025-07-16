@@ -329,8 +329,8 @@ func (c Equipment) BlockEquipmentFunc(repository domain.EquipmentRepository, eqS
 				WithPayload(buildForbiddenErrorPayload(messages.ErrEquipmentBlockForbidden, ""))
 		}
 
-		startDate := time.Time(s.Data.StartDate)
-		endDate := time.Time(s.Data.EndDate)
+		startDate := time.Unix(0, s.Data.StartDate)
+		endDate := time.Unix(0, s.Data.EndDate)
 		currentDate := time.Now()
 		isEqStatusBlocked := lastEqStatus != nil &&
 			lastEqStatus.Edges.EquipmentStatusName.Name == domain.EquipmentStatusNotAvailable
