@@ -1,9 +1,18 @@
+# IDE and editor configuration
 .idea
 .vscode
+
+# Generated code and artifacts
 /internal/generated
 coverage.out
 csr
 report.txt
+schema.svg
+
+# Caches and temporary files
+.cache
+
+# Local user files and environment
 .rdbgrc.breakpoints
 .tool-versions
 playground
