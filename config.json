@@ -1,6 +1,6 @@
 {
   "db": {
-    "host": "postgres",
+    "host": "localhost",
     "port": "5432",
     "database": "csr",
     "showSql": false
@@ -30,11 +30,7 @@
         "isReadonly": false
       },
       "allowedEndpoints": {
-        "GET": [
-          "/equipment/status_names",
-          "/v1/users/me",
-          "/v1/status_names"
-        ]
+        "GET": ["/equipment/status_names", "/v1/users/me", "/v1/status_names"]
       }
     },
     {
@@ -71,12 +67,8 @@
           "/v1/users/me/email",
           "/v1/users/me/password"
         ],
-        "POST": [
-          "/equipment/search"
-        ],
-        "DELETE": [
-          "/v1/users/me"
-        ]
+        "POST": ["/equipment/search"],
+        "DELETE": ["/v1/users/me"]
       }
     },
     {
@@ -113,13 +105,8 @@
           "/v1/users/me/email",
           "/v1/users/me/password"
         ],
-        "POST": [
-          "/equipment/search",
-          "/v1/orders"
-        ],
-        "DELETE": [
-          "/v1/users/me"
-        ]
+        "POST": ["/equipment/search", "/v1/orders"],
+        "DELETE": ["/v1/users/me"]
       }
     },
     {
