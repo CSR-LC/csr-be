@@ -501,18 +501,42 @@ func (s *OrderSuite) TestOrderRepository_OrdersTotal() {
 	tx, err := s.client.Tx(ctx)
 	require.NoError(t, err)
 	ctx = context.WithValue(ctx, middlewares.TxContextKey, tx)
-	totalOrders, err := s.orderRepository.OrdersTotal(ctx, &s.user.ID)
+	filter := domain.OrderFilter{}
+	totalOrders, err := s.orderRepository.OrdersTotal(ctx, &s.user.ID, filter)
 	if err != nil {
 		t.Fatal(err)
 	}
 	require.Equal(t, len(s.orders), totalOrders)
 	// Check orders for all users (should be the same amount because of only user)
-	totalOrders, err = s.orderRepository.OrdersTotal(ctx, nil)
+	totalOrders, err = s.orderRepository.OrdersTotal(ctx, nil, filter)
 	if err != nil {
 		t.Fatal(err)
 	}
 	require.NoError(t, tx.Commit())
 	require.Equal(t, len(s.orders), totalOrders)
+}
+
+func (s *OrderSuite) TestOrderRepository_OrdersTotal_Filtered() {
+	t := s.T()
+	ctx := s.ctx
+	tx, err := s.client.Tx(ctx)
+	require.NoError(t, err)
+	ctx = context.WithValue(ctx, middlewares.TxContextKey, tx)
+
+	active := domain.OrderStatusActive
+	finished := domain.OrderStatusFinished
+
+	activeFilter := domain.OrderFilter{Status: &active}
+	totalOrders, err := s.orderRepository.OrdersTotal(ctx, nil, activeFilter)
+	require.NoError(t, err)
+	require.Equal(t, 2, totalOrders)
+
+	finishedFilter := domain.OrderFilter{Status: &finished}
+	totalOrders, err = s.orderRepository.OrdersTotal(ctx, nil, finishedFilter)
+	require.NoError(t, err)
+	require.Equal(t, 2, totalOrders)
+
+	require.NoError(t, tx.Rollback())
 }
 
 func (s *OrderSuite) TestOrderRepository_List_EmptyOrderBy() {

@@ -76,7 +76,7 @@ type EquipmentStatusNameRepository interface {
 
 type OrderRepository interface {
 	List(ctx context.Context, ownerId *int, filter OrderFilter) ([]*ent.Order, error)
-	OrdersTotal(ctx context.Context, ownerId *int) (int, error)
+	OrdersTotal(ctx context.Context, ownerId *int, filter OrderFilter) (int, error)
 	Create(ctx context.Context, data *models.OrderCreateRequest, ownerId int, equipmentIDs []int) (*ent.Order, error)
 	Update(ctx context.Context, id int, data *models.OrderUpdateRequest, ownerId int) (*ent.Order, error)
 	Get(ctx context.Context, id int) (*ent.Order, error)

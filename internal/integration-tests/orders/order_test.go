@@ -631,6 +631,24 @@ func TestIntegration_ListAllOrders(t *testing.T) {
 		assert.Equal(t, 1, len(res.GetPayload().Items))
 	})
 
+	t.Run("Get All Orders as Admin, filter by Active status", func(t *testing.T) {
+		listParams := orders.NewGetAllOrdersParamsWithContext(ctx)
+		listParams.Status = &domain.OrderStatusActive
+
+		res, err := client.Orders.GetAllOrders(listParams, auth)
+		require.NoError(t, err)
+		require.NotNil(t, res.Payload)
+		require.NotNil(t, res.Payload.Items)
+		require.NotEmpty(t, res.Payload.Items)
+
+		activeStatuses := domain.OrderStatusAggregation[domain.OrderStatusActive]
+		for _, item := range res.Payload.Items {
+			require.NotNil(t, item.LastStatus)
+			require.NotNil(t, item.LastStatus.Status)
+			assert.Contains(t, activeStatuses, *item.LastStatus.Status)
+		}
+	})
+
 	t.Run("Get All Orders as Admin, filter by Finished status + equipment", func(t *testing.T) {
 		listParams := orders.NewGetAllOrdersParamsWithContext(ctx)
 		listParams.Status = &domain.OrderStatusFinished // we have 2 finished orders from the TC above
@@ -668,8 +686,9 @@ func TestIntegration_UpdateOrder(t *testing.T) {
 	quantity := int64(1)
 	orderID := order.Payload.ID
 	t.Run("Update Order", func(t *testing.T) {
-		rentStart := strfmt.DateTime(time.Now())
-		rentEnd := strfmt.DateTime(time.Now().Add(time.Hour * 24))
+		baseTime := time.Now().UTC()
+		rentStart := strfmt.DateTime(baseTime)
+		rentEnd := strfmt.DateTime(baseTime.Add(time.Hour * 24))
 
 		params := orders.NewUpdateOrderParamsWithContext(ctx)
 		params.OrderID = *orderID
@@ -686,8 +705,8 @@ func TestIntegration_UpdateOrder(t *testing.T) {
 
 		assert.Equal(t, desc, *res.Payload.Description)
 		assert.Equal(t, quantity, *res.Payload.Quantity)
-		assert.InDelta(t, time.Time(rentEnd).UnixNano(), time.Time(*res.Payload.RentEnd).UnixNano(), 1e6)
-		assert.InDelta(t, time.Time(rentStart).UnixNano(), time.Time(*res.Payload.RentStart).UnixNano(), 1e6)
+		assert.InDelta(t, time.Time(rentEnd).UTC().UnixNano(), time.Time(*res.Payload.RentEnd).UTC().UnixNano(), 1e6)
+		assert.InDelta(t, time.Time(rentStart).UTC().UnixNano(), time.Time(*res.Payload.RentStart).UTC().UnixNano(), 1e6)
 	})
 }
 
