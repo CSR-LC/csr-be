@@ -109,7 +109,7 @@ func (r *orderRepository) List(ctx context.Context, ownerId *int, filter domain.
 	return items, err
 }
 
-func (r *orderRepository) OrdersTotal(ctx context.Context, ownerId *int) (int, error) {
+func (r *orderRepository) OrdersTotal(ctx context.Context, ownerId *int, filter domain.OrderFilter) (int, error) {
 	tx, err := middlewares.TxFromContext(ctx)
 	if err != nil {
 		return 0, err
@@ -118,6 +118,7 @@ func (r *orderRepository) OrdersTotal(ctx context.Context, ownerId *int) (int, e
 	if ownerId != nil {
 		query = query.Where(order.HasUsersWith(user.ID(*ownerId)))
 	}
+	query = r.applyListFilters(query, filter)
 	return query.Count(ctx)
 }
 

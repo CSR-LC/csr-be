@@ -294,6 +294,11 @@ func (r *equipmentRepository) ArchiveEquipment(ctx context.Context, id int) erro
 		}
 		// change all order statuses to close
 		for _, orderToUpdate := range ordersToUpdate {
+			// current status on the order reflects the archived state
+			if _, err = tx.Order.UpdateOneID(orderToUpdate.ID).SetCurrentStatus(orderStatusClosed).Save(ctx); err != nil {
+				return err
+			}
+
 			var orderStatusesToUpdate = []*ent.OrderStatus{}
 			orderStatusesToUpdate, err = tx.OrderStatus.Query().QueryOrder().Where(order.ID(orderToUpdate.ID)).
 				QueryOrderStatus().All(ctx)
