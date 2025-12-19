@@ -96,9 +96,9 @@ func (c Equipment) GetEquipmentFunc(repository domain.EquipmentRepository) equip
 }
 
 func (c Equipment) ArchiveEquipmentFunc(repository domain.EquipmentRepository) equipment.ArchiveEquipmentHandlerFunc {
-	return func(s equipment.ArchiveEquipmentParams, _ *models.Principal) middleware.Responder {
+	return func(s equipment.ArchiveEquipmentParams, principal *models.Principal) middleware.Responder {
 		ctx := s.HTTPRequest.Context()
-		err := repository.ArchiveEquipment(ctx, int(s.EquipmentID))
+		err := repository.ArchiveEquipment(ctx, int(s.EquipmentID), int(principal.ID))
 		if err != nil {
 			if ent.IsNotFound(err) {
 				return equipment.NewArchiveEquipmentNotFound().

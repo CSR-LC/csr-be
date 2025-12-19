@@ -101,7 +101,7 @@ func (r *orderRepository) List(ctx context.Context, ownerId *int, filter domain.
 
 	query = r.applyListFilters(query, filter)
 
-	items, err := query.WithUsers().WithOrderStatus().WithEquipments().All(ctx)
+	items, err := query.WithUsers().WithOrderStatus().WithEquipments().WithCurrentStatus().All(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -204,7 +204,7 @@ func (r *orderRepository) Create(ctx context.Context, data *models.OrderCreateRe
 		return nil, err
 	}
 	newOrder, err := tx.Order.Query().Where(order.IDEQ(createdOrder.ID)). // get order with relations
-										WithUsers().WithOrderStatus().Only(ctx)
+										WithUsers().WithOrderStatus().WithCurrentStatus().Only(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -265,7 +265,7 @@ func (r *orderRepository) Update(ctx context.Context, id int, data *models.Order
 	}
 
 	returnOrder, err := tx.Order.Query().Where(order.IDEQ(createdOrder.ID)). // get order with relations
-											WithUsers().WithOrderStatus().Only(ctx)
+											WithUsers().WithOrderStatus().WithCurrentStatus().Only(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -326,6 +326,7 @@ func (r *orderRepository) Get(ctx context.Context, id int) (*ent.Order, error) {
 		Query().
 		Where(order.IDEQ(id)).
 		WithUsers().
+		WithCurrentStatus().
 		Only(ctx)
 	if err != nil {
 		return nil, err

@@ -247,7 +247,7 @@ func (r *equipmentRepository) AllEquipmentsTotal(ctx context.Context) (int, erro
 	return total, nil
 }
 
-func (r *equipmentRepository) ArchiveEquipment(ctx context.Context, id int) error {
+func (r *equipmentRepository) ArchiveEquipment(ctx context.Context, id int, archivedByUserID int) error {
 	tx, err := middlewares.TxFromContext(ctx)
 	if err != nil {
 		return err
@@ -281,6 +281,7 @@ func (r *equipmentRepository) ArchiveEquipment(ctx context.Context, id int) erro
 		return err
 	}
 	// if this equipment is in order, then archive equipment status
+	orderIDSet := make(map[int]struct{})
 	for _, equipmentStatus := range equipmentStatuses {
 		_, err = equipmentStatus.Update().SetEquipmentStatusNameID(equipmentStatusArchived.ID).Save(ctx)
 		if err != nil {
@@ -292,25 +293,33 @@ func (r *equipmentRepository) ArchiveEquipment(ctx context.Context, id int) erro
 		if err != nil {
 			return err
 		}
-		// change all order statuses to close
 		for _, orderToUpdate := range ordersToUpdate {
-			// current status on the order reflects the archived state
-			if _, err = tx.Order.UpdateOneID(orderToUpdate.ID).SetCurrentStatus(orderStatusClosed).Save(ctx); err != nil {
-				return err
-			}
+			orderIDSet[orderToUpdate.ID] = struct{}{}
+		}
+	}
 
-			var orderStatusesToUpdate = []*ent.OrderStatus{}
-			orderStatusesToUpdate, err = tx.OrderStatus.Query().QueryOrder().Where(order.ID(orderToUpdate.ID)).
-				QueryOrderStatus().All(ctx)
-			if err != nil {
-				return err
-			}
-			for _, orderStatusToUpdate := range orderStatusesToUpdate {
-				_, err = orderStatusToUpdate.Update().SetOrderStatusNameID(orderStatusClosed.ID).Save(ctx)
-				if err != nil {
-					return err
-				}
-			}
+	orderIDs := make([]int, 0, len(orderIDSet))
+	for orderID := range orderIDSet {
+		orderIDs = append(orderIDs, orderID)
+	}
+
+	if len(orderIDs) > 0 {
+		if _, err = tx.Order.Update().Where(order.IDIn(orderIDs...)).SetCurrentStatus(orderStatusClosed).Save(ctx); err != nil {
+			return err
+		}
+
+		now := time.Now()
+		oss := make([]*ent.OrderStatusCreate, len(orderIDs))
+		for i, orderID := range orderIDs {
+			oss[i] = tx.OrderStatus.Create().
+				SetComment("Equipment archived").
+				SetCurrentDate(now).
+				SetOrderID(orderID).
+				SetUsersID(archivedByUserID).
+				SetOrderStatusName(orderStatusClosed)
+		}
+		if _, err = tx.OrderStatus.CreateBulk(oss...).Save(ctx); err != nil {
+			return err
 		}
 	}
 	// change equipment status to archived

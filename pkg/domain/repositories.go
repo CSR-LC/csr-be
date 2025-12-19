@@ -49,7 +49,7 @@ type EquipmentRepository interface {
 	UpdateEquipmentByID(ctx context.Context, id int, eq *models.Equipment) (*ent.Equipment, error)
 	AllEquipmentsTotal(ctx context.Context) (int, error)
 	EquipmentsByFilterTotal(ctx context.Context, filter models.EquipmentFilter) (int, error)
-	ArchiveEquipment(ctx context.Context, id int) error
+	ArchiveEquipment(ctx context.Context, id int, archivedByUserID int) error
 	BlockEquipment(ctx context.Context, id int, startDate, endDate time.Time, userID int) error
 	UnblockEquipment(ctx context.Context, id int) error
 	UnblockAllExpiredEquipment(ctx context.Context, client *ent.Client) (int, error)

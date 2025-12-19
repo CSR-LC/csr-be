@@ -55,6 +55,12 @@ func mapUserOrder(o *ent.Order, log *zap.Logger) (*models.UserOrder, error) {
 	quantity := int64(o.Quantity)
 	rentEnd := strfmt.DateTime(o.RentEnd)
 	rentStart := strfmt.DateTime(o.RentStart)
+
+	var currentStatus string
+	if o.Edges.CurrentStatus != nil {
+		currentStatus = o.Edges.CurrentStatus.Status
+	}
+
 	equipments := o.Edges.Equipments
 	if equipments == nil {
 		log.Warn("order has no equipments")
@@ -154,13 +160,18 @@ func mapUserOrder(o *ent.Order, log *zap.Logger) (*models.UserOrder, error) {
 		statusToOrder = mappedStatus
 	}
 
+	if currentStatus == "" && statusToOrder != nil && statusToOrder.Status != nil {
+		currentStatus = *statusToOrder.Status
+	}
+
 	return &models.UserOrder{
-		Description: &o.Description,
-		Equipments:  orderEquipments,
-		ID:          &id,
-		Quantity:    &quantity,
-		RentEnd:     &rentEnd,
-		RentStart:   &rentStart,
+		Description:   &o.Description,
+		Equipments:    orderEquipments,
+		CurrentStatus: &currentStatus,
+		ID:            &id,
+		Quantity:      &quantity,
+		RentEnd:       &rentEnd,
+		RentStart:     &rentStart,
 		User: &models.UserEmbeddable{
 			ID:   &ownerId,
 			Name: &ownerName,
@@ -194,15 +205,16 @@ func mapOrdersToResponse(log *zap.Logger, entOrders ...*ent.Order) ([]*models.Or
 		}
 		user := mapUserInfoWoRole(o.Edges.Users)
 		mo := &models.Order{
-			Description: uo.Description,
-			Equipments:  uo.Equipments,
-			ID:          uo.ID,
-			IsFirst:     uo.IsFirst,
-			LastStatus:  uo.LastStatus,
-			Quantity:    uo.Quantity,
-			RentEnd:     uo.RentEnd,
-			RentStart:   uo.RentStart,
-			User:        user,
+			Description:   uo.Description,
+			Equipments:    uo.Equipments,
+			CurrentStatus: uo.CurrentStatus,
+			ID:            uo.ID,
+			IsFirst:       uo.IsFirst,
+			LastStatus:    uo.LastStatus,
+			Quantity:      uo.Quantity,
+			RentEnd:       uo.RentEnd,
+			RentStart:     uo.RentStart,
+			User:          user,
 		}
 		modelOrders[i] = mo
 	}

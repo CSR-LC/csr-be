@@ -106,15 +106,16 @@ func (s *EquipmentTestSuite) TestEquipment_ArchiveEquipmentFunc_RepoNotFoundErr(
 
 	handlerFunc := s.equipment.ArchiveEquipmentFunc(s.equipmentRepo)
 	id := 1
+	principal := &models.Principal{ID: 123}
 	data := equipment.ArchiveEquipmentParams{
 		HTTPRequest: request.WithContext(ctx),
 		EquipmentID: int64(id),
 	}
 	err := &ent.NotFoundError{}
 
-	s.equipmentRepo.On("ArchiveEquipment", ctx, id).Return(err)
+	s.equipmentRepo.On("ArchiveEquipment", ctx, id, int(principal.ID)).Return(err)
 
-	resp := handlerFunc(data, nil)
+	resp := handlerFunc(data, principal)
 	responseRecorder := httptest.NewRecorder()
 	producer := runtime.JSONProducer()
 	resp.WriteResponse(responseRecorder, producer)
@@ -129,15 +130,16 @@ func (s *EquipmentTestSuite) TestEquipment_ArchiveEquipmentFunc_RepoErr() {
 
 	handlerFunc := s.equipment.ArchiveEquipmentFunc(s.equipmentRepo)
 	id := 1
+	principal := &models.Principal{ID: 123}
 	data := equipment.ArchiveEquipmentParams{
 		HTTPRequest: request.WithContext(ctx),
 		EquipmentID: int64(id),
 	}
 	err := errors.New("some error")
 
-	s.equipmentRepo.On("ArchiveEquipment", ctx, id).Return(err)
+	s.equipmentRepo.On("ArchiveEquipment", ctx, id, int(principal.ID)).Return(err)
 
-	resp := handlerFunc(data, nil)
+	resp := handlerFunc(data, principal)
 	responseRecorder := httptest.NewRecorder()
 	producer := runtime.JSONProducer()
 	resp.WriteResponse(responseRecorder, producer)
@@ -152,14 +154,15 @@ func (s *EquipmentTestSuite) TestEquipment_ArchiveEquipmentFunc_Ok() {
 
 	handlerFunc := s.equipment.ArchiveEquipmentFunc(s.equipmentRepo)
 	id := 1
+	principal := &models.Principal{ID: 123}
 	data := equipment.ArchiveEquipmentParams{
 		HTTPRequest: request.WithContext(ctx),
 		EquipmentID: int64(id),
 	}
 
-	s.equipmentRepo.On("ArchiveEquipment", ctx, id).Return(nil)
+	s.equipmentRepo.On("ArchiveEquipment", ctx, id, int(principal.ID)).Return(nil)
 
-	resp := handlerFunc(data, nil)
+	resp := handlerFunc(data, principal)
 	responseRecorder := httptest.NewRecorder()
 	producer := runtime.JSONProducer()
 	resp.WriteResponse(responseRecorder, producer)

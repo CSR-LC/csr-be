@@ -3281,6 +3281,7 @@ definitions:
       - user
       - equipments
       - last_status
+      - current_status
       - is_first
     properties:
       id:
@@ -3305,6 +3306,8 @@ definitions:
       last_status:
         type: object
         $ref: '#/definitions/OrderStatus'
+      current_status:
+        type: string
       is_first:
         type: boolean
         example: false
@@ -3319,6 +3322,7 @@ definitions:
       - user
       - equipments
       - last_status
+      - current_status
       - is_first
     properties:
       id:
@@ -3343,6 +3347,8 @@ definitions:
       last_status:
         type: object
         $ref: '#/definitions/OrderStatus'
+      current_status:
+        type: string
       is_first:
         type: boolean
         example: false

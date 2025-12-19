@@ -70,6 +70,7 @@ func (r *orderFilterRepository) OrdersByPeriodAndStatus(ctx context.Context, fro
 		Where(orderstatus.CurrentDateLTE(to)).
 		QueryOrder().
 		WithOrderStatus().
+		WithCurrentStatus().
 		WithEquipments().
 		WithUsers().
 		Order(orderFunc).Limit(limit).Offset(offset).All(ctx)
@@ -96,9 +97,8 @@ func (r *orderFilterRepository) OrdersByStatus(ctx context.Context, status strin
 		QueryOrderStatus().
 		QueryOrderStatusName().Where(orderstatusname.StatusEQ(status)).
 		QueryOrderStatus().QueryOrder().
-		WithOrderStatus().
 		Order(orderFunc).Limit(limit).Offset(offset).
-		WithUsers().WithOrderStatus().WithEquipments().
+		WithUsers().WithOrderStatus().WithEquipments().WithCurrentStatus().
 		All(ctx)
 	if err != nil {
 		return nil, err
