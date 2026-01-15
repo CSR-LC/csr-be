@@ -72,3 +72,5 @@ The name of the folder with files is set in environment variable PHOTOS_FOLDER.
 The database stores id - names of files without an extension
 
 <img src="images/equipments_photos.png" alt="files workflow diagrams">
+
+test
