@@ -2976,8 +2976,9 @@ definitions:
         example: "удовлетворительное, местами облупляется краска"
         description: "required if technicalIssues is 'есть'"
       inventoryNumber:
-        type: integer
-        example: "1"
+        type: string
+        pattern: "^[A-Za-z0-9]+$"
+        example: "AB123"
       supplier:
         type: string
         example: "ИП Григорьев Виталий Васильевич"
@@ -3041,8 +3042,9 @@ definitions:
         type: string
         example: "удовлетворительное, местами облупляется краска"
       inventoryNumber:
-        type: integer
-        example: "1"
+        type: string
+        pattern: "^[A-Za-z0-9]+$"
+        example: "AB123"
       supplier:
         type: string
         example: "ИП Григорьев Виталий Васильевич"
@@ -3121,8 +3123,9 @@ definitions:
         type: string
         example: "удовлетворительное, местами облупляется краска"
       inventoryNumber:
-        type: integer
-        example: "1"
+        type: string
+        pattern: "^[A-Za-z0-9]+$"
+        example: "AB123"
       supplier:
         type: string
         example: "ИП Григорьев Виталий Васильевич"

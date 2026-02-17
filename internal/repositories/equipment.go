@@ -68,7 +68,7 @@ func (r *equipmentRepository) EquipmentsByFilter(ctx context.Context, filter mod
 			OptionalStringEquipment(filter.Description, equipment.FieldDescription),
 			OptionalStringEquipment(filter.TermsOfUse, equipment.FieldTermsOfUse),
 			OptionalIntEquipment(filter.CompensationCost, equipment.FieldCompensationCost),
-			OptionalIntEquipment(filter.InventoryNumber, equipment.FieldInventoryNumber),
+			OptionalStringEquipment(filter.InventoryNumber, equipment.FieldInventoryNumber),
 			OptionalStringEquipment(filter.Supplier, equipment.FieldSupplier),
 			OptionalStringEquipment(
 				filterReceiptDate,
@@ -348,7 +348,7 @@ func (r *equipmentRepository) EquipmentsByFilterTotal(ctx context.Context, filte
 			OptionalStringEquipment(filter.Description, equipment.FieldDescription),
 			OptionalStringEquipment(filter.TermsOfUse, equipment.FieldTermsOfUse),
 			OptionalIntEquipment(filter.CompensationCost, equipment.FieldCompensationCost),
-			OptionalIntEquipment(filter.InventoryNumber, equipment.FieldInventoryNumber),
+			OptionalStringEquipment(filter.InventoryNumber, equipment.FieldInventoryNumber),
 			OptionalStringEquipment(filter.Supplier, equipment.FieldSupplier),
 			OptionalStringEquipment(
 				filterReceiptDate,
@@ -394,7 +394,7 @@ func (r *equipmentRepository) UpdateEquipmentByID(ctx context.Context, id int, e
 		edit.SetTechIssue(*eq.TechnicalIssues)
 		edit.SetCondition(eq.Condition)
 	}
-	if *eq.InventoryNumber != 0 {
+	if *eq.InventoryNumber != "" {
 		edit.SetInventoryNumber(*eq.InventoryNumber)
 	}
 	if *eq.Supplier != "" {

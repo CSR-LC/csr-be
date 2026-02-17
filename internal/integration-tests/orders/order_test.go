@@ -832,7 +832,7 @@ func setParameters(ctx context.Context, client *client.Be, auth runtime.ClientAu
 	cost := int64(3900)
 	condition := "удовлетворительное, местами облупляется краска"
 	description := "удобная, подойдет для котов любых размеров"
-	inventoryNumber := int64(1)
+	inventoryNumber := "A1"
 
 	category, err := client.Categories.GetCategoryByID(categories.NewGetCategoryByIDParamsWithContext(ctx).WithCategoryID(1), auth)
 	if err != nil {
