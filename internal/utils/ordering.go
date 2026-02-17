@@ -1,7 +1,6 @@
 package utils
 
 import (
-	"errors"
 	"fmt"
 
 	"entgo.io/ent/dialect/sql"
@@ -22,7 +21,7 @@ func GetOrderFunc(orderBy, orderColumn string) (func(*sql.Selector), error) {
 	case DescOrder:
 		orderFunc = ent.Desc(orderColumn)
 	default:
-		err = errors.New(fmt.Sprintf("wrong value for orderBy: %s", orderBy))
+		err = fmt.Errorf("wrong value for orderBy: %s", orderBy)
 	}
 	return orderFunc, err
 }

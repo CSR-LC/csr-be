@@ -36,7 +36,7 @@ func (c *sender) IsSendRequired() bool {
 }
 
 func (c *sender) SendResetLink(email string, userName string, token string) error {
-	if c.isRequiredToSend == false {
+	if !c.isRequiredToSend {
 		return nil
 	}
 
@@ -62,7 +62,7 @@ func (c *sender) SendResetLink(email string, userName string, token string) erro
 }
 
 func (c *sender) SendNewPassword(email string, userName string, password string) error {
-	if c.isRequiredToSend == false {
+	if !c.isRequiredToSend {
 		return nil
 	}
 
@@ -86,7 +86,7 @@ func (c *sender) SendNewPassword(email string, userName string, password string)
 }
 
 func (c *sender) SendRegistrationConfirmLink(email string, userName string, token string) error {
-	if c.isRequiredToSend == false {
+	if !c.isRequiredToSend {
 		return nil
 	}
 	text, err := GenerateRegistrationConfirmMessage(userName, c.websiteUrl, token, c.RegistrationConfirmPath)

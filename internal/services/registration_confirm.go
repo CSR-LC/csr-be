@@ -44,7 +44,7 @@ func (rc *registrationConfirm) IsSendRequired() bool {
 func (rc *registrationConfirm) SendConfirmationLink(ctx context.Context, login string) error {
 	rc.logger.Info("registration confirmation service: send confirmation link", zap.String("login", login))
 	token := uuid.New().String()
-	user, err := rc.UserRepository.UserByLogin(ctx, login)
+	user, err := rc.UserByLogin(ctx, login)
 	if err != nil {
 		err = ErrUserNotFound
 		rc.logger.Error("Error while getting user by login", zap.String("login", login), zap.Error(err))
@@ -55,12 +55,12 @@ func (rc *registrationConfirm) SendConfirmationLink(ctx context.Context, login s
 		rc.logger.Error("Error registration is already confirmed", zap.String("login", login), zap.Error(err))
 		return err
 	}
-	err = rc.RegistrationConfirmRepository.CreateToken(ctx, token, time.Now().Add(rc.ttl), user.ID)
+	err = rc.CreateToken(ctx, token, time.Now().Add(rc.ttl), user.ID)
 	if err != nil {
 		rc.logger.Error("Error while creating token", zap.String("login", login), zap.Error(err))
 		return err
 	}
-	err = rc.Sender.SendRegistrationConfirmLink(user.Email, user.Login, token)
+	err = rc.SendRegistrationConfirmLink(user.Email, user.Login, token)
 	if err != nil {
 		rc.logger.Error("Error while sending confirmation link to email", zap.String("login", login), zap.Error(err))
 		return err

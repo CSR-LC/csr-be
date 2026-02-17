@@ -288,8 +288,7 @@ func (r *equipmentRepository) ArchiveEquipment(ctx context.Context, id int, arch
 			return err
 		}
 		// get orders with this equipment status
-		var ordersToUpdate = []*ent.Order{}
-		ordersToUpdate, err = equipmentStatus.QueryOrder().All(ctx)
+		ordersToUpdate, err := equipmentStatus.QueryOrder().All(ctx)
 		if err != nil {
 			return err
 		}
