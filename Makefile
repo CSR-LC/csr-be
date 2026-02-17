@@ -7,7 +7,7 @@ packagesToTest=$$(go list ./... | grep -v generated)
 setup:
 	go install github.com/go-swagger/go-swagger/cmd/swagger@v0.30.4
 	go install entgo.io/ent/cmd/ent@v0.14.4
-	go install github.com/vektra/mockery/v2@v2.45.0
+	go install github.com/vektra/mockery/v2@v2.53.5
 
 setup_alpine:
 	apk add --update --no-cache git build-base && rm -rf /var/cache/apk/*
