@@ -12,6 +12,6 @@ func GenerateFileName() (string, error) {
 		return "", err
 	}
 
-	name := strings.Replace(id.String(), "-", "", -1)
+	name := strings.ReplaceAll(id.String(), "-", "")
 	return name, nil
 }

@@ -8,6 +8,7 @@ setup:
 	go install github.com/go-swagger/go-swagger/cmd/swagger@v0.30.4
 	go install entgo.io/ent/cmd/ent@v0.14.4
 	go install github.com/vektra/mockery/v3@v3.2.4
+	go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.10.1
 
 setup_alpine:
 	apk add --update --no-cache git build-base && rm -rf /var/cache/apk/*
@@ -45,7 +46,7 @@ build:
 	CGO_ENABLED=0 go build -o csr ./cmd/swagger/...
 
 lint:
-	golangci-lint run --out-format tab | tee ./report.txt
+	$$(go env GOPATH)/bin/golangci-lint run --output.tab.path=./report.txt --output.tab.colors=false
 
 test:
 	go test ${packagesToTest} -race -coverprofile=coverage.out -short

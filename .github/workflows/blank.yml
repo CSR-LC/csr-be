@@ -31,7 +31,7 @@ jobs:
           fi
   lint:
     runs-on: ubuntu-latest
-    container: registry.gitlab.com/gitlab-org/gitlab-build-images:golangci-lint-alpine
+    container: golang:1.25.7-alpine
     steps:
       - uses: actions/checkout@v6
       - name: Lint

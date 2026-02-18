@@ -37,22 +37,22 @@ func NewPasswordResetService(emailClient domain.Sender, userRepository domain.Us
 func (p *passwordReset) SendResetPasswordLink(ctx context.Context, login string) error {
 	p.logger.Info("password reset service: send reset password link", zap.String("login", login))
 	token := uuid.New().String()
-	user, err := p.UserRepository.UserByLogin(ctx, login)
+	user, err := p.UserByLogin(ctx, login)
 	if err != nil {
 		p.logger.Error("Error while getting user by login", zap.String("login", login), zap.Error(err))
 		return err
 	}
-	err = p.PasswordResetRepository.CreateToken(ctx, token, time.Now().Add(p.ttl), user.ID)
+	err = p.CreateToken(ctx, token, time.Now().Add(p.ttl), user.ID)
 	if err != nil {
 		p.logger.Error("Error while creating token", zap.String("login", login), zap.Error(err))
 		return err
 	}
-	err = p.Sender.SendResetLink(user.Email, user.Login, token)
+	err = p.SendResetLink(user.Email, user.Login, token)
 	if err != nil {
 		p.logger.Error("Error while sending reset link to email", zap.String("login", login), zap.Error(err))
 		return err
 	}
-	if !p.Sender.IsSendRequired() {
+	if !p.IsSendRequired() {
 		p.logger.Info("password reset service: reset password link wasn't send, sending parameter is set to false and send email is not required")
 	} else {
 		p.logger.Info("password reset service: send reset password link")
@@ -76,7 +76,7 @@ func (p *passwordReset) VerifyTokenAndSendPassword(ctx context.Context, tokenToV
 		return errors.New("token expired")
 	}
 	login := token.Edges.Users.Login
-	password, err := p.PasswordGenerator.NewPassword()
+	password, err := p.NewPassword()
 	if err != nil {
 		p.logger.Error("Error while generating password", zap.Error(err))
 		return err
@@ -95,7 +95,7 @@ func (p *passwordReset) VerifyTokenAndSendPassword(ctx context.Context, tokenToV
 	if errDelete != nil {
 		p.logger.Warn("Error while deleting token", zap.String("token", tokenToVerify), zap.Error(errDelete))
 	}
-	if !p.Sender.IsSendRequired() {
+	if !p.IsSendRequired() {
 		p.logger.Info("password reset service: verified token, password wasn't send, sending parameter is set to false and send email is not required")
 	} else {
 		p.logger.Info("password reset service: verified token and send password")

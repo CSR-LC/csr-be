@@ -33,7 +33,7 @@ func NewEmailChangeService(senderClient domain.Sender, userRepository domain.Use
 func (e *emailChange) SendEmailConfirmationLink(ctx context.Context, login, email string) error {
 	e.logger.Info("new email confirmation service: send confirmation link", zap.String("login", login))
 	token := uuid.New().String()
-	user, err := e.UserRepository.UserByLogin(ctx, login)
+	user, err := e.UserByLogin(ctx, login)
 	if err != nil {
 		e.logger.Error(
 			"Error while getting user by login", zap.String("login", login),
@@ -42,7 +42,7 @@ func (e *emailChange) SendEmailConfirmationLink(ctx context.Context, login, emai
 		return err
 	}
 
-	err = e.EmailConfirmRepository.CreateToken(ctx, token, time.Now().Add(e.ttl), user.ID, email)
+	err = e.CreateToken(ctx, token, time.Now().Add(e.ttl), user.ID, email)
 	if err != nil {
 		e.logger.Error(
 			"Error while creating token during sending confirmation link to new email",

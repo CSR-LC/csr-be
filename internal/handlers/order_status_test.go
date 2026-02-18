@@ -1542,27 +1542,6 @@ func (s *OrderStatusTestSuite) TestOrderStatus_GetOrdersByStatus_SeveralPages() 
 	s.orderFilterRepository.AssertExpectations(t)
 }
 
-func (s *OrderStatusTestSuite) sTestOrderStatus_GetOrdersByPeriodAndStatus_NoAccess() {
-	t := s.T()
-	request := http.Request{}
-	userID := 1
-	principal := &models.Principal{
-		ID:   int64(userID),
-		Role: roles.User,
-	}
-	handlerFunc := s.orderStatus.GetOrdersByPeriodAndStatus(s.orderFilterRepository)
-	params := orders.GetOrdersByDateAndStatusParams{
-		HTTPRequest: &request,
-	}
-
-	resp := handlerFunc(params, principal)
-	responseRecorder := httptest.NewRecorder()
-	producer := runtime.JSONProducer()
-	resp.WriteResponse(responseRecorder, producer)
-	require.Equal(t, http.StatusForbidden, responseRecorder.Code)
-	s.orderFilterRepository.AssertExpectations(t)
-}
-
 func (s *OrderStatusTestSuite) TestOrderStatus_GetOrdersByPeriodAndStatus_RepoErr() {
 	t := s.T()
 	request := http.Request{}
