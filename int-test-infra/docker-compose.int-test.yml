@@ -1,4 +1,3 @@
-version: '3'
 services:
   csr:
     image: csr:int-test

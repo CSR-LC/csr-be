@@ -8,7 +8,7 @@ on:
 jobs:
   test:
     runs-on: ubuntu-22.04
-    container: golang:1.24-alpine
+    container: golang:1.25.7-alpine
     steps:
       - uses: actions/checkout@v6
       - name: Test
@@ -31,7 +31,7 @@ jobs:
           fi
   lint:
     runs-on: ubuntu-latest
-    container: registry.gitlab.com/gitlab-org/gitlab-build-images:golangci-lint-alpine
+    container: golang:1.25.7-alpine
     steps:
       - uses: actions/checkout@v6
       - name: Lint
@@ -52,7 +52,7 @@ jobs:
           retention-days: 5
   build:
     runs-on: ubuntu-latest
-    container: golang:1.24-alpine
+    container: golang:1.25.7-alpine
     needs: [lint,test]
     steps:
       - uses: actions/checkout@v6

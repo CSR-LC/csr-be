@@ -97,31 +97,6 @@ func generateGetPasswordReset(userName, password string) hermes.Email {
 	}
 }
 
-func generateRegistrationConfirmMessage(userName, websiteUrl, token string) hermes.Email {
-	return hermes.Email{
-		Body: hermes.Body{
-			Name: userName,
-			Intros: []string{
-				"Вы получили это электронное письмо, потому что зарегистрировали учетную запись в сервисе Лёнькин Кот.",
-			},
-			Actions: []hermes.Action{
-				{
-					Instructions: "Нажмите кнопку ниже для подтверждения регистрации:",
-					Button: hermes.Button{
-						Color: "#DC4D2F",
-						Text:  "Подтвердить",
-						Link:  fmt.Sprintf("%sapi/registration_confirm/%s", websiteUrl, token),
-					},
-				},
-			},
-			Outros: []string{
-				"Если вы не регистрировались, никаких дальнейших действий с вашей стороны не требуется.",
-			},
-			Signature: "Спасибо",
-		},
-	}
-}
-
 func generateEmailConfirmMessage(userName, websiteUrl, token string) hermes.Email {
 	return hermes.Email{
 		Body: hermes.Body{

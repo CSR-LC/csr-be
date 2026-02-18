@@ -1182,5 +1182,3 @@ func ordersDuplicated(t *testing.T, array1, array2 []*models.UserOrder) bool {
 	}
 	return false
 }
-
-func ptr(i int64) *int64 { return &i }

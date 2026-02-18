@@ -1,8 +1,6 @@
 module github.com/CSR-LC/csr-be
 
-go 1.23
-
-toolchain go1.24.1
+go 1.25
 
 require (
 	entgo.io/ent v0.14.4

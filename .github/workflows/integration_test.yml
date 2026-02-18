@@ -12,6 +12,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
       - name: Setup Go
+        id: setup-go
         uses: actions/setup-go@v6
         with:
           go-version-file: "${{ github.workspace }}/go.mod"
@@ -19,9 +20,10 @@ jobs:
         uses: actions/cache@v4
         with:
           path: |
-            ~/.cache/go-build
             ~/go/pkg/mod
-          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          key: ${{ runner.os }}-gomod-${{ steps.setup-go.outputs.go-version }}-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-gomod-${{ steps.setup-go.outputs.go-version }}-
       - name: Prepare
         run: |
           make setup
