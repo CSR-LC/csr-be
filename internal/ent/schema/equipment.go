@@ -20,7 +20,7 @@ func (Equipment) Fields() []ent.Field {
 		field.Int64("compensationCost").Optional(),
 		field.Bool("tech_issue").Optional(),
 		field.String("condition").Optional(),
-		field.Int64("inventoryNumber").Optional(),
+		field.String("inventoryNumber").Optional(),
 		field.String("supplier").Default("unknown"),
 		field.String("receiptDate").Default("unknown"),
 		field.Int64("maximumDays").Optional(),
